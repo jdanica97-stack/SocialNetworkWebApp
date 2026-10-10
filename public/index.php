@@ -103,18 +103,13 @@ switch ($action) {
         $postController->delete();
         break;
 
-    // Search and Filtering action
+    // Community Insights (Search, Filtering, and Reports)
+    case 'insights':
     case 'search':
-        require_once __DIR__ . '/../app/controllers/SearchController.php';
-        $searchController = new SearchController();
-        $searchController->index();
-        break;
-
-    // Reports and SQL Analytics action
     case 'reports':
-        require_once __DIR__ . '/../app/controllers/ReportController.php';
-        $reportController = new ReportController();
-        $reportController->index();
+        require_once __DIR__ . '/../app/controllers/InsightsController.php';
+        $insightsController = new InsightsController();
+        $insightsController->index();
         break;
 
     // Additional Navigation Pages

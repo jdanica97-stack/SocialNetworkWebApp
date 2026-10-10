@@ -57,6 +57,12 @@ body {
     left: 0;
     z-index: 1040;
     transition: transform 0.3s ease;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+}
+
+.app-sidebar.show {
+    transform: translateX(0);
 }
 
 .sidebar-header {
@@ -76,6 +82,8 @@ body {
     font-weight: 700;
     font-size: 1.1rem;
     letter-spacing: -0.3px;
+    cursor: pointer;
+    user-select: none;
 }
 
 .brand-icon-box {
@@ -90,6 +98,12 @@ body {
     font-size: 1.15rem;
     font-weight: 800;
     box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.brand-link:hover .brand-icon-box {
+    transform: scale(1.05);
+    box-shadow: 0 3px 8px rgba(245, 158, 11, 0.6);
 }
 
 .sidebar-nav {
@@ -175,12 +189,20 @@ body {
 ======================================================== */
 .app-main {
     flex: 1;
-    margin-left: var(--sidebar-width);
+    margin-left: 0;
     display: flex;
     flex-direction: column;
     min-width: 0; /* Prevents flex children from overflowing */
     min-height: 100vh;
     transition: margin-left 0.3s ease;
+}
+
+/* Feed Container Max Width & Balance */
+.feed-layout-container {
+    width: 100%;
+    max-width: 1180px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .app-main.no-sidebar {
@@ -953,6 +975,10 @@ body {
     z-index: 1035;
 }
 
+.sidebar-backdrop.show {
+    display: block;
+}
+
 /* Responsive Rules */
 @media (max-width: 991.98px) {
     .app-sidebar {
@@ -1720,6 +1746,237 @@ textarea::placeholder,
         font-size: 0.82rem;
     }
 }
+
+/* ========================================================
+   COMMUNITY INSIGHTS & SEARCH MODULE - DARK MODE COMPATIBILITY
+======================================================== */
+.insights-container {
+    background-color: var(--body-bg, #f8fafc);
+    min-height: 100vh;
+    padding: 1.5rem 0;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+[data-bs-theme="dark"] .insights-container {
+    background-color: var(--body-bg, #0b1329) !important;
+}
+
+.insights-card {
+    background-color: var(--card-bg, #ffffff);
+    border: 1px solid var(--card-border, #e2e8f0);
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+[data-bs-theme="dark"] .insights-card {
+    background-color: var(--card-bg, #151e32) !important;
+    border-color: var(--card-border, #1e293b) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.insights-title {
+    color: var(--text-primary, #0f172a);
+}
+
+[data-bs-theme="dark"] .insights-title {
+    color: #f8fafc !important;
+}
+
+.insights-border {
+    border-color: var(--card-border, #e2e8f0) !important;
+}
+
+[data-bs-theme="dark"] .insights-border {
+    border-color: #243048 !important;
+}
+
+/* Segmented Control Selector Group */
+.insights-segmented-wrap {
+    background-color: var(--subtle-bg, #f1f5f9);
+    border: 1px solid var(--card-border, #e2e8f0);
+    padding: 4px;
+    border-radius: 50rem;
+    display: inline-flex;
+    align-items: center;
+}
+
+[data-bs-theme="dark"] .insights-segmented-wrap {
+    background-color: #1e293b !important;
+    border-color: #2b3952 !important;
+}
+
+.insights-segmented-btn {
+    border-radius: 50rem;
+    font-weight: 600;
+    padding: 0.35rem 1.25rem;
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.insights-segmented-btn.active {
+    background-color: var(--sidebar-bg, #192f5d);
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+[data-bs-theme="dark"] .insights-segmented-btn.active {
+    background-color: var(--accent-yellow, #f1bd27) !important;
+    color: #192f5d !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.insights-segmented-btn:not(.active) {
+    background-color: transparent;
+    color: var(--text-secondary, #64748b);
+}
+
+.insights-segmented-btn:not(.active):hover {
+    color: var(--text-primary, #0f172a);
+}
+
+[data-bs-theme="dark"] .insights-segmented-btn:not(.active) {
+    color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .insights-segmented-btn:not(.active):hover {
+    color: #ffffff;
+}
+
+/* Filter Toggle Button */
+.btn-filter-toggle {
+    color: var(--text-primary, #0f172a);
+    border: 1px solid var(--card-border, #cbd5e1);
+    background-color: transparent;
+}
+
+.btn-filter-toggle:hover {
+    background-color: var(--subtle-bg, #f1f5f9);
+    color: var(--text-primary, #0f172a);
+}
+
+[data-bs-theme="dark"] .btn-filter-toggle {
+    color: #e2e8f0 !important;
+    border-color: #475569 !important;
+}
+
+[data-bs-theme="dark"] .btn-filter-toggle:hover {
+    background-color: #334155 !important;
+    color: #ffffff !important;
+}
+
+/* Sub-cards and List Items inside Dark Mode */
+[data-bs-theme="dark"] .insights-sub-item {
+    background-color: #1a253c !important;
+    border-color: #243048 !important;
+    color: #e2e8f0 !important;
+}
+
+/* Table Dark Mode Adjustments in Insights */
+[data-bs-theme="dark"] .insights-table {
+    --bs-table-bg: transparent;
+    --bs-table-color: #e2e8f0;
+    --bs-table-hover-bg: rgba(255, 255, 255, 0.04);
+    --bs-table-hover-color: #ffffff;
+    border-color: #243048;
+}
+
+[data-bs-theme="dark"] .insights-table-head,
+[data-bs-theme="dark"] .insights-table th {
+    background-color: #1a253c !important;
+    color: #94a3b8 !important;
+    border-color: #243048 !important;
+}
+
+/* Secondary Badges in Dark Mode */
+[data-bs-theme="dark"] .insights-badge-subtle {
+    background-color: #1e293b !important;
+    color: #cbd5e1 !important;
+    border-color: #334155 !important;
+}
+
+/* Primary Dark Buttons in Dark Mode */
+[data-bs-theme="dark"] .btn-dark {
+    background-color: var(--accent-yellow, #f1bd27) !important;
+    color: #192f5d !important;
+    border-color: var(--accent-yellow, #f1bd27) !important;
+    font-weight: 600;
+}
+
+[data-bs-theme="dark"] .btn-dark:hover,
+[data-bs-theme="dark"] .btn-dark:focus {
+    background-color: #e5ad19 !important;
+    color: #192f5d !important;
+    border-color: #e5ad19 !important;
+}
+
+/* Comments Box in Insights Dark Mode */
+[data-bs-theme="dark"] .comments-container .bg-light,
+[data-bs-theme="dark"] .comments-container div.small {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+/* ========================================================
+   SEARCH FEED WIDTH & CENTERING BALANCE
+======================================================== */
+/* ========================================================
+   SEARCH & REPORTS PAGE DESIGN SPECIFICATIONS
+======================================================== */
+.search-reports-container {
+    max-width: 780px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+
+.search-reports-card {
+    background-color: #fafafb;
+    border: 1px solid #dedee2;
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+[data-bs-theme="dark"] .search-reports-card {
+    background-color: var(--card-bg, #151e32) !important;
+    border-color: var(--card-border, #1e293b) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.search-accent-icon {
+    color: #3478f6 !important;
+}
+
+.btn-black {
+    background-color: #171719 !important;
+    color: #ffffff !important;
+    border-color: #171719 !important;
+}
+
+.btn-black:hover,
+.btn-black:focus {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .btn-black {
+    background-color: var(--accent-yellow, #f1bd27) !important;
+    color: #192f5d !important;
+    border-color: var(--accent-yellow, #f1bd27) !important;
+}
+
+[data-bs-theme="dark"] .btn-black:hover {
+    background-color: #e5ad19 !important;
+    color: #192f5d !important;
+}
+
+
+
 
 
 

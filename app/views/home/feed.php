@@ -5,7 +5,7 @@
 $currentUserId = $_SESSION['user_id'] ?? null;
 ?>
 
-<div class="container-fluid p-0">
+<div class="feed-layout-container mx-auto">
 
     <!-- Flash Notifications -->
     <?php if (!empty($_SESSION['success_message'])): ?>
@@ -30,7 +30,7 @@ $currentUserId = $_SESSION['user_id'] ?? null;
         <!-- ==============================================
              CENTER COLUMN: POST COMPOSER & SOCIAL FEED
              ============================================== -->
-        <div class="col-lg-8 col-xl-8">
+        <div class="col-lg-7 col-xl-8">
 
             <?php if (!$currentUserId): ?>
                 <!-- Guest Landing Home Page (No social posts exposed to guests) -->
@@ -358,7 +358,7 @@ $currentUserId = $_SESSION['user_id'] ?? null;
         <!-- ==============================================
              RIGHT SIDEBAR: UPCOMING EVENTS, TRENDING, WHO TO FOLLOW
              ============================================== -->
-        <div class="col-lg-4 col-xl-4">
+        <div class="col-lg-5 col-xl-4">
 
             <!-- 1. Upcoming Events Card -->
             <div class="widget-card">

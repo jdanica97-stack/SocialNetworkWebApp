@@ -37,7 +37,16 @@ class CommentController {
     public function create() {
         $this->requireAuth();
 
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || isset($_POST['ajax']) || isset($_GET['ajax'])
+            || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Invalid request method.']);
+                exit;
+            }
             header('Location: ' . BASE_URL . '/index.php');
             exit;
         }
@@ -48,7 +57,13 @@ class CommentController {
 
         // Validate post ID
         if ($postId <= 0) {
-            $_SESSION['error_message'] = 'Invalid post ID.';
+            $errMsg = 'Invalid post ID.';
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $errMsg]);
+                exit;
+            }
+            $_SESSION['error_message'] = $errMsg;
             header('Location: ' . BASE_URL . '/index.php');
             exit;
         }
@@ -56,29 +71,88 @@ class CommentController {
         // Verify that the post exists
         $post = $this->postModel->getPostById($postId);
         if (!$post) {
-            $_SESSION['error_message'] = 'The post you are trying to comment on does not exist or has been deleted.';
+            $errMsg = 'The post you are trying to comment on does not exist or has been deleted.';
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $errMsg]);
+                exit;
+            }
+            $_SESSION['error_message'] = $errMsg;
             header('Location: ' . BASE_URL . '/index.php');
             exit;
         }
 
         // Validate content
         if ($content === '') {
-            $_SESSION['error_message'] = 'Comment cannot be empty.';
+            $errMsg = 'Comment cannot be empty.';
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $errMsg]);
+                exit;
+            }
+            $_SESSION['error_message'] = $errMsg;
             header('Location: ' . BASE_URL . '/index.php#post-' . $postId);
             exit;
         }
 
         if (mb_strlen($content) > 1000) {
-            $_SESSION['error_message'] = 'Comment cannot exceed 1,000 characters.';
+            $errMsg = 'Comment cannot exceed 1,000 characters.';
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $errMsg]);
+                exit;
+            }
+            $_SESSION['error_message'] = $errMsg;
             header('Location: ' . BASE_URL . '/index.php#post-' . $postId);
             exit;
         }
 
         $newCommentId = $this->commentModel->createComment($postId, $userId, $content);
         if ($newCommentId) {
+            $user = $this->userModel->findById($userId);
+            $allComments = $this->commentModel->getCommentsByPost($postId);
+            $commentsCount = count($allComments);
+
+            $cFullName = $user['full_name'] ?? 'User';
+            $cUsername = $user['username'] ?? '';
+            $cProfileImage = $user['profile_image'] ?? null;
+
+            $cParts = explode(' ', trim($cFullName));
+            $cInitials = count($cParts) >= 2
+                ? strtoupper(mb_substr($cParts[0], 0, 1) . mb_substr($cParts[count($cParts)-1], 0, 1))
+                : strtoupper(mb_substr($cFullName, 0, 2));
+
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'post_id' => $postId,
+                    'comments_count' => $commentsCount,
+                    'comment' => [
+                        'id' => (int)$newCommentId,
+                        'post_id' => $postId,
+                        'user_id' => $userId,
+                        'content' => $content,
+                        'full_name' => $cFullName,
+                        'username' => $cUsername,
+                        'profile_image' => $cProfileImage,
+                        'initials' => $cInitials,
+                        'time_badge' => 'Just now',
+                        'created_at' => date('M j, Y \a\t g:i a')
+                    ]
+                ]);
+                exit;
+            }
+
             $_SESSION['success_message'] = 'Comment added successfully!';
         } else {
-            $_SESSION['error_message'] = 'Failed to post comment. Please try again.';
+            $errMsg = 'Failed to post comment. Please try again.';
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $errMsg]);
+                exit;
+            }
+            $_SESSION['error_message'] = $errMsg;
         }
 
         header('Location: ' . BASE_URL . '/index.php#post-' . $postId);

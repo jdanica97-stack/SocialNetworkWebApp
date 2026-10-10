@@ -28,10 +28,16 @@
 
 <!-- Shared Theme Script (Dark Mode / Light Mode) -->
 <script src="<?= BASE_URL ?>/public/assets/js/theme.js"></script>
+<!-- AJAX Interactions Script (Likes, Comments, Post Creation) -->
+<script src="<?= BASE_URL ?>/public/assets/js/interactions.js"></script>
 
-<!-- Mobile Sidebar Toggle Script -->
+<!-- Sidebar Toggle & Keyboard Event Handlers -->
 <script>
-function toggleSidebar() {
+function toggleSidebar(e) {
+    if (e && e.preventDefault) {
+        e.preventDefault();
+        if (e.stopPropagation) e.stopPropagation();
+    }
     const sidebar = document.getElementById('appSidebar');
     const backdrop = document.getElementById('sidebarBackdrop');
     if (sidebar && backdrop) {
@@ -40,9 +46,16 @@ function toggleSidebar() {
     }
 }
 
-// Global keyboard shortcut to focus header search input (Cmd+K / Ctrl+K)
+// Keyboard Listeners: Close side panel on Escape, focus search on Cmd+K / Ctrl+K
 document.addEventListener('keydown', function(e) {
-    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+    if (e.key === 'Escape') {
+        const sidebar = document.getElementById('appSidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (sidebar && sidebar.classList.contains('show')) {
+            sidebar.classList.remove('show');
+            if (backdrop) backdrop.classList.remove('show');
+        }
+    } else if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
         const searchInput = document.querySelector('.header-search input[name="q"]');
         if (searchInput) {
             e.preventDefault();

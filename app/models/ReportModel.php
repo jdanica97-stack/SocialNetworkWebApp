@@ -255,4 +255,221 @@ class ReportModel {
             'recent_comments' => $recentComments
         ];
     }
+
+    /**
+     * Build WHERE conditions and parameters for filtering report queries.
+     *
+     * @param array $params
+     * @return array [$whereClause, $sqlParams]
+     */
+    private function buildReportWhereClause($params = []) {
+        $search = trim($params['search'] ?? '');
+        $authorId = !empty($params['author_id']) ? (int)$params['author_id'] : null;
+        $startDate = trim($params['start_date'] ?? '');
+        $endDate = trim($params['end_date'] ?? '');
+        $contentType = trim($params['content_type'] ?? 'all');
+
+        $whereConditions = [];
+        $sqlParams = [];
+
+        if ($search !== '') {
+            $whereConditions[] = "(p.content LIKE :search1 OR u.full_name LIKE :search2 OR u.username LIKE :search3)";
+            $searchVal = '%' . $search . '%';
+            $sqlParams[':search1'] = $searchVal;
+            $sqlParams[':search2'] = $searchVal;
+            $sqlParams[':search3'] = $searchVal;
+        }
+
+        if ($authorId) {
+            $whereConditions[] = "u.id = :author_id";
+            $sqlParams[':author_id'] = $authorId;
+        }
+
+        if ($startDate !== '') {
+            $whereConditions[] = "DATE(p.created_at) >= :start_date";
+            $sqlParams[':start_date'] = $startDate;
+        }
+
+        if ($endDate !== '') {
+            $whereConditions[] = "DATE(p.created_at) <= :end_date";
+            $sqlParams[':end_date'] = $endDate;
+        }
+
+        if ($contentType === 'text') {
+            $whereConditions[] = "(p.image IS NULL OR p.image = '')";
+        } elseif ($contentType === 'image') {
+            $whereConditions[] = "(p.image IS NOT NULL AND p.image != '')";
+        }
+
+        $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
+        return [$whereClause, $sqlParams];
+    }
+
+    /**
+     * Get Filtered Summary Metrics for Summary Cards.
+     *
+     * @param array $params
+     * @return array
+     */
+    public function getFilteredSummaryMetrics($params = []) {
+        list($whereClause, $sqlParams) = $this->buildReportWhereClause($params);
+
+        $sql = "SELECT 
+                    (SELECT COUNT(*) FROM users) AS total_users,
+                    COUNT(DISTINCT p.id) AS total_posts,
+                    COUNT(DISTINCT c.id) AS total_comments,
+                    COUNT(DISTINCT l.id) AS total_likes
+                FROM users u
+                LEFT JOIN posts p ON u.id = p.user_id
+                LEFT JOIN comments c ON p.id = c.post_id
+                LEFT JOIN likes l ON p.id = l.post_id
+                {$whereClause}";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($sqlParams);
+        $row = $stmt->fetch();
+
+        return [
+            'total_users'    => (int)($row['total_users'] ?? 0),
+            'total_posts'    => (int)($row['total_posts'] ?? 0),
+            'total_comments' => (int)($row['total_comments'] ?? 0),
+            'total_likes'    => (int)($row['total_likes'] ?? 0)
+        ];
+    }
+
+    /**
+     * Report B: Posts Grouped by Author.
+     *
+     * @param array $params
+     * @return array
+     */
+    public function getPostsGroupedByAuthor($params = []) {
+        list($whereClause, $sqlParams) = $this->buildReportWhereClause($params);
+
+        $sql = "SELECT 
+                    u.id AS user_id,
+                    u.full_name,
+                    u.username,
+                    u.profile_image,
+                    COUNT(DISTINCT p.id) AS post_count,
+                    MAX(p.created_at) AS latest_post_date
+                FROM users u
+                LEFT JOIN posts p ON u.id = p.user_id
+                {$whereClause}
+                GROUP BY u.id, u.full_name, u.username, u.profile_image
+                ORDER BY post_count DESC, u.username ASC";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($sqlParams);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Report C: Most Active Community Members.
+     *
+     * @param array $params
+     * @param int $limit
+     * @return array
+     */
+    public function getMostActiveMembers($params = [], $limit = 5) {
+        list($whereClause, $sqlParams) = $this->buildReportWhereClause($params);
+
+        $sql = "SELECT 
+                    u.id AS user_id,
+                    u.full_name,
+                    u.username,
+                    u.profile_image,
+                    COUNT(DISTINCT p.id) AS total_posts,
+                    MAX(p.created_at) AS last_post_at
+                FROM users u
+                JOIN posts p ON u.id = p.user_id
+                {$whereClause}
+                GROUP BY u.id, u.full_name, u.username, u.profile_image
+                ORDER BY total_posts DESC, u.username ASC
+                LIMIT :limit";
+
+        $stmt = $this->db->prepare($sql);
+        foreach ($sqlParams as $key => $val) {
+            $stmt->bindValue($key, $val);
+        }
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Report D: Post Activity Within Selected Date Range (Timeline Breakdown).
+     *
+     * @param array $params
+     * @return array
+     */
+    public function getPostActivityTimeline($params = []) {
+        list($whereClause, $sqlParams) = $this->buildReportWhereClause($params);
+
+        $sql = "SELECT 
+                    DATE(p.created_at) AS post_date,
+                    COUNT(DISTINCT p.id) AS daily_posts,
+                    COUNT(DISTINCT p.user_id) AS active_authors
+                FROM posts p
+                JOIN users u ON p.user_id = u.id
+                {$whereClause}
+                GROUP BY DATE(p.created_at)
+                ORDER BY post_date DESC
+                LIMIT 15";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($sqlParams);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Report E: Detailed Report Table (Author detailed metrics with allowlisted sorting).
+     *
+     * @param array $params
+     * @return array
+     */
+    public function getDetailedReportTable($params = []) {
+        list($whereClause, $sqlParams) = $this->buildReportWhereClause($params);
+        $reportSort = trim($params['report_sort'] ?? 'posts_desc');
+
+        switch ($reportSort) {
+            case 'posts_asc':
+                $orderBy = 'post_count ASC, u.username ASC';
+                break;
+            case 'likes_desc':
+                $orderBy = 'total_likes DESC, post_count DESC, u.username ASC';
+                break;
+            case 'comments_desc':
+                $orderBy = 'total_comments DESC, post_count DESC, u.username ASC';
+                break;
+            case 'username_asc':
+                $orderBy = 'u.username ASC';
+                break;
+            case 'posts_desc':
+            default:
+                $orderBy = 'post_count DESC, total_likes DESC, u.username ASC';
+                break;
+        }
+
+        $sql = "SELECT 
+                    u.id AS user_id,
+                    u.full_name,
+                    u.username,
+                    u.profile_image,
+                    COUNT(DISTINCT p.id) AS post_count,
+                    MAX(p.created_at) AS latest_post_date,
+                    COUNT(DISTINCT l.id) AS total_likes,
+                    COUNT(DISTINCT c.id) AS total_comments
+                FROM users u
+                LEFT JOIN posts p ON u.id = p.user_id
+                LEFT JOIN likes l ON p.id = l.post_id
+                LEFT JOIN comments c ON p.id = c.post_id
+                {$whereClause}
+                GROUP BY u.id, u.full_name, u.username, u.profile_image
+                ORDER BY {$orderBy}";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($sqlParams);
+        return $stmt->fetchAll();
+    }
 }

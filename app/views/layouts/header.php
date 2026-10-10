@@ -48,6 +48,7 @@ if ($isLoggedIn) {
 
     <!-- Theme initialization (inline to prevent theme flash) -->
     <script>
+        window.BASE_URL = "<?= BASE_URL ?>";
         (function() {
             var stored = localStorage.getItem('smcc_theme_preference');
             var theme = 'light';
@@ -81,7 +82,7 @@ if ($isLoggedIn) {
         <aside class="app-sidebar" id="appSidebar">
             <!-- Sidebar Brand / Logo -->
             <div class="sidebar-header">
-                <a href="<?= BASE_URL ?>/" class="brand-link">
+                <a href="<?= BASE_URL ?>/" class="brand-link" onclick="toggleSidebar(event)" title="Close Navigation Menu">
                     <div class="brand-icon-box">
                         <i class="bi bi-people-fill"></i>
                     </div>
@@ -134,10 +135,15 @@ if ($isLoggedIn) {
         <header class="app-header">
             <div class="header-container">
                 <?php if ($isLoggedIn): ?>
-                    <!-- Mobile Toggle Button -->
-                    <button class="btn btn-sm d-lg-none p-1 text-dark" onclick="toggleSidebar()" aria-label="Toggle Navigation">
-                        <i class="bi bi-list fs-4"></i>
-                    </button>
+                    <!-- Website Logo (Clicking Toggles Side Panel) -->
+                    <div class="d-flex align-items-center me-3">
+                        <a href="<?= BASE_URL ?>/" class="brand-link text-dark" id="headerLogoBtn" onclick="toggleSidebar(event)" title="Toggle Side Panel">
+                            <div class="brand-icon-box">
+                                <i class="bi bi-people-fill"></i>
+                            </div>
+                            <span class="fs-5 font-navy ms-1 fw-bold d-none d-sm-inline">SMCC Connect</span>
+                        </a>
+                    </div>
 
                     <!-- Search Bar -->
                     <form action="<?= BASE_URL ?>/index.php" method="GET" class="header-search" role="search">

@@ -129,6 +129,10 @@ class PostController {
     public function create() {
         $this->requireAuth();
 
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || isset($_POST['ajax']) || isset($_GET['ajax'])
+            || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $content = trim($_POST['content'] ?? '');
             $userId  = (int)$_SESSION['user_id'];
@@ -137,7 +141,13 @@ class PostController {
             $hasImageUpload = isset($_FILES['post_image']) && $_FILES['post_image']['error'] !== UPLOAD_ERR_NO_FILE;
 
             if (empty($content) && !$hasImageUpload) {
-                $_SESSION['error_message'] = 'Post content or image cannot be empty.';
+                $errMsg = 'Post content or image cannot be empty.';
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'error' => $errMsg]);
+                    exit;
+                }
+                $_SESSION['error_message'] = $errMsg;
                 header('Location: ' . BASE_URL . '/index.php');
                 exit;
             }
@@ -149,20 +159,66 @@ class PostController {
             }
 
             if (!empty($errors)) {
-                $_SESSION['error_message'] = implode(' ', $errors);
+                $errMsg = implode(' ', $errors);
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'error' => $errMsg]);
+                    exit;
+                }
+                $_SESSION['error_message'] = $errMsg;
                 header('Location: ' . BASE_URL . '/index.php');
                 exit;
             }
 
             $postId = $this->postModel->createPost($userId, $content, $imageName);
             if ($postId) {
+                $user = $this->userModel->findById($userId);
+                $authorFullName = $user['full_name'] ?? 'User';
+                $authorUsername = $user['username'] ?? '';
+                $authorProfileImage = $user['profile_image'] ?? null;
+
+                $authorParts = explode(' ', trim($authorFullName));
+                $authorInitials = count($authorParts) >= 2
+                    ? strtoupper(mb_substr($authorParts[0], 0, 1) . mb_substr($authorParts[count($authorParts)-1], 0, 1))
+                    : strtoupper(mb_substr($authorFullName, 0, 2));
+
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Post published successfully!',
+                        'post' => [
+                            'id' => (int)$postId,
+                            'user_id' => $userId,
+                            'content' => $content,
+                            'image' => $imageName,
+                            'full_name' => $authorFullName,
+                            'username' => $authorUsername,
+                            'profile_image' => $authorProfileImage,
+                            'initials' => $authorInitials,
+                            'created_at' => date('M j, Y \a\t g:i a'),
+                            'time_badge' => 'Just now',
+                            'likes_count' => 0,
+                            'comments_count' => 0,
+                            'is_liked' => 0,
+                            'comments' => []
+                        ]
+                    ]);
+                    exit;
+                }
+
                 $_SESSION['success_message'] = 'Post published successfully!';
             } else {
-                // If DB insert failed, clean up uploaded file
                 if ($imageName) {
                     $this->deleteImageFile($imageName);
                 }
-                $_SESSION['error_message'] = 'Failed to publish post.';
+                $errMsg = 'Failed to publish post.';
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'error' => $errMsg]);
+                    exit;
+                }
+                $_SESSION['error_message'] = $errMsg;
             }
         }
 
@@ -322,8 +378,32 @@ class PostController {
         $postId = (int)($_POST['post_id'] ?? $_GET['post_id'] ?? 0);
         $userId = (int)$_SESSION['user_id'];
 
-        if ($postId > 0) {
-            $this->postModel->toggleLike($postId, $userId);
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || isset($_POST['ajax']) || isset($_GET['ajax'])
+            || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+
+        if ($postId <= 0) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Invalid post ID.']);
+                exit;
+            }
+            header('Location: ' . BASE_URL . '/index.php');
+            exit;
+        }
+
+        $isLiked = $this->postModel->toggleLike($postId, $userId);
+        $likesCount = $this->postModel->getLikesCount($postId);
+
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'is_liked' => $isLiked,
+                'likes_count' => $likesCount,
+                'post_id' => $postId
+            ]);
+            exit;
         }
 
         header('Location: ' . BASE_URL . '/index.php');

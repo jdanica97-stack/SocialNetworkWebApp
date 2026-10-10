@@ -157,6 +157,18 @@ class PostModel {
     }
 
     /**
+     * Get the total likes count for a specific post.
+     *
+     * @param int $postId
+     * @return int
+     */
+    public function getLikesCount($postId) {
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM likes WHERE post_id = :post_id");
+        $stmt->execute([':post_id' => $postId]);
+        return (int)$stmt->fetchColumn();
+    }
+
+    /**
      * Delete a post (only allowed if post belongs to user).
      *
      * @param int $postId
@@ -340,5 +352,97 @@ class PostModel {
             'total_comments'=> (int)($stats['total_comments'] ?? 0),
             'total_likes'   => (int)($stats['total_likes'] ?? 0)
         ];
+    }
+
+    /**
+     * Advanced Post Search for Community Insights.
+     * Supports query, author_id, date range, content_type, sorting, and user like status.
+     *
+     * @param array $params
+     * @return array
+     */
+    public function searchPostsAdvanced($params = []) {
+        $query = trim($params['query'] ?? '');
+        $authorId = !empty($params['author_id']) ? (int)$params['author_id'] : null;
+        $startDate = trim($params['start_date'] ?? '');
+        $endDate = trim($params['end_date'] ?? '');
+        $contentType = trim($params['content_type'] ?? 'all');
+        $sort = trim($params['sort'] ?? 'newest');
+        $currentUserId = (int)($params['current_user_id'] ?? 0);
+
+        $whereConditions = [];
+        $sqlParams = [':current_user_id' => $currentUserId];
+
+        if ($query !== '') {
+            $whereConditions[] = "(p.content LIKE :search1 OR u.full_name LIKE :search2 OR u.username LIKE :search3)";
+            $searchVal = '%' . $query . '%';
+            $sqlParams[':search1'] = $searchVal;
+            $sqlParams[':search2'] = $searchVal;
+            $sqlParams[':search3'] = $searchVal;
+        }
+
+        if ($authorId) {
+            $whereConditions[] = "p.user_id = :author_id";
+            $sqlParams[':author_id'] = $authorId;
+        }
+
+        if ($startDate !== '') {
+            $whereConditions[] = "DATE(p.created_at) >= :start_date";
+            $sqlParams[':start_date'] = $startDate;
+        }
+
+        if ($endDate !== '') {
+            $whereConditions[] = "DATE(p.created_at) <= :end_date";
+            $sqlParams[':end_date'] = $endDate;
+        }
+
+        if ($contentType === 'text') {
+            $whereConditions[] = "(p.image IS NULL OR p.image = '')";
+        } elseif ($contentType === 'image') {
+            $whereConditions[] = "(p.image IS NOT NULL AND p.image != '')";
+        }
+
+        $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
+
+        switch ($sort) {
+            case 'oldest':
+                $orderBy = 'p.created_at ASC, p.id ASC';
+                break;
+            case 'most_liked':
+                $orderBy = 'likes_count DESC, p.created_at DESC';
+                break;
+            case 'most_commented':
+                $orderBy = 'comments_count DESC, p.created_at DESC';
+                break;
+            case 'newest':
+            default:
+                $orderBy = 'p.created_at DESC, p.id DESC';
+                break;
+        }
+
+        $sql = "SELECT p.*, 
+                       u.username, 
+                       u.full_name, 
+                       u.profile_image,
+                       COUNT(DISTINCT l.id) AS likes_count,
+                       COUNT(DISTINCT c.id) AS comments_count,
+                       MAX(CASE WHEN l.user_id = :current_user_id THEN 1 ELSE 0 END) AS is_liked
+                FROM posts p
+                JOIN users u ON p.user_id = u.id
+                LEFT JOIN likes l ON p.id = l.post_id
+                LEFT JOIN comments c ON p.id = c.post_id
+                {$whereClause}
+                GROUP BY p.id, p.user_id, p.content, p.image, p.created_at, u.username, u.full_name, u.profile_image
+                ORDER BY {$orderBy}";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($sqlParams);
+        $posts = $stmt->fetchAll();
+
+        foreach ($posts as &$post) {
+            $post['comments'] = $this->getCommentsByPostId($post['id']);
+        }
+
+        return $posts;
     }
 }
