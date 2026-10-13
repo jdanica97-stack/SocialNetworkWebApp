@@ -203,6 +203,43 @@ class PostModel {
     }
 
     /**
+     * Get a single post with author info, like counts, comment counts, and attached comments.
+     *
+     * @param int $postId
+     * @param int|null $currentUserId
+     * @return array|false
+     */
+    public function getPostWithDetails($postId, $currentUserId = null) {
+        $sql = "SELECT p.*, 
+                       u.username, 
+                       u.full_name, 
+                       u.profile_image,
+                       COUNT(DISTINCT l.id) AS likes_count,
+                       COUNT(DISTINCT c.id) AS comments_count,
+                       MAX(CASE WHEN l.user_id = :current_user_id THEN 1 ELSE 0 END) AS is_liked
+                FROM posts p
+                JOIN users u ON p.user_id = u.id
+                LEFT JOIN likes l ON p.id = l.post_id
+                LEFT JOIN comments c ON p.id = c.post_id
+                WHERE p.id = :id
+                GROUP BY p.id
+                LIMIT 1";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            ':id' => (int)$postId,
+            ':current_user_id' => $currentUserId ?? 0
+        ]);
+        $post = $stmt->fetch();
+
+        if ($post) {
+            $post['comments'] = $this->getCommentsByPostId($post['id']);
+        }
+
+        return $post;
+    }
+
+    /**
      * Update an existing post (only if user is author).
      *
      * @param int $postId

@@ -387,4 +387,83 @@ class ProfileController {
         $pageTitle = 'Edit Profile';
         require __DIR__ . '/../views/profile/edit.php';
     }
+
+    /**
+     * AJAX endpoint to get list of followers or following for a user,
+     * respecting the user's privacy settings.
+     */
+    public function getFollowList() {
+        $this->requireAuth();
+        $currentUserId = (int)$_SESSION['user_id'];
+        $targetUserId = isset($_GET['user_id']) ? (int)$_GET['user_id'] : $currentUserId;
+        $type = ($_GET['type'] ?? 'followers') === 'following' ? 'following' : 'followers';
+
+        header('Content-Type: application/json');
+
+        if ($targetUserId <= 0) {
+            echo json_encode(['success' => false, 'error' => 'Invalid user ID.']);
+            exit;
+        }
+
+        $targetUser = $this->userModel->getProfileById($targetUserId);
+        if (!$targetUser) {
+            echo json_encode(['success' => false, 'error' => 'User not found.']);
+            exit;
+        }
+
+        // Privacy Check:
+        // If profile is private and current user is NOT the owner and NOT an admin:
+        $isOwner = ($currentUserId === $targetUserId);
+        $isAdmin = (isset($_SESSION['role']) && $_SESSION['role'] === 'admin');
+        $isPrivate = (($targetUser['privacy_followers'] ?? 'public') === 'private');
+
+        if ($isPrivate && !$isOwner && !$isAdmin) {
+            echo json_encode([
+                'success' => false,
+                'is_private' => true,
+                'message' => 'This account has made their follower and following list private.'
+            ]);
+            exit;
+        }
+
+        // Fetch users
+        if ($type === 'following') {
+            $users = $this->followModel->getFollowing($targetUserId);
+        } else {
+            $users = $this->followModel->getFollowers($targetUserId);
+        }
+
+        // Add initials and formatted fields
+        $formatted = [];
+        foreach ($users as $u) {
+            $uParts = explode(' ', trim($u['full_name']));
+            $uInitials = count($uParts) >= 2
+                ? strtoupper(mb_substr($uParts[0], 0, 1) . mb_substr($uParts[count($uParts)-1], 0, 1))
+                : strtoupper(mb_substr($u['full_name'], 0, 2));
+
+            $isFollowingThisUser = ($currentUserId !== (int)$u['id']) 
+                ? $this->followModel->isFollowing($currentUserId, (int)$u['id']) 
+                : null;
+
+            $formatted[] = [
+                'id' => (int)$u['id'],
+                'username' => $u['username'],
+                'full_name' => $u['full_name'],
+                'profile_image' => $u['profile_image'],
+                'initials' => $uInitials,
+                'is_following' => $isFollowingThisUser,
+                'is_self' => ($currentUserId === (int)$u['id'])
+            ];
+        }
+
+        echo json_encode([
+            'success' => true,
+            'is_private' => false,
+            'type' => $type,
+            'target_name' => $targetUser['full_name'],
+            'count' => count($formatted),
+            'users' => $formatted
+        ]);
+        exit;
+    }
 }

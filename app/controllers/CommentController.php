@@ -140,7 +140,7 @@ class CommentController {
                     (int)$post['user_id'],
                     $userId,
                     'comment',
-                    $postId,
+                    (int)$newCommentId,
                     $actorName . ' commented: "' . $previewSnippet . '"'
                 );
             }

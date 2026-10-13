@@ -38,171 +38,105 @@ $authorId = $_GET['author_id'] ?? null;
         <?php unset($_SESSION['error_message']); ?>
     <?php endif; ?>
 
-    <!-- 1. Search & Reports Header Hero -->
-    <div class="search-hero">
-        <div class="d-inline-flex align-items-center gap-2 mb-2">
-            <span class="badge bg-primary text-white fw-bold px-3 py-1 rounded-pill">
-                <i class="bi bi-search me-1"></i> Search & Filtering (Step 11)
-            </span>
-            <span class="badge bg-warning text-dark fw-bold px-3 py-1 rounded-pill">
-                <i class="bi bi-bar-chart-fill me-1"></i> Summary & Reports (Step 12)
-            </span>
-        </div>
-        <h3 class="search-hero-title">Search & Analytics Reports</h3>
-        <p class="search-hero-subtitle">Search users or posts, filter by author, sort results, and explore live engagement statistics</p>
+    <!-- Search Header -->
+    <div class="search-header-clean mb-4 text-center">
+        <h3 class="fw-bold text-dark mb-1">Search</h3>
+        <p class="text-muted small mb-0">Find students, faculty, posts, and topics across SMCC Connect</p>
     </div>
 
-    <!-- 2. STEP 12 A: SUMMARY REPORTS KPI CARDS -->
-    <div class="row g-2 g-sm-3 mb-4">
-        <!-- Matching Posts -->
-        <div class="col-6 col-md-3">
-            <div class="card-modern p-3 text-center border-0 shadow-sm h-100" style="border-top: 3px solid #3b82f6 !important;">
-                <div class="text-muted small fw-semibold mb-1">
-                    <i class="bi bi-file-earmark-post text-primary me-1"></i> Matching Posts
-                </div>
-                <h4 class="fw-bold text-dark mb-0"><?= (int)($summaryStats['total_posts'] ?? 0); ?></h4>
-                <small class="text-muted micro-text">Filtered database records</small>
-            </div>
-        </div>
-
-        <!-- Distinct Authors -->
-        <div class="col-6 col-md-3">
-            <div class="card-modern p-3 text-center border-0 shadow-sm h-100" style="border-top: 3px solid #10b981 !important;">
-                <div class="text-muted small fw-semibold mb-1">
-                    <i class="bi bi-people text-success me-1"></i> Distinct Authors
-                </div>
-                <h4 class="fw-bold text-dark mb-0"><?= (int)($summaryStats['total_authors'] ?? 0); ?></h4>
-                <small class="text-muted micro-text">Unique content creators</small>
-            </div>
-        </div>
-
-        <!-- Total Comments -->
-        <div class="col-6 col-md-3">
-            <div class="card-modern p-3 text-center border-0 shadow-sm h-100" style="border-top: 3px solid #f59e0b !important;">
-                <div class="text-muted small fw-semibold mb-1">
-                    <i class="bi bi-chat-left-text text-warning me-1"></i> Total Comments
-                </div>
-                <h4 class="fw-bold text-dark mb-0"><?= (int)($summaryStats['total_comments'] ?? 0); ?></h4>
-                <small class="text-muted micro-text">On matching posts</small>
-            </div>
-        </div>
-
-        <!-- Total Likes -->
-        <div class="col-6 col-md-3">
-            <div class="card-modern p-3 text-center border-0 shadow-sm h-100" style="border-top: 3px solid #ef4444 !important;">
-                <div class="text-muted small fw-semibold mb-1">
-                    <i class="bi bi-heart text-danger me-1"></i> Total Likes
-                </div>
-                <h4 class="fw-bold text-dark mb-0"><?= (int)($summaryStats['total_likes'] ?? 0); ?></h4>
-                <small class="text-muted micro-text">Engagement interactions</small>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. SEARCH BAR AND FILTERS FORM -->
-    <form action="<?= BASE_URL ?>/index.php" method="GET" class="mb-4" role="search">
+    <!-- Main Search Bar -->
+    <form action="<?= BASE_URL ?>/index.php" method="GET" class="mb-4" role="search" id="searchMainForm">
         <input type="hidden" name="action" value="search">
-        <input type="hidden" name="type" value="<?= htmlspecialchars($type); ?>">
-        <input type="hidden" name="filter" value="<?= htmlspecialchars($filter); ?>">
+        <input type="hidden" name="type" value="<?= htmlspecialchars($type); ?>" id="searchTypeInput">
+        <input type="hidden" name="filter" value="<?= htmlspecialchars($filter); ?>" id="searchFilterInput">
 
-        <!-- Search Input Box -->
-        <div class="search-box-centered mb-3">
-            <i class="bi bi-search search-icon"></i>
+        <div class="search-input-wrapper mb-3">
+            <i class="bi bi-search search-icon-lead"></i>
             <input 
                 type="text" 
                 name="q" 
-                class="search-input-centered" 
-                placeholder="Search users or post content..." 
+                class="search-main-control" 
+                placeholder="Search by name, username, or keywords..." 
                 value="<?= htmlspecialchars($query ?? ''); ?>" 
                 autocomplete="off"
             >
             <?php if (!empty($query) || !empty($authorId)): ?>
-                <a href="<?= BASE_URL ?>/index.php?action=search" class="search-clear-btn" title="Reset Search & Filters">&times;</a>
+                <a href="<?= BASE_URL ?>/index.php?action=search" class="search-clear-btn" title="Clear Search">
+                    <i class="bi bi-x"></i>
+                </a>
             <?php endif; ?>
+            <button type="submit" class="btn btn-primary search-submit-btn">
+                Search
+            </button>
         </div>
 
-        <!-- Author Filter Dropdown & Filter Controls -->
-        <div class="card-modern p-3 mb-3 border-0 shadow-sm">
-            <div class="row g-2 align-items-center">
-                <!-- Author Filter Dropdown -->
-                <div class="col-12 col-md-6">
-                    <div class="d-flex align-items-center gap-2">
-                        <label for="author_id_select" class="form-label text-muted small fw-bold mb-0 text-nowrap">
-                            <i class="bi bi-funnel-fill text-primary me-1"></i> Author Filter:
-                        </label>
-                        <select name="author_id" id="author_id_select" class="form-select form-select-sm rounded-pill" onchange="this.form.submit()">
-                            <option value="">All Authors</option>
-                            <?php if (!empty($allAuthors)): ?>
-                                <?php foreach ($allAuthors as $authorItem): ?>
-                                    <option value="<?= $authorItem['id']; ?>" <?= (!empty($authorId) && (int)$authorId === (int)$authorItem['id']) ? 'selected' : ''; ?>>
-                                        <?= htmlspecialchars($authorItem['full_name']); ?> (@<?= htmlspecialchars($authorItem['username']); ?>)
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </select>
-                    </div>
+        <!-- Filter & Tab Navigation Bar -->
+        <div class="search-nav-toolbar d-flex flex-wrap align-items-center justify-content-between gap-2 p-2 rounded-3">
+            <!-- Type Tabs -->
+            <ul class="nav nav-pills search-tabs-pills" role="tablist">
+                <li class="nav-item">
+                    <a href="<?= BASE_URL ?>/index.php?action=search&q=<?= urlencode($query); ?>&type=all&filter=<?= urlencode($filter); ?><?= !empty($authorId) ? '&author_id=' . (int)$authorId : ''; ?>" 
+                       class="nav-link <?= ($type === 'all') ? 'active' : ''; ?>">
+                        All Results
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= BASE_URL ?>/index.php?action=search&q=<?= urlencode($query); ?>&type=users&filter=<?= urlencode($filter); ?><?= !empty($authorId) ? '&author_id=' . (int)$authorId : ''; ?>" 
+                       class="nav-link <?= ($type === 'users') ? 'active' : ''; ?>">
+                        <i class="bi bi-people me-1"></i> People <?= !empty($users) ? '(' . count($users) . ')' : ''; ?>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= BASE_URL ?>/index.php?action=search&q=<?= urlencode($query); ?>&type=posts&filter=<?= urlencode($filter); ?><?= !empty($authorId) ? '&author_id=' . (int)$authorId : ''; ?>" 
+                       class="nav-link <?= ($type === 'posts') ? 'active' : ''; ?>">
+                        <i class="bi bi-file-earmark-text me-1"></i> Posts <?= !empty($posts) ? '(' . count($posts) . ')' : ''; ?>
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Refine Dropdowns: Author & Sort -->
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <!-- Author Filter -->
+                <div class="dropdown">
+                    <select name="author_id" id="author_id_select" class="form-select form-select-sm search-select-pill" onchange="this.form.submit()" aria-label="Filter by author">
+                        <option value="">All Authors</option>
+                        <?php if (!empty($allAuthors)): ?>
+                            <?php foreach ($allAuthors as $authorItem): ?>
+                                <option value="<?= $authorItem['id']; ?>" <?= (!empty($authorId) && (int)$authorId === (int)$authorItem['id']) ? 'selected' : ''; ?>>
+                                    <?= htmlspecialchars($authorItem['full_name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
                 </div>
 
-                <!-- Submit / Clear Buttons -->
-                <div class="col-12 col-md-6 text-md-end d-flex gap-2 justify-content-md-end">
-                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3">
-                        <i class="bi bi-search me-1"></i> Apply Filter
-                    </button>
-                    <?php if (!empty($query) || !empty($authorId)): ?>
-                        <a href="<?= BASE_URL ?>/index.php?action=search" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                            <i class="bi bi-x-circle me-1"></i> Reset
-                        </a>
-                    <?php endif; ?>
-                </div>
+                <!-- Sort Order (When posts are shown) -->
+                <?php if ($type !== 'users'): ?>
+                    <select name="filter" id="filter_select" class="form-select form-select-sm search-select-pill" onchange="this.form.submit()" aria-label="Sort results">
+                        <option value="newest" <?= ($filter === 'newest') ? 'selected' : ''; ?>>Newest</option>
+                        <option value="oldest" <?= ($filter === 'oldest') ? 'selected' : ''; ?>>Oldest</option>
+                        <option value="most_liked" <?= ($filter === 'most_liked') ? 'selected' : ''; ?>>Most Liked</option>
+                        <option value="most_commented" <?= ($filter === 'most_commented') ? 'selected' : ''; ?>>Most Commented</option>
+                    </select>
+                <?php endif; ?>
             </div>
-        </div>
-
-        <!-- Filter Pills & Sorting Options -->
-        <div class="search-filter-group">
-            <!-- Result Type Filter Pills -->
-            <div class="filter-pills-wrap">
-                <a href="<?= BASE_URL ?>/index.php?action=search&q=<?= urlencode($query); ?>&type=all&filter=<?= urlencode($filter); ?><?= !empty($authorId) ? '&author_id=' . (int)$authorId : ''; ?>" 
-                   class="filter-pill <?= ($type === 'all') ? 'active' : ''; ?>">
-                    All Results
-                </a>
-                <a href="<?= BASE_URL ?>/index.php?action=search&q=<?= urlencode($query); ?>&type=users&filter=<?= urlencode($filter); ?><?= !empty($authorId) ? '&author_id=' . (int)$authorId : ''; ?>" 
-                   class="filter-pill <?= ($type === 'users') ? 'active' : ''; ?>">
-                    Users
-                </a>
-                <a href="<?= BASE_URL ?>/index.php?action=search&q=<?= urlencode($query); ?>&type=posts&filter=<?= urlencode($filter); ?><?= !empty($authorId) ? '&author_id=' . (int)$authorId : ''; ?>" 
-                   class="filter-pill <?= ($type === 'posts') ? 'active' : ''; ?>">
-                    Posts
-                </a>
-            </div>
-
-            <!-- Sorting Order Pills (Step 11 & Step 12 B) -->
-            <?php if ($type !== 'users'): ?>
-                <div class="d-flex align-items-center flex-wrap justify-content-center gap-2 mt-2">
-                    <span class="text-muted small fw-semibold me-1"><i class="bi bi-sort-down text-primary me-1"></i>Sort Posts By:</span>
-                    
-                    <a href="<?= BASE_URL ?>/index.php?action=search&q=<?= urlencode($query); ?>&type=<?= urlencode($type); ?>&filter=newest<?= !empty($authorId) ? '&author_id=' . (int)$authorId : ''; ?>" 
-                       class="btn btn-sm rounded-pill px-3 <?= ($filter === 'newest') ? 'btn-primary' : 'btn-outline-secondary'; ?>">
-                        <i class="bi bi-clock-history me-1"></i> Newest
-                    </a>
-                    
-                    <a href="<?= BASE_URL ?>/index.php?action=search&q=<?= urlencode($query); ?>&type=<?= urlencode($type); ?>&filter=oldest<?= !empty($authorId) ? '&author_id=' . (int)$authorId : ''; ?>" 
-                       class="btn btn-sm rounded-pill px-3 <?= ($filter === 'oldest') ? 'btn-primary' : 'btn-outline-secondary'; ?>">
-                        <i class="bi bi-arrow-up-circle me-1"></i> Oldest
-                    </a>
-
-                    <a href="<?= BASE_URL ?>/index.php?action=search&q=<?= urlencode($query); ?>&type=<?= urlencode($type); ?>&filter=most_liked<?= !empty($authorId) ? '&author_id=' . (int)$authorId : ''; ?>" 
-                       class="btn btn-sm rounded-pill px-3 <?= ($filter === 'most_liked') ? 'btn-danger text-white' : 'btn-outline-danger'; ?>">
-                        <i class="bi bi-heart-fill me-1"></i> Most Liked
-                    </a>
-
-                    <a href="<?= BASE_URL ?>/index.php?action=search&q=<?= urlencode($query); ?>&type=<?= urlencode($type); ?>&filter=most_commented<?= !empty($authorId) ? '&author_id=' . (int)$authorId : ''; ?>" 
-                       class="btn btn-sm rounded-pill px-3 <?= ($filter === 'most_commented') ? 'btn-warning text-dark' : 'btn-outline-warning text-dark'; ?>">
-                        <i class="bi bi-chat-dots-fill me-1"></i> Most Commented
-                    </a>
-                </div>
-            <?php endif; ?>
         </div>
     </form>
+
+    <!-- Results Overview Ribbon (When searching or filtered) -->
+    <?php if (!$isEmptySearch || !empty($users) || !empty($posts)): ?>
+        <div class="d-flex align-items-center justify-content-between px-1 mb-3">
+            <span class="text-muted small">
+                Showing results for <strong class="text-dark">"<?= htmlspecialchars($query ?: ($selectedAuthorName ? 'Author: ' . $selectedAuthorName : 'All')); ?>"</strong>
+                <?php if (!empty($authorId) && !empty($selectedAuthorName)): ?>
+                    <span class="badge bg-light text-secondary border ms-1">By <?= htmlspecialchars($selectedAuthorName); ?></span>
+                <?php endif; ?>
+            </span>
+            <span class="text-muted small">
+                <?= count($users) + count($posts); ?> matches
+            </span>
+        </div>
+    <?php endif; ?>
 
     <!-- 4. SEARCH & REPORT RESULTS CONTENT -->
     <?php if ($isEmptySearch && empty($users) && empty($posts)): ?>
@@ -421,25 +355,11 @@ $authorId = $_GET['author_id'] ?? null;
                             <?php endif; ?>
                         <?php endif; ?>
 
-                        <!-- STEP 12 B: DETAILED REPORT ENGAGEMENT METRICS BADGES -->
-                        <div class="p-2 bg-light rounded-3 my-2 d-flex align-items-center justify-content-between border">
-                            <span class="small text-muted fw-semibold">
-                                <i class="bi bi-graph-up text-primary me-1"></i> Post Analytics:
-                            </span>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill px-2.5 py-1">
-                                    <i class="bi bi-heart-fill me-1"></i> <?= (int)$post['likes_count']; ?> Likes
-                                </span>
-                                <span class="badge bg-warning bg-opacity-10 text-dark border border-warning-subtle rounded-pill px-2.5 py-1">
-                                    <i class="bi bi-chat-dots-fill me-1"></i> <?= (int)$post['comments_count']; ?> Comments
-                                </span>
-                            </div>
-                        </div>
-
                         <!-- Post Engagement Actions (Like / Comment) -->
                         <div class="post-footer-actions d-flex align-items-center">
                             <div class="d-flex align-items-center gap-3">
                                 <form action="<?= BASE_URL ?>/index.php?action=like_post" method="POST" class="d-inline">
+                                    <?= csrf_field(); ?>
                                     <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
                                     <button type="submit" class="post-action-btn <?= !empty($post['is_liked']) ? 'liked' : '' ?>" title="Like">
                                         <i class="bi <?= !empty($post['is_liked']) ? 'bi-heart-fill' : 'bi-heart' ?>"></i>

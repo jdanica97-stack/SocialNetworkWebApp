@@ -123,7 +123,7 @@ if (!empty($activeUser['full_name'])) {
             <?php if ($activeUser): ?>
                 <!-- Active Chat Header -->
                 <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-body">
-                    <div class="d-flex align-items-center gap-3">
+                    <a href="<?= BASE_URL ?>/index.php?action=profile&user_id=<?= (int)$activeUser['id'] ?>" class="d-flex align-items-center gap-3 text-decoration-none" title="View <?= htmlspecialchars($activeUser['full_name']) ?>'s profile">
                         <div class="position-relative">
                             <?php if ($activeUserAvatar): ?>
                                 <img src="<?= $activeUserAvatar ?>" alt="<?= htmlspecialchars($activeUser['full_name']) ?>" class="rounded-circle" style="width: 42px; height: 42px; object-fit: cover;">
@@ -137,7 +137,7 @@ if (!empty($activeUser['full_name'])) {
                             <h6 class="mb-0 fw-bold text-dark"><?= htmlspecialchars($activeUser['full_name']) ?></h6>
                             <small class="text-muted">@<?= htmlspecialchars($activeUser['username']) ?></small>
                         </div>
-                    </div>
+                    </a>
                     <div>
                         <a href="<?= BASE_URL ?>/index.php?action=profile&user_id=<?= (int)$activeUser['id'] ?>" class="btn btn-sm btn-outline-secondary rounded-pill px-3" title="View Profile">
                             <i class="bi bi-person me-1"></i> Profile

@@ -91,7 +91,7 @@ class UserModel {
      * @return array|false
      */
     public function findById($id) {
-        $sql = "SELECT id, username, full_name, bio, profile_image, cover_photo, role, created_at FROM users WHERE id = :id LIMIT 1";
+        $sql = "SELECT id, username, full_name, bio, profile_image, cover_photo, role, privacy_followers, created_at FROM users WHERE id = :id LIMIT 1";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $id]);
         return $stmt->fetch();
@@ -186,6 +186,23 @@ class UserModel {
         $sql = "SELECT id, username, full_name FROM users ORDER BY full_name ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Update user's follower/following privacy setting ('public' or 'private').
+     *
+     * @param int $id
+     * @param string $privacy 'public' or 'private'
+     * @return bool
+     */
+    public function updatePrivacyFollowers($id, $privacy) {
+        $privacy = ($privacy === 'private') ? 'private' : 'public';
+        $sql = "UPDATE users SET privacy_followers = :privacy WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':privacy' => $privacy,
+            ':id'      => (int)$id
+        ]);
     }
 }
 

@@ -153,9 +153,10 @@ document.addEventListener('DOMContentLoaded', function() {
             commentsContainer.classList.remove('d-none');
         }
 
+        const commentAuthorUrl = `${baseUrl}/index.php?action=profile&user_id=${comment.user_id}`;
         const avatarHtml = comment.profile_image 
-            ? `<img src="${baseUrl}/public/uploads/avatars/${comment.profile_image}" alt="${escapeHtml(comment.full_name)}" class="comment-avatar" onerror="this.onerror=null; this.outerHTML='<div class=\\'comment-avatar\\'>${escapeHtml(comment.initials)}</div>';">`
-            : `<div class="comment-avatar">${escapeHtml(comment.initials)}</div>`;
+            ? `<a href="${commentAuthorUrl}" class="text-decoration-none flex-shrink-0" title="View ${escapeHtml(comment.full_name)}'s profile"><img src="${baseUrl}/public/uploads/avatars/${comment.profile_image}" alt="${escapeHtml(comment.full_name)}" class="comment-avatar" onerror="this.onerror=null; this.outerHTML='<div class=\\'comment-avatar\\'>${escapeHtml(comment.initials)}</div>';"></a>`
+            : `<a href="${commentAuthorUrl}" class="text-decoration-none flex-shrink-0" title="View ${escapeHtml(comment.full_name)}'s profile"><div class="comment-avatar">${escapeHtml(comment.initials)}</div></a>`;
 
         const commentBubbleHtml = `
             <div class="comment-bubble" id="comment-${comment.id}">
@@ -163,8 +164,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="comment-content-box">
                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-1 mb-1">
                         <div>
-                            <span class="comment-author">${escapeHtml(comment.full_name)}</span>
-                            <span class="text-muted small">@${escapeHtml(comment.username)}</span>
+                            <a href="${commentAuthorUrl}" class="comment-author text-decoration-none" title="View ${escapeHtml(comment.full_name)}'s profile">${escapeHtml(comment.full_name)}</a>
+                            <a href="${commentAuthorUrl}" class="text-muted small text-decoration-none">@${escapeHtml(comment.username)}</a>
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <small class="text-muted" title="${escapeHtml(comment.created_at)}">
@@ -295,9 +296,10 @@ document.addEventListener('DOMContentLoaded', function() {
             emptyStateCard.remove();
         }
 
+        const postAuthorUrl = `${baseUrl}/index.php?action=profile&user_id=${post.user_id}`;
         const avatarHtml = post.profile_image
-            ? `<img src="${baseUrl}/public/uploads/avatars/${post.profile_image}" alt="${escapeHtml(post.full_name)}" class="post-avatar" onerror="this.onerror=null; this.outerHTML='<div class=\\'post-avatar\\'>${escapeHtml(post.initials)}</div>';">`
-            : `<div class="post-avatar">${escapeHtml(post.initials)}</div>`;
+            ? `<a href="${postAuthorUrl}" class="text-decoration-none flex-shrink-0" title="View ${escapeHtml(post.full_name)}'s profile"><img src="${baseUrl}/public/uploads/avatars/${post.profile_image}" alt="${escapeHtml(post.full_name)}" class="post-avatar" onerror="this.onerror=null; this.outerHTML='<div class=\\'post-avatar\\'>${escapeHtml(post.initials)}</div>';"></a>`
+            : `<a href="${postAuthorUrl}" class="text-decoration-none flex-shrink-0" title="View ${escapeHtml(post.full_name)}'s profile"><div class="post-avatar">${escapeHtml(post.initials)}</div></a>`;
 
         const imageHtml = post.image 
             ? `<div class="post-image-container"><img src="${baseUrl}/public/uploads/posts/${post.image}" alt="Post attachment"></div>`
@@ -309,9 +311,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="post-author-box">
                         ${avatarHtml}
                         <div>
-                            <a href="#" class="post-author-name">${escapeHtml(post.full_name)}</a>
+                            <a href="${postAuthorUrl}" class="post-author-name" title="View ${escapeHtml(post.full_name)}'s profile">${escapeHtml(post.full_name)}</a>
                             <div class="post-meta">
-                                @${escapeHtml(post.username)} &bull; ${escapeHtml(post.time_badge)}
+                                <a href="${postAuthorUrl}" class="text-muted text-decoration-none">@${escapeHtml(post.username)}</a> &bull; ${escapeHtml(post.time_badge)}
                             </div>
                         </div>
                     </div>
@@ -540,6 +542,8 @@ document.addEventListener('DOMContentLoaded', function() {
                    data-is-read="${n.is_read}"
                    data-type="${escapeHtml(n.type)}"
                    data-entity-id="${n.entity_id || ''}"
+                   data-post-id="${n.post_id || ''}"
+                   data-comment-id="${n.comment_id || ''}"
                    style="${unreadStyle}">
                     <div class="rounded-circle p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="background: rgba(0,0,0,0.05); width: 36px; height: 36px;">
                         <i class="bi ${iconClass}"></i>
@@ -561,9 +565,10 @@ document.addEventListener('DOMContentLoaded', function() {
             item.addEventListener('click', function(e) {
                 const notifId = this.getAttribute('data-notification-id');
                 const isRead = this.getAttribute('data-is-read');
-                const targetUrl = this.getAttribute('href');
                 const notifType = this.getAttribute('data-type');
                 const entityId = this.getAttribute('data-entity-id');
+                const postId = this.getAttribute('data-post-id');
+                const commentId = this.getAttribute('data-comment-id');
 
                 // Mark this notification as read on the backend asynchronously
                 if (isRead === '0' && notifId) {
@@ -572,30 +577,51 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // If clicking a like/comment notification while already on the home/feed page
                 const isCurrentFeedPage = window.location.pathname.endsWith('/index.php') || window.location.pathname.endsWith('/') || window.location.search === '' || window.location.search === '?action=home';
-                if ((notifType === 'like' || notifType === 'comment') && entityId && isCurrentFeedPage && !window.location.search.includes('action=')) {
-                    const targetPost = document.getElementById('post-' + entityId);
-                    if (targetPost) {
-                        e.preventDefault();
-                        
-                        // Close dropdown
-                        const dropdownInstance = bootstrap.Dropdown.getInstance(document.getElementById('notificationsDropdownBtn'));
-                        if (dropdownInstance) {
-                            dropdownInstance.hide();
+                if ((notifType === 'like' || notifType === 'comment') && isCurrentFeedPage && !window.location.search.includes('action=')) {
+                    // Close notification dropdown
+                    const dropdownInstance = bootstrap.Dropdown.getInstance(document.getElementById('notificationsDropdownBtn'));
+                    if (dropdownInstance) {
+                        dropdownInstance.hide();
+                    }
+
+                    if (notifType === 'comment') {
+                        // Priority: Target comment directly
+                        let targetComment = commentId ? document.getElementById('comment-' + commentId) : null;
+                        const targetPostId = postId || entityId;
+                        const commentsBox = targetPostId ? document.getElementById('comments-box-' + targetPostId) : null;
+
+                        // Ensure comments container is revealed
+                        if (commentsBox && commentsBox.classList.contains('d-none')) {
+                            commentsBox.classList.remove('d-none');
                         }
 
-                        // If it's a comment, expand the comments box
-                        if (notifType === 'comment') {
-                            const commentsBox = document.getElementById('comments-box-' + entityId);
-                            if (commentsBox && commentsBox.classList.contains('d-none')) {
-                                commentsBox.classList.remove('d-none');
+                        // If comment element was already rendered or newly revealed
+                        if (!targetComment && commentId) {
+                            targetComment = document.getElementById('comment-' + commentId);
+                        }
+
+                        if (targetComment) {
+                            e.preventDefault();
+                            targetComment.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            highlightCommentElement(targetComment);
+                            return;
+                        } else if (targetPostId) {
+                            const targetPost = document.getElementById('post-' + targetPostId);
+                            if (targetPost) {
+                                e.preventDefault();
+                                targetPost.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                highlightPostElement(targetPost);
+                                return;
                             }
                         }
-
-                        // Smoothly scroll to the target post and apply highlight
-                        targetPost.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        highlightPostElement(targetPost);
-                        history.pushState(null, null, '#post-' + entityId);
-                        return;
+                    } else if (notifType === 'like') {
+                        const targetPost = document.getElementById('post-' + (postId || entityId));
+                        if (targetPost) {
+                            e.preventDefault();
+                            targetPost.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            highlightPostElement(targetPost);
+                            return;
+                        }
                     }
                 }
                 // Otherwise allow standard navigation to targetUrl
@@ -637,32 +663,72 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(err => console.debug('Mark single read error:', err));
     }
 
-    // Post highlight helper
+    // Post highlight helper (steady highlight)
     function highlightPostElement(postEl) {
         if (!postEl) return;
-        postEl.classList.remove('post-highlight');
-        void postEl.offsetWidth; // Force CSS reflow
+        // Clear all highlighted posts and comments so only the target post is highlighted
+        document.querySelectorAll('.post-card.post-highlight').forEach(el => {
+            el.classList.remove('post-highlight');
+        });
+        document.querySelectorAll('.comment-bubble.comment-highlight').forEach(el => {
+            el.classList.remove('comment-highlight');
+        });
         postEl.classList.add('post-highlight');
-        setTimeout(() => {
-            postEl.classList.remove('post-highlight');
-        }, 4000);
     }
 
-    // Highlight post on page load if URL contains hash (#post-X)
-    if (window.location.hash && window.location.hash.startsWith('#post-')) {
-        const targetPost = document.getElementById(window.location.hash.substring(1));
-        if (targetPost) {
-            setTimeout(() => {
-                targetPost.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                highlightPostElement(targetPost);
-                
-                // If comments box is collapsed, optionally open it
-                const postId = window.location.hash.replace('#post-', '');
-                const commentsBox = document.getElementById('comments-box-' + postId);
-                if (commentsBox && commentsBox.classList.contains('d-none')) {
-                    commentsBox.classList.remove('d-none');
+    // Comment highlight helper (steady highlight)
+    function highlightCommentElement(commentEl) {
+        if (!commentEl) return;
+        // Clear all highlighted comments AND posts so ONLY the comment is highlighted
+        document.querySelectorAll('.comment-bubble.comment-highlight').forEach(el => {
+            el.classList.remove('comment-highlight');
+        });
+        document.querySelectorAll('.post-card.post-highlight').forEach(el => {
+            el.classList.remove('post-highlight');
+        });
+        commentEl.classList.add('comment-highlight');
+    }
+
+    // Highlight post or comment on page load if arriving directly via link hash, then clear hash so refreshing removes highlight
+    if (window.location.hash) {
+        const hash = window.location.hash;
+        if (hash.startsWith('#comment-')) {
+            const commentId = hash.substring('#comment-'.length);
+            const targetComment = document.getElementById('comment-' + commentId);
+            if (targetComment) {
+                // Ensure parent comments container is open
+                const parentBox = targetComment.closest('.comments-container');
+                if (parentBox && parentBox.classList.contains('d-none')) {
+                    parentBox.classList.remove('d-none');
                 }
-            }, 300);
+                setTimeout(() => {
+                    targetComment.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    highlightCommentElement(targetComment);
+                }, 350);
+            }
+            // Clear hash from URL so that refreshing the page leaves no highlight
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
+            }
+        } else if (hash.startsWith('#post-')) {
+            const targetPost = document.getElementById(hash.substring(1));
+            if (targetPost) {
+                setTimeout(() => {
+                    targetPost.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    highlightPostElement(targetPost);
+                    
+                    // If comments box is collapsed, optionally open it
+                    const postId = hash.replace('#post-', '');
+                    const commentsBox = document.getElementById('comments-box-' + postId);
+                    if (commentsBox && commentsBox.classList.contains('d-none')) {
+                        commentsBox.classList.remove('d-none');
+                    }
+                }, 300);
+            }
+            // Clear hash from URL so that refreshing the page leaves no highlight
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
+            }
         }
     }
 

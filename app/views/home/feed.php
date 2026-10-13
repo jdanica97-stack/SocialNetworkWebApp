@@ -164,23 +164,25 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                         <!-- Post Author Header -->
                         <div class="post-header">
                             <div class="post-author-box">
-                                <?php if (!empty($post['profile_image'])): ?>
-                                    <img 
-                                        src="<?= BASE_URL ?>/public/uploads/avatars/<?= htmlspecialchars(basename($post['profile_image'])) ?>" 
-                                        alt="<?= htmlspecialchars($post['full_name']); ?>" 
-                                        class="post-avatar"
-                                        onerror="this.onerror=null; this.outerHTML='<div class=\'post-avatar\'><?= htmlspecialchars($authorInitials) ?></div>';"
-                                    >
-                                <?php else: ?>
-                                    <div class="post-avatar">
-                                        <?= htmlspecialchars($authorInitials) ?>
-                                    </div>
-                                <?php endif; ?>
+                                <a href="<?= BASE_URL ?>/index.php?action=profile&user_id=<?= (int)$post['user_id']; ?>" class="text-decoration-none flex-shrink-0" title="View <?= htmlspecialchars($post['full_name']); ?>'s profile">
+                                    <?php if (!empty($post['profile_image'])): ?>
+                                        <img 
+                                            src="<?= BASE_URL ?>/public/uploads/avatars/<?= htmlspecialchars(basename($post['profile_image'])) ?>" 
+                                            alt="<?= htmlspecialchars($post['full_name']); ?>" 
+                                            class="post-avatar"
+                                            onerror="this.onerror=null; this.outerHTML='<div class=\'post-avatar\'><?= htmlspecialchars($authorInitials) ?></div>';"
+                                        >
+                                    <?php else: ?>
+                                        <div class="post-avatar">
+                                            <?= htmlspecialchars($authorInitials) ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </a>
 
                                 <div>
-                                    <a href="#" class="post-author-name"><?= htmlspecialchars($post['full_name']); ?></a>
+                                    <a href="<?= BASE_URL ?>/index.php?action=profile&user_id=<?= (int)$post['user_id']; ?>" class="post-author-name" title="View <?= htmlspecialchars($post['full_name']); ?>'s profile"><?= htmlspecialchars($post['full_name']); ?></a>
                                     <div class="post-meta">
-                                        @<?= htmlspecialchars($post['username']); ?> &bull; <?= htmlspecialchars($timeBadge); ?>
+                                        <a href="<?= BASE_URL ?>/index.php?action=profile&user_id=<?= (int)$post['user_id']; ?>" class="text-muted text-decoration-none">@<?= htmlspecialchars($post['username']); ?></a> &bull; <?= htmlspecialchars($timeBadge); ?>
                                     </div>
                                 </div>
                             </div>
@@ -266,24 +268,26 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                                     $cFullTime = date('M j, Y \a\t g:i a', strtotime($comment['created_at']));
                                     ?>
                                     <div class="comment-bubble" id="comment-<?= $comment['id'] ?>">
-                                        <?php if (!empty($comment['profile_image'])): ?>
-                                            <img 
-                                                src="<?= BASE_URL ?>/public/uploads/avatars/<?= htmlspecialchars(basename($comment['profile_image'])) ?>" 
-                                                alt="<?= htmlspecialchars($comment['full_name']); ?>" 
-                                                class="comment-avatar"
-                                                onerror="this.onerror=null; this.outerHTML='<div class=\'comment-avatar\'><?= htmlspecialchars($cInitials) ?></div>';"
-                                            >
-                                        <?php else: ?>
-                                            <div class="comment-avatar">
-                                                <?= htmlspecialchars($cInitials) ?>
-                                            </div>
-                                        <?php endif; ?>
+                                        <a href="<?= BASE_URL ?>/index.php?action=profile&user_id=<?= (int)$comment['user_id']; ?>" class="text-decoration-none flex-shrink-0" title="View <?= htmlspecialchars($comment['full_name']); ?>'s profile">
+                                            <?php if (!empty($comment['profile_image'])): ?>
+                                                <img 
+                                                    src="<?= BASE_URL ?>/public/uploads/avatars/<?= htmlspecialchars(basename($comment['profile_image'])) ?>" 
+                                                    alt="<?= htmlspecialchars($comment['full_name']); ?>" 
+                                                    class="comment-avatar"
+                                                    onerror="this.onerror=null; this.outerHTML='<div class=\'comment-avatar\'><?= htmlspecialchars($cInitials) ?></div>';"
+                                                >
+                                            <?php else: ?>
+                                                <div class="comment-avatar">
+                                                    <?= htmlspecialchars($cInitials) ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        </a>
 
                                         <div class="comment-content-box">
                                             <div class="d-flex align-items-center justify-content-between flex-wrap gap-1 mb-1">
                                                 <div>
-                                                    <span class="comment-author"><?= htmlspecialchars($comment['full_name']); ?></span>
-                                                    <span class="text-muted small">@<?= htmlspecialchars($comment['username']); ?></span>
+                                                    <a href="<?= BASE_URL ?>/index.php?action=profile&user_id=<?= (int)$comment['user_id']; ?>" class="comment-author text-decoration-none" title="View <?= htmlspecialchars($comment['full_name']); ?>'s profile"><?= htmlspecialchars($comment['full_name']); ?></a>
+                                                    <a href="<?= BASE_URL ?>/index.php?action=profile&user_id=<?= (int)$comment['user_id']; ?>" class="text-muted small text-decoration-none">@<?= htmlspecialchars($comment['username']); ?></a>
                                                 </div>
                                                 <div class="d-flex align-items-center gap-2">
                                                     <small class="text-muted" title="<?= htmlspecialchars($cFullTime); ?>">

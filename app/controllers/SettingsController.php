@@ -128,4 +128,33 @@ class SettingsController {
         header('Location: ' . BASE_URL . '/index.php?action=settings&tab=notifications');
         exit;
     }
+
+    /**
+     * Update Profile & Follow Privacy (Public or Private Followers/Following).
+     */
+    public function updatePrivacy() {
+        $this->requireAuth();
+        $userId = (int)$_SESSION['user_id'];
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/index.php?action=settings&tab=privacy');
+            exit;
+        }
+
+        if (!validate_csrf_token()) {
+            $_SESSION['error_message'] = 'Security Error: Invalid or expired CSRF token.';
+            header('Location: ' . BASE_URL . '/index.php?action=settings&tab=privacy');
+            exit;
+        }
+
+        $privacy = ($_POST['privacy_followers'] ?? 'public') === 'private' ? 'private' : 'public';
+        if ($this->userModel->updatePrivacyFollowers($userId, $privacy)) {
+            $_SESSION['success_message'] = 'Privacy settings updated successfully.';
+        } else {
+            $_SESSION['error_message'] = 'Failed to update privacy settings. Please try again.';
+        }
+
+        header('Location: ' . BASE_URL . '/index.php?action=settings&tab=privacy');
+        exit;
+    }
 }

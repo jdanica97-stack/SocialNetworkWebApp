@@ -74,7 +74,26 @@ switch ($action) {
         $settingsController->updatePreferences();
         break;
 
+    case 'settings_privacy':
+        require_once __DIR__ . '/../app/controllers/SettingsController.php';
+        $settingsController = new SettingsController();
+        $settingsController->updatePrivacy();
+        break;
+
+    case 'get_follow_list':
+        require_once __DIR__ . '/../app/controllers/ProfileController.php';
+        $profileController = new ProfileController();
+        $profileController->getFollowList();
+        break;
+
     // Post, Comment, Like actions
+    case 'view_post':
+    case 'post':
+        require_once __DIR__ . '/../app/controllers/PostController.php';
+        $postController = new PostController();
+        $postController->view();
+        break;
+
     case 'create_post':
         require_once __DIR__ . '/../app/controllers/PostController.php';
         $postController = new PostController();

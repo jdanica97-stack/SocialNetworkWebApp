@@ -127,6 +127,31 @@ class PostController {
     }
 
     /**
+     * Display a single post with comments (Single Post View).
+     */
+    public function view() {
+        $postId = (int)($_GET['post_id'] ?? $_GET['id'] ?? 0);
+
+        if ($postId <= 0) {
+            header('Location: ' . BASE_URL . '/index.php');
+            exit;
+        }
+
+        $currentUserId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+        $post = $this->postModel->getPostWithDetails($postId, $currentUserId);
+
+        if (!$post) {
+            require_once __DIR__ . '/../core/ErrorHandler.php';
+            ErrorHandler::renderErrorPage(404, 'Post Not Found', 'The requested post does not exist or may have been removed.');
+            exit;
+        }
+
+        $highlightCommentId = (int)($_GET['comment_id'] ?? 0);
+        $pageTitle = 'Post by ' . htmlspecialchars($post['full_name']);
+        require __DIR__ . '/../views/posts/view.php';
+    }
+
+    /**
      * Create a post.
      */
     public function create() {

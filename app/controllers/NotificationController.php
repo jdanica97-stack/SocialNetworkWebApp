@@ -3,15 +3,18 @@
 // Handles notification polling, listing, and read receipts
 
 require_once __DIR__ . '/../models/NotificationModel.php';
+require_once __DIR__ . '/../models/CommentModel.php';
 
 class NotificationController {
     private $notificationModel;
+    private $commentModel;
 
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         $this->notificationModel = new NotificationModel();
+        $this->commentModel = new CommentModel();
     }
 
     private function requireAuth() {
@@ -63,11 +66,42 @@ class NotificationController {
             // Time badge calculation
             $timeAgo = format_time_ago($n['created_at']);
 
-            // Calculate target destination URL (direct link to post or user profile)
+            $commentId = null;
+            $postId = null;
+
+            // Calculate target destination URL (direct link to standalone post or user profile or comment)
             $targetUrl = BASE_URL . '/index.php';
-            if ($n['type'] === 'like' || $n['type'] === 'comment') {
+            if ($n['type'] === 'like') {
                 if (!empty($n['entity_id'])) {
-                    $targetUrl = BASE_URL . '/index.php#post-' . (int)$n['entity_id'];
+                    $postId = (int)$n['entity_id'];
+                    $targetUrl = BASE_URL . '/index.php?action=view_post&post_id=' . $postId;
+                }
+            } elseif ($n['type'] === 'comment') {
+                if (!empty($n['entity_id'])) {
+                    $rawEntityId = (int)$n['entity_id'];
+                    // Check if entity_id is a comment ID
+                    $comment = $this->commentModel->getCommentById($rawEntityId);
+                    if ($comment) {
+                        $commentId = (int)$comment['id'];
+                        $postId = (int)$comment['post_id'];
+                    } else {
+                        // Historical fallback: entity_id might have been the post_id
+                        $postId = $rawEntityId;
+                        // Try to find the latest comment by this actor on this post
+                        $db = Database::connect();
+                        $cStmt = $db->prepare("SELECT id FROM comments WHERE post_id = :post_id AND user_id = :actor_id ORDER BY id DESC LIMIT 1");
+                        $cStmt->execute([':post_id' => $postId, ':actor_id' => (int)$n['actor_id']]);
+                        $foundComment = $cStmt->fetch();
+                        if ($foundComment) {
+                            $commentId = (int)$foundComment['id'];
+                        }
+                    }
+
+                    if ($commentId && $postId) {
+                        $targetUrl = BASE_URL . '/index.php?action=view_post&post_id=' . $postId . '&comment_id=' . $commentId . '#comment-' . $commentId;
+                    } elseif ($postId) {
+                        $targetUrl = BASE_URL . '/index.php?action=view_post&post_id=' . $postId;
+                    }
                 }
             } elseif ($n['type'] === 'follow') {
                 if (!empty($n['actor_id'])) {
@@ -84,6 +118,8 @@ class NotificationController {
                 'actor_initials' => $initials,
                 'type'           => $n['type'],
                 'entity_id'      => $n['entity_id'],
+                'post_id'        => $postId,
+                'comment_id'     => $commentId,
                 'target_url'     => $targetUrl,
                 'message'        => $n['message'],
                 'is_read'        => (int)$n['is_read'],

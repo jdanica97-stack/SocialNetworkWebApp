@@ -92,15 +92,15 @@ if (!empty($user['full_name'])) {
 
                 <!-- Follower / Following Stats Badges -->
                 <div class="d-flex justify-content-center align-items-center gap-4 mb-4">
-                    <div class="text-center">
-                        <div class="fs-5 fw-bold text-dark" id="profileFollowersCount"><?= (int)($followersCount ?? 0) ?></div>
+                    <button type="button" class="btn p-0 border-0 bg-transparent text-center follow-stat-btn" onclick="openFollowListModal('followers', <?= (int)$user['id'] ?>)" title="Click to view Followers" style="cursor: pointer; text-decoration: none;">
+                        <div class="fs-5 fw-bold text-dark follow-stat-num" id="profileFollowersCount"><?= (int)($followersCount ?? 0) ?></div>
                         <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.75rem;">Followers</small>
-                    </div>
+                    </button>
                     <div class="border-end" style="height: 24px;"></div>
-                    <div class="text-center">
-                        <div class="fs-5 fw-bold text-dark" id="profileFollowingCount"><?= (int)($followingCount ?? 0) ?></div>
+                    <button type="button" class="btn p-0 border-0 bg-transparent text-center follow-stat-btn" onclick="openFollowListModal('following', <?= (int)$user['id'] ?>)" title="Click to view Following" style="cursor: pointer; text-decoration: none;">
+                        <div class="fs-5 fw-bold text-dark follow-stat-num" id="profileFollowingCount"><?= (int)($followingCount ?? 0) ?></div>
                         <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.75rem;">Following</small>
-                    </div>
+                    </button>
                     <div class="border-end" style="height: 24px;"></div>
                     <div class="text-center">
                         <div class="fs-5 fw-bold text-dark"><?= !empty($posts) ? count($posts) : 0; ?></div>
@@ -210,23 +210,25 @@ if (!empty($user['full_name'])) {
                         <!-- Post Author Header -->
                         <div class="post-header">
                             <div class="post-author-box">
-                                <?php if (!empty($post['profile_image'])): ?>
-                                    <img 
-                                        src="<?= BASE_URL ?>/public/uploads/avatars/<?= htmlspecialchars(basename($post['profile_image'])) ?>" 
-                                        alt="<?= htmlspecialchars($post['full_name']); ?>" 
-                                        class="post-avatar"
-                                        onerror="this.onerror=null; this.outerHTML='<div class=\'post-avatar\'><?= htmlspecialchars($authorInitials) ?></div>';"
-                                    >
-                                <?php else: ?>
-                                    <div class="post-avatar">
-                                        <?= htmlspecialchars($authorInitials) ?>
-                                    </div>
-                                <?php endif; ?>
+                                <a href="<?= BASE_URL ?>/index.php?action=profile&user_id=<?= (int)$post['user_id']; ?>" class="text-decoration-none flex-shrink-0" title="View <?= htmlspecialchars($post['full_name']); ?>'s profile">
+                                    <?php if (!empty($post['profile_image'])): ?>
+                                        <img 
+                                            src="<?= BASE_URL ?>/public/uploads/avatars/<?= htmlspecialchars(basename($post['profile_image'])) ?>" 
+                                            alt="<?= htmlspecialchars($post['full_name']); ?>" 
+                                            class="post-avatar"
+                                            onerror="this.onerror=null; this.outerHTML='<div class=\'post-avatar\'><?= htmlspecialchars($authorInitials) ?></div>';"
+                                        >
+                                    <?php else: ?>
+                                        <div class="post-avatar">
+                                            <?= htmlspecialchars($authorInitials) ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </a>
 
                                 <div>
-                                    <span class="post-author-name"><?= htmlspecialchars($post['full_name']); ?></span>
+                                    <a href="<?= BASE_URL ?>/index.php?action=profile&user_id=<?= (int)$post['user_id']; ?>" class="post-author-name" title="View <?= htmlspecialchars($post['full_name']); ?>'s profile"><?= htmlspecialchars($post['full_name']); ?></a>
                                     <div class="post-meta">
-                                        @<?= htmlspecialchars($post['username']); ?> &bull; <?= htmlspecialchars($timeBadge); ?>
+                                        <a href="<?= BASE_URL ?>/index.php?action=profile&user_id=<?= (int)$post['user_id']; ?>" class="text-muted text-decoration-none">@<?= htmlspecialchars($post['username']); ?></a> &bull; <?= htmlspecialchars($timeBadge); ?>
                                     </div>
                                 </div>
                             </div>
@@ -311,24 +313,26 @@ if (!empty($user['full_name'])) {
                                     $cFullTime = date('M j, Y \a\t g:i a', strtotime($comment['created_at']));
                                     ?>
                                     <div class="comment-bubble" id="comment-<?= $comment['id'] ?>">
-                                        <?php if (!empty($comment['profile_image'])): ?>
-                                            <img 
-                                                src="<?= BASE_URL ?>/public/uploads/avatars/<?= htmlspecialchars(basename($comment['profile_image'])) ?>" 
-                                                alt="<?= htmlspecialchars($comment['full_name']); ?>" 
-                                                class="comment-avatar"
-                                                onerror="this.onerror=null; this.outerHTML='<div class=\'comment-avatar\'><?= htmlspecialchars($cInitials) ?></div>';"
-                                            >
-                                        <?php else: ?>
-                                            <div class="comment-avatar">
-                                                <?= htmlspecialchars($cInitials) ?>
-                                            </div>
-                                        <?php endif; ?>
+                                        <a href="<?= BASE_URL ?>/index.php?action=profile&user_id=<?= (int)$comment['user_id']; ?>" class="text-decoration-none flex-shrink-0" title="View <?= htmlspecialchars($comment['full_name']); ?>'s profile">
+                                            <?php if (!empty($comment['profile_image'])): ?>
+                                                <img 
+                                                    src="<?= BASE_URL ?>/public/uploads/avatars/<?= htmlspecialchars(basename($comment['profile_image'])) ?>" 
+                                                    alt="<?= htmlspecialchars($comment['full_name']); ?>" 
+                                                    class="comment-avatar"
+                                                    onerror="this.onerror=null; this.outerHTML='<div class=\'comment-avatar\'><?= htmlspecialchars($cInitials) ?></div>';"
+                                                >
+                                            <?php else: ?>
+                                                <div class="comment-avatar">
+                                                    <?= htmlspecialchars($cInitials) ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        </a>
 
                                         <div class="comment-content-box">
                                             <div class="d-flex align-items-center justify-content-between flex-wrap gap-1 mb-1">
                                                 <div>
-                                                    <span class="comment-author"><?= htmlspecialchars($comment['full_name']); ?></span>
-                                                    <span class="text-muted small">@<?= htmlspecialchars($comment['username']); ?></span>
+                                                    <a href="<?= BASE_URL ?>/index.php?action=profile&user_id=<?= (int)$comment['user_id']; ?>" class="comment-author text-decoration-none" title="View <?= htmlspecialchars($comment['full_name']); ?>'s profile"><?= htmlspecialchars($comment['full_name']); ?></a>
+                                                    <a href="<?= BASE_URL ?>/index.php?action=profile&user_id=<?= (int)$comment['user_id']; ?>" class="text-muted small text-decoration-none">@<?= htmlspecialchars($comment['username']); ?></a>
                                                 </div>
                                                 <div class="d-flex align-items-center gap-2">
                                                     <small class="text-muted" title="<?= htmlspecialchars($cFullTime); ?>">
@@ -397,12 +401,183 @@ if (!empty($user['full_name'])) {
     </div>
 </div>
 
+<style>
+.follow-stat-btn {
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.follow-stat-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.85;
+}
+.follow-stat-btn:hover .follow-stat-num {
+    text-decoration: underline;
+    color: var(--accent-yellow-hover, #0d6efd) !important;
+}
+</style>
+
+<!-- Followers & Following Modal -->
+<div class="modal fade" id="followListModal" tabindex="-1" aria-labelledby="followListModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow border-0 rounded-4">
+            <div class="modal-header border-bottom py-3 px-4">
+                <h5 class="modal-title fw-bold fs-6 d-flex align-items-center gap-2 mb-0" id="followListModalTitle">
+                    <i class="bi bi-people-fill text-primary" id="followListModalIcon"></i>
+                    <span id="followListModalHeading">Followers</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0" id="followListModalBody" style="min-height: 200px; max-height: 420px; overflow-y: auto;">
+                <!-- Content loaded dynamically via openFollowListModal() -->
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function toggleComments(postId) {
     const box = document.getElementById('comments-box-' + postId);
     if (box) {
         box.classList.toggle('d-none');
     }
+}
+
+let followListModalInstance = null;
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function openFollowListModal(type, targetUserId) {
+    const modalEl = document.getElementById('followListModal');
+    if (!modalEl) return;
+
+    if (!followListModalInstance) {
+        followListModalInstance = new bootstrap.Modal(modalEl);
+    }
+
+    const titleEl = document.getElementById('followListModalHeading');
+    const iconEl = document.getElementById('followListModalIcon');
+    const bodyEl = document.getElementById('followListModalBody');
+
+    const isFollowers = (type === 'followers');
+    if (titleEl) {
+        titleEl.textContent = isFollowers ? 'Followers' : 'Following';
+    }
+    if (iconEl) {
+        iconEl.className = isFollowers ? 'bi bi-people-fill text-primary' : 'bi bi-person-check-fill text-primary';
+    }
+
+    bodyEl.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted small mt-2 mb-0">Loading ${isFollowers ? 'followers' : 'following'}...</p>
+        </div>
+    `;
+
+    followListModalInstance.show();
+
+    const fetchUrl = `<?= BASE_URL ?>/index.php?action=get_follow_list&user_id=${targetUserId}&type=${type}`;
+
+    fetch(fetchUrl, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.is_private) {
+            bodyEl.innerHTML = `
+                <div class="text-center py-5 px-4">
+                    <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center p-3 mb-3 border shadow-sm" style="width: 64px; height: 64px;">
+                        <i class="bi bi-lock-fill text-secondary fs-3"></i>
+                    </div>
+                    <h6 class="fw-bold text-dark mb-1">Follow List is Private</h6>
+                    <p class="text-muted small mb-0 px-3">
+                        ${escapeHtml(data.message || 'This account has made their follower and following list private.')}
+                    </p>
+                </div>
+            `;
+            return;
+        }
+
+        if (!data.success) {
+            bodyEl.innerHTML = `
+                <div class="alert alert-danger m-3 text-center small rounded-3">
+                    ${escapeHtml(data.error || 'Unable to load list.')}
+                </div>
+            `;
+            return;
+        }
+
+        if (titleEl) {
+            titleEl.textContent = `${isFollowers ? 'Followers' : 'Following'} (${data.count})`;
+        }
+
+        if (!data.users || data.users.length === 0) {
+            bodyEl.innerHTML = `
+                <div class="text-center py-5 text-muted px-3">
+                    <i class="bi bi-people fs-1 text-secondary mb-2 d-block opacity-50"></i>
+                    <h6 class="fw-semibold text-dark mb-1">${isFollowers ? 'No followers yet' : 'Not following anyone yet'}</h6>
+                    <p class="small text-muted mb-0">When people ${isFollowers ? 'follow this profile' : 'are followed by this profile'}, they will appear here.</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '<div class="list-group list-group-flush">';
+        data.users.forEach(u => {
+            const profileUrl = `<?= BASE_URL ?>/index.php?action=profile&user_id=${u.id}`;
+            let avatarHtml = '';
+            if (u.profile_image) {
+                const imgUrl = `<?= BASE_URL ?>/public/uploads/avatars/${encodeURIComponent(u.profile_image)}`;
+                avatarHtml = `<img src="${imgUrl}" alt="${escapeHtml(u.full_name)}" class="rounded-circle object-fit-cover shadow-sm flex-shrink-0" style="width: 44px; height: 44px;" onerror="this.onerror=null; this.outerHTML='<div class=\\'rounded-circle text-white fw-bold d-flex align-items-center justify-content-center shadow-sm flex-shrink-0\\' style=\\'width: 44px; height: 44px; background-color: #07193d; font-size: 0.85rem;\\'>${escapeHtml(u.initials)}</div>';">`;
+            } else {
+                avatarHtml = `<div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 44px; height: 44px; background-color: #07193d; font-size: 0.85rem;">${escapeHtml(u.initials)}</div>`;
+            }
+
+            html += `
+                <div class="list-group-item d-flex align-items-center justify-content-between px-3 py-3 border-0 border-bottom">
+                    <div class="d-flex align-items-center gap-3 text-truncate">
+                        <a href="${profileUrl}" class="text-decoration-none">
+                            ${avatarHtml}
+                        </a>
+                        <div class="text-truncate">
+                            <a href="${profileUrl}" class="text-dark fw-bold text-decoration-none d-block small text-truncate">
+                                ${escapeHtml(u.full_name)}
+                                ${u.is_self ? '<span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.65rem;">You</span>' : ''}
+                            </a>
+                            <a href="${profileUrl}" class="text-muted text-decoration-none d-block small text-truncate">@${escapeHtml(u.username)}</a>
+                        </div>
+                    </div>
+                    <div class="ms-2 flex-shrink-0">
+                        <a href="${profileUrl}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold" style="font-size: 0.78rem;">
+                            View
+                        </a>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        bodyEl.innerHTML = html;
+    })
+    .catch(err => {
+        bodyEl.innerHTML = `
+            <div class="alert alert-danger m-3 text-center small rounded-3">
+                Failed to load follow list. Please try again.
+            </div>
+        `;
+    });
 }
 </script>
 

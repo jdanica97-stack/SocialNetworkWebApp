@@ -63,6 +63,15 @@ $prefSound    = $_SESSION['pref_sound'] ?? 0;
                                 </div>
                             </a>
 
+                            <a href="<?= BASE_URL ?>/index.php?action=settings&tab=privacy" 
+                               class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 border-0 rounded-3 mb-1 <?= ($activeTab === 'privacy') ? 'active bg-primary text-white' : 'text-dark' ?>">
+                                <i class="bi bi-shield-shaded fs-5"></i>
+                                <div>
+                                    <div class="fw-semibold small">Privacy & Visibility</div>
+                                    <div class="<?= ($activeTab === 'privacy') ? 'text-white-50' : 'text-muted' ?>" style="font-size: 0.73rem;">Followers & following privacy</div>
+                                </div>
+                            </a>
+
                             <a href="<?= BASE_URL ?>/index.php?action=settings&tab=account" 
                                class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 border-0 rounded-3 <?= ($activeTab === 'account') ? 'active bg-primary text-white' : 'text-dark' ?>">
                                 <i class="bi bi-info-circle-fill fs-5"></i>
@@ -202,6 +211,56 @@ $prefSound    = $_SESSION['pref_sound'] ?? 0;
                                 <div class="d-flex align-items-center justify-content-end gap-2 pt-3 border-top">
                                     <button type="submit" class="btn btn-primary rounded-pill px-4">
                                         <i class="bi bi-save me-1"></i> Save Preferences
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                    <!-- TAB: PRIVACY & VISIBILITY -->
+                    <?php elseif ($activeTab === 'privacy'): ?>
+                        <?php $currentPrivacy = $user['privacy_followers'] ?? 'public'; ?>
+                        <div class="card-modern p-4">
+                            <h5 class="fw-bold mb-1 text-dark">Privacy & Visibility</h5>
+                            <p class="text-muted small mb-4">Control who can view your followers and following lists.</p>
+
+                            <form action="<?= BASE_URL ?>/index.php?action=settings_privacy" method="POST">
+                                <?= csrf_field(); ?>
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold small text-secondary mb-3">Followers & Following Visibility</label>
+                                    
+                                    <div class="card border p-3 mb-3 rounded-3 <?= ($currentPrivacy === 'public') ? 'border-primary bg-primary-subtle bg-opacity-10' : '' ?>">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="privacy_followers" id="privacy_public" value="public" <?= ($currentPrivacy === 'public') ? 'checked' : '' ?>>
+                                            <label class="form-check-label w-100 cursor-pointer" for="privacy_public" style="cursor: pointer;">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="bi bi-globe-americas text-primary fs-5"></i>
+                                                    <span class="fw-semibold text-dark">Everyone (Public)</span>
+                                                    <span class="badge bg-secondary-subtle text-secondary ms-auto">Default</span>
+                                                </div>
+                                                <div class="text-muted small mt-1">Anyone visiting your profile can click your Followers and Following counters to see who is on your list.</div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="card border p-3 rounded-3 <?= ($currentPrivacy === 'private') ? 'border-primary bg-primary-subtle bg-opacity-10' : '' ?>">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="privacy_followers" id="privacy_private" value="private" <?= ($currentPrivacy === 'private') ? 'checked' : '' ?>>
+                                            <label class="form-check-label w-100 cursor-pointer" for="privacy_private" style="cursor: pointer;">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="bi bi-lock-fill text-danger fs-5"></i>
+                                                    <span class="fw-semibold text-dark">Only Me (Private)</span>
+                                                    <span class="badge bg-danger-subtle text-danger ms-auto">Private</span>
+                                                </div>
+                                                <div class="text-muted small mt-1">Only you can view your followers and following lists. Other campus users visiting your profile will see a polite privacy notice.</div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex align-items-center justify-content-end gap-2 pt-3 border-top">
+                                    <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                        <i class="bi bi-shield-check me-1"></i> Save Privacy Settings
                                     </button>
                                 </div>
                             </form>
