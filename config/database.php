@@ -28,9 +28,14 @@ class Database {
 
             try {
                 self::$conn = new PDO($dsn, self::$username, self::$password, $options);
+                self::$conn->exec("SET time_zone = '+08:00';");
             } catch (PDOException $e) {
                 // Log actual error securely to server log without exposing details to users
                 error_log("Database connection error: " . $e->getMessage());
+                if (class_exists('ErrorHandler')) {
+                    ErrorHandler::renderErrorPage(500, 'Database Unavailable', 'The database is temporarily unavailable. Please try again later.');
+                    exit;
+                }
                 die("Database connection failed. Please try again later.");
             }
         }

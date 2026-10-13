@@ -88,11 +88,12 @@ class CommentModel {
                 WHERE id = :id AND user_id = :user_id";
 
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
+        $executed = $stmt->execute([
             ':content' => $content,
             ':id'      => $commentId,
             ':user_id' => $userId
         ]);
+        return $executed && $stmt->rowCount() > 0;
     }
 
     /**

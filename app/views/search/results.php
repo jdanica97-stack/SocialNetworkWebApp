@@ -378,14 +378,18 @@ $authorId = $_GET['author_id'] ?? null;
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                                         <?php if ($currentUserId && (int)$currentUserId === (int)$post['user_id']): ?>
                                             <li>
-                                                <a class="dropdown-item small text-primary" href="<?= BASE_URL ?>/index.php?action=edit_post&post_id=<?= $post['id'] ?>">
-                                                    <i class="bi bi-pencil-square me-2"></i>Edit post
+                                                <a class="dropdown-item small text-secondary" href="<?= BASE_URL ?>/index.php?action=edit_post&post_id=<?= $post['id'] ?>">
+                                                    <i class="bi bi-pencil-square me-2 text-muted"></i>Edit post
                                                 </a>
                                             </li>
                                             <li>
-                                                <a class="dropdown-item small text-danger" href="<?= BASE_URL ?>/index.php?action=delete_post&post_id=<?= $post['id'] ?>" onclick="return confirm('Are you sure you want to delete this post? This action cannot be undone.');">
-                                                    <i class="bi bi-trash me-2"></i>Delete post
-                                                </a>
+                                                <form action="<?= BASE_URL ?>/index.php?action=delete_post" method="POST" class="m-0" onsubmit="return confirm('Are you sure you want to delete this post? This action cannot be undone.');">
+                                                    <?= csrf_field(); ?>
+                                                    <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
+                                                    <button type="submit" class="dropdown-item small text-secondary border-0 bg-transparent w-100 text-start">
+                                                        <i class="bi bi-trash me-2 text-muted"></i>Delete post
+                                                    </button>
+                                                </form>
                                             </li>
                                             <li><hr class="dropdown-divider"></li>
                                         <?php endif; ?>
@@ -432,8 +436,8 @@ $authorId = $_GET['author_id'] ?? null;
                             </div>
                         </div>
 
-                        <!-- Post Engagement Actions (Like / Comment / Edit / Delete) -->
-                        <div class="post-footer-actions d-flex align-items-center justify-content-between">
+                        <!-- Post Engagement Actions (Like / Comment) -->
+                        <div class="post-footer-actions d-flex align-items-center">
                             <div class="d-flex align-items-center gap-3">
                                 <form action="<?= BASE_URL ?>/index.php?action=like_post" method="POST" class="d-inline">
                                     <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
@@ -448,17 +452,6 @@ $authorId = $_GET['author_id'] ?? null;
                                     <span><?= (int)$post['comments_count']; ?></span>
                                 </button>
                             </div>
-
-                            <?php if ($currentUserId && (int)$currentUserId === (int)$post['user_id']): ?>
-                                <div class="d-flex align-items-center gap-1">
-                                    <a href="<?= BASE_URL ?>/index.php?action=edit_post&post_id=<?= $post['id'] ?>" class="btn btn-sm btn-light text-primary border-0 rounded-pill px-2 py-1 small" title="Edit your post">
-                                        <i class="bi bi-pencil-square me-1"></i>Edit
-                                    </a>
-                                    <a href="<?= BASE_URL ?>/index.php?action=delete_post&post_id=<?= $post['id'] ?>" class="btn btn-sm btn-light text-danger border-0 rounded-pill px-2 py-1 small" onclick="return confirm('Are you sure you want to delete this post? This action cannot be undone.');" title="Delete your post">
-                                        <i class="bi bi-trash me-1"></i>Delete
-                                    </a>
-                                </div>
-                            <?php endif; ?>
                         </div>
 
                         <!-- Comments Section -->
@@ -471,16 +464,7 @@ $authorId = $_GET['author_id'] ?? null;
                                         ? strtoupper(mb_substr($cParts[0], 0, 1) . mb_substr($cParts[count($cParts)-1], 0, 1))
                                         : strtoupper(mb_substr($comment['full_name'] ?? 'U', 0, 2));
 
-                                    $cTimeDiff = time() - strtotime($comment['created_at']);
-                                    if ($cTimeDiff < 60) {
-                                        $cTimeBadge = 'Just now';
-                                    } elseif ($cTimeDiff < 3600) {
-                                        $cTimeBadge = floor($cTimeDiff / 60) . 'm ago';
-                                    } elseif ($cTimeDiff < 86400) {
-                                        $cTimeBadge = floor($cTimeDiff / 3600) . 'h ago';
-                                    } else {
-                                        $cTimeBadge = date('M j, Y', strtotime($comment['created_at']));
-                                    }
+                                    $cTimeBadge = format_time_ago($comment['created_at']);
                                     ?>
                                     <div class="comment-bubble" id="comment-<?= $comment['id'] ?>">
                                         <?php if (!empty($comment['profile_image'])): ?>

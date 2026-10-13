@@ -56,13 +56,42 @@ class UserModel {
     }
 
     /**
+     * Get password hash for a user by ID.
+     *
+     * @param int $id
+     * @return string|false
+     */
+    public function getPasswordHash($id) {
+        $sql = "SELECT password FROM users WHERE id = :id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id' => (int)$id]);
+        return $stmt->fetchColumn();
+    }
+
+    /**
+     * Update user password.
+     *
+     * @param int $id
+     * @param string $newPasswordHash
+     * @return bool
+     */
+    public function updatePassword($id, $newPasswordHash) {
+        $sql = "UPDATE users SET password = :password WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':password' => $newPasswordHash,
+            ':id'       => (int)$id
+        ]);
+    }
+
+    /**
      * Find a user by ID.
      *
      * @param int $id
      * @return array|false
      */
     public function findById($id) {
-        $sql = "SELECT id, username, full_name, bio, profile_image, role, created_at FROM users WHERE id = :id LIMIT 1";
+        $sql = "SELECT id, username, full_name, bio, profile_image, cover_photo, role, created_at FROM users WHERE id = :id LIMIT 1";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $id]);
         return $stmt->fetch();
@@ -110,6 +139,22 @@ class UserModel {
         return $stmt->execute([
             ':profile_image' => $profileImage,
             ':id'            => $id
+        ]);
+    }
+
+    /**
+     * Update user's cover photo.
+     *
+     * @param int $id
+     * @param string|null $coverPhoto Filename relative to covers folder, or null to remove
+     * @return bool
+     */
+    public function updateCoverPhoto($id, $coverPhoto) {
+        $sql = "UPDATE users SET cover_photo = :cover_photo WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':cover_photo' => $coverPhoto,
+            ':id'          => $id
         ]);
     }
 

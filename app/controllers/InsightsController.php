@@ -160,6 +160,7 @@ class InsightsController {
                 $reportGenerated = true;
             } catch (Exception $e) {
                 error_log("Reports query error: " . $e->getMessage());
+                $errorMessage = "Report Generation Error: We could not generate the community report at this time. Please try again.";
             }
         }
 

@@ -6,6 +6,14 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Load centralized Security and Error Handlers
+require_once __DIR__ . '/../app/helpers/Security.php';
+require_once __DIR__ . '/../app/helpers/ErrorHandler.php';
+ErrorHandler::register();
+
+// Ensure CSRF token is always initialized in the session
+csrf_token();
+
 // Compute BASE_URL for clean routing and asset linking
 if (!defined('BASE_URL')) {
     $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
@@ -45,6 +53,25 @@ switch ($action) {
         require_once __DIR__ . '/../app/controllers/ProfileController.php';
         $profileController = new ProfileController();
         $profileController->edit();
+        break;
+
+    // Dedicated Settings Routing (Account Security, Theme, Notifications & Preferences)
+    case 'settings':
+        require_once __DIR__ . '/../app/controllers/SettingsController.php';
+        $settingsController = new SettingsController();
+        $settingsController->index();
+        break;
+
+    case 'settings_password':
+        require_once __DIR__ . '/../app/controllers/SettingsController.php';
+        $settingsController = new SettingsController();
+        $settingsController->changePassword();
+        break;
+
+    case 'settings_preferences':
+        require_once __DIR__ . '/../app/controllers/SettingsController.php';
+        $settingsController = new SettingsController();
+        $settingsController->updatePreferences();
         break;
 
     // Post, Comment, Like actions
@@ -112,11 +139,104 @@ switch ($action) {
         $insightsController->index();
         break;
 
+    // Administrator Control Center & Moderation Actions
+    case 'admin':
+        require_once __DIR__ . '/../app/controllers/AdminController.php';
+        $adminController = new AdminController();
+        $adminController->index();
+        break;
+
+    case 'admin_change_role':
+        require_once __DIR__ . '/../app/controllers/AdminController.php';
+        $adminController = new AdminController();
+        $adminController->changeRole();
+        break;
+
+    case 'admin_delete_user':
+        require_once __DIR__ . '/../app/controllers/AdminController.php';
+        $adminController = new AdminController();
+        $adminController->deleteUser();
+        break;
+
+    case 'admin_delete_post':
+        require_once __DIR__ . '/../app/controllers/AdminController.php';
+        $adminController = new AdminController();
+        $adminController->deletePost();
+        break;
+
+    case 'admin_delete_comment':
+        require_once __DIR__ . '/../app/controllers/AdminController.php';
+        $adminController = new AdminController();
+        $adminController->deleteComment();
+        break;
+
+    case 'admin_save_event':
+        require_once __DIR__ . '/../app/controllers/AdminController.php';
+        $adminController = new AdminController();
+        $adminController->saveEvent();
+        break;
+
+    case 'admin_delete_event':
+        require_once __DIR__ . '/../app/controllers/AdminController.php';
+        $adminController = new AdminController();
+        $adminController->deleteEvent();
+        break;
+
+    // Follow and Unfollow Actions
+    case 'follow_user':
+        require_once __DIR__ . '/../app/controllers/FollowController.php';
+        $followController = new FollowController();
+        $followController->toggle();
+        break;
+
+    // Real-Time Notifications Actions
+    case 'notifications':
+        require_once __DIR__ . '/../app/controllers/NotificationController.php';
+        $notifController = new NotificationController();
+        $notifController->getNotifications();
+        break;
+
+    case 'unread_notifications':
+        require_once __DIR__ . '/../app/controllers/NotificationController.php';
+        $notifController = new NotificationController();
+        $notifController->getUnreadCount();
+        break;
+
+    case 'mark_notifications_read':
+        require_once __DIR__ . '/../app/controllers/NotificationController.php';
+        $notifController = new NotificationController();
+        $notifController->markRead();
+        break;
+
+    // Direct Messaging Actions
+    case 'messages':
+        require_once __DIR__ . '/../app/controllers/MessageController.php';
+        $msgController = new MessageController();
+        $msgController->index();
+        break;
+
+    case 'send_message':
+        require_once __DIR__ . '/../app/controllers/MessageController.php';
+        $msgController = new MessageController();
+        $msgController->send();
+        break;
+
+    case 'poll_messages':
+        require_once __DIR__ . '/../app/controllers/MessageController.php';
+        $msgController = new MessageController();
+        $msgController->poll();
+        break;
+
+    case 'unread_messages':
+        require_once __DIR__ . '/../app/controllers/MessageController.php';
+        $msgController = new MessageController();
+        $msgController->getUnreadCount();
+        break;
+
     // Additional Navigation Pages
     case 'people':
     case 'groups':
     case 'events':
-    case 'messages':
     case 'saved':
         if (!isset($_SESSION['user_id'])) {
             $_SESSION['error_message'] = 'You must be logged in to access that page.';
@@ -153,7 +273,7 @@ switch ($action) {
         break;
 
     case 'home':
-    default:
+    case '':
         if (!isset($_SESSION['user_id'])) {
             header('Location: ' . BASE_URL . '/index.php?action=login');
             exit;
@@ -161,22 +281,24 @@ switch ($action) {
         $pageTitle = 'Home';
         require_once __DIR__ . '/../app/models/PostModel.php';
         require_once __DIR__ . '/../app/models/UserModel.php';
+        require_once __DIR__ . '/../app/models/EventModel.php';
 
         $postModel = new PostModel();
         $userModel = new UserModel();
+        $eventModel = new EventModel();
 
         $currentUserId = $_SESSION['user_id'];
         $feedFilter = $_GET['filter'] ?? 'newest';
         $posts = $postModel->getAllPosts($currentUserId, $feedFilter);
-
-        // Fetch suggested users (excluding current user)
-        $db = Database::connect();
-        $stmt = $db->prepare("SELECT id, username, full_name, profile_image FROM users WHERE id != :user_id LIMIT 3");
-        $stmt->execute([':user_id' => $currentUserId]);
-        $suggestedUsers = $stmt->fetchAll();
+        $upcomingEvents = $eventModel->getUpcomingEvents(5);
 
         require_once __DIR__ . '/../app/views/layouts/header.php';
         require_once __DIR__ . '/../app/views/home/feed.php';
         require_once __DIR__ . '/../app/views/layouts/footer.php';
+        break;
+
+    default:
+        // Return friendly 404 Not Found for unrecognized action routes
+        ErrorHandler::renderErrorPage(404, 'Page Not Found', 'The page or action you requested ("' . htmlspecialchars($action, ENT_QUOTES, 'UTF-8') . '") does not exist on SMCC Connect.');
         break;
 }

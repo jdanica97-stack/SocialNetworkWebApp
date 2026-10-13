@@ -4,10 +4,12 @@
 
 require_once __DIR__ . '/../models/PostModel.php';
 require_once __DIR__ . '/../models/UserModel.php';
+require_once __DIR__ . '/../models/NotificationModel.php';
 
 class PostController {
     private $postModel;
     private $userModel;
+    private $notificationModel;
 
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
@@ -15,6 +17,7 @@ class PostController {
         }
         $this->postModel = new PostModel();
         $this->userModel = new UserModel();
+        $this->notificationModel = new NotificationModel();
     }
 
     /**
@@ -134,6 +137,19 @@ class PostController {
             || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // CSRF Token Validation
+            if (!validate_csrf_token()) {
+                $errMsg = 'Security Error: Invalid or expired CSRF token.';
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'error' => $errMsg]);
+                    exit;
+                }
+                $_SESSION['error_message'] = $errMsg;
+                header('Location: ' . BASE_URL . '/index.php');
+                exit;
+            }
+
             $content = trim($_POST['content'] ?? '');
             $userId  = (int)$_SESSION['user_id'];
             $errors  = [];
@@ -170,7 +186,14 @@ class PostController {
                 exit;
             }
 
-            $postId = $this->postModel->createPost($userId, $content, $imageName);
+            $postId = false;
+            try {
+                $postId = $this->postModel->createPost($userId, $content, $imageName);
+            } catch (Throwable $e) {
+                error_log("Post creation DB error: " . $e->getMessage());
+                $postId = false;
+            }
+
             if ($postId) {
                 $user = $this->userModel->findById($userId);
                 $authorFullName = $user['full_name'] ?? 'User';
@@ -212,7 +235,7 @@ class PostController {
                 if ($imageName) {
                     $this->deleteImageFile($imageName);
                 }
-                $errMsg = 'Failed to publish post.';
+                $errMsg = 'We could not save your post due to a system issue. Please try again.';
                 if ($isAjax) {
                     header('Content-Type: application/json');
                     echo json_encode(['success' => false, 'error' => $errMsg]);
@@ -236,22 +259,19 @@ class PostController {
         $userId = (int)$_SESSION['user_id'];
 
         if ($postId <= 0) {
-            $_SESSION['error_message'] = 'Invalid post ID.';
-            header('Location: ' . BASE_URL . '/index.php');
+            ErrorHandler::renderErrorPage(400, 'Invalid Request', 'The provided post identifier is invalid.');
             exit;
         }
 
         $post = $this->postModel->getPostById($postId);
         if (!$post) {
-            $_SESSION['error_message'] = 'Post not found.';
-            header('Location: ' . BASE_URL . '/index.php');
+            ErrorHandler::renderErrorPage(404, 'Post Not Found', 'The post you are attempting to edit could not be found or has been deleted.');
             exit;
         }
 
         // Strict Server-Side Ownership Check
         if ((int)$post['user_id'] !== $userId) {
-            $_SESSION['error_message'] = 'Unauthorized: You can only edit your own posts.';
-            header('Location: ' . BASE_URL . '/index.php');
+            ErrorHandler::renderErrorPage(403, 'Permission Denied', 'You do not have permission to edit this post. You can only edit your own posts.');
             exit;
         }
 
@@ -271,6 +291,13 @@ class PostController {
         $this->requireAuth();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/index.php');
+            exit;
+        }
+
+        // CSRF Token Validation
+        if (!validate_csrf_token()) {
+            $_SESSION['error_message'] = 'Security Error: Invalid or expired CSRF token.';
             header('Location: ' . BASE_URL . '/index.php');
             exit;
         }
@@ -382,6 +409,18 @@ class PostController {
             || isset($_POST['ajax']) || isset($_GET['ajax'])
             || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
 
+        // CSRF Token Validation
+        if (!validate_csrf_token()) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Security Error: Invalid or expired CSRF token.']);
+                exit;
+            }
+            $_SESSION['error_message'] = 'Security Error: Invalid or expired CSRF token.';
+            header('Location: ' . BASE_URL . '/index.php');
+            exit;
+        }
+
         if ($postId <= 0) {
             if ($isAjax) {
                 header('Content-Type: application/json');
@@ -392,8 +431,46 @@ class PostController {
             exit;
         }
 
-        $isLiked = $this->postModel->toggleLike($postId, $userId);
-        $likesCount = $this->postModel->getLikesCount($postId);
+        // Verify that the post actually exists before toggling like
+        $post = $this->postModel->getPostById($postId);
+        if (!$post) {
+            $errMsg = 'The post you are trying to like does not exist or has been removed.';
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $errMsg]);
+                exit;
+            }
+            $_SESSION['error_message'] = $errMsg;
+            header('Location: ' . BASE_URL . '/index.php');
+            exit;
+        }
+
+        try {
+            $isLiked = $this->postModel->toggleLike($postId, $userId);
+            $likesCount = $this->postModel->getLikesCount($postId);
+
+            if ($isLiked && (int)$post['user_id'] !== $userId) {
+                $actorName = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'Someone';
+                $this->notificationModel->createNotification(
+                    (int)$post['user_id'],
+                    $userId,
+                    'like',
+                    $postId,
+                    $actorName . ' liked your post.'
+                );
+            }
+        } catch (Throwable $e) {
+            error_log("Error toggling like on post {$postId}: " . $e->getMessage());
+            $errMsg = 'Could not update like status at this time. Please try again.';
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $errMsg]);
+                exit;
+            }
+            $_SESSION['error_message'] = $errMsg;
+            header('Location: ' . BASE_URL . '/index.php');
+            exit;
+        }
 
         if ($isAjax) {
             header('Content-Type: application/json');
@@ -416,7 +493,20 @@ class PostController {
     public function delete() {
         $this->requireAuth();
 
-        $postId = (int)($_POST['post_id'] ?? $_GET['post_id'] ?? 0);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $_SESSION['error_message'] = 'Invalid request method for deleting a post.';
+            header('Location: ' . BASE_URL . '/index.php');
+            exit;
+        }
+
+        // CSRF Token Validation
+        if (!validate_csrf_token()) {
+            $_SESSION['error_message'] = 'Security Error: Invalid or expired CSRF token.';
+            header('Location: ' . BASE_URL . '/index.php');
+            exit;
+        }
+
+        $postId = (int)($_POST['post_id'] ?? 0);
         $userId = (int)$_SESSION['user_id'];
 
         if ($postId <= 0) {

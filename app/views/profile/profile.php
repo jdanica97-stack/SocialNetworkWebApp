@@ -15,6 +15,17 @@ if (!empty($user['profile_image'])) {
     }
 }
 
+// Prepare cover photo URL or fallback placeholder
+$coverUrl = null;
+if (!empty($user['cover_photo'])) {
+    $uploadedCoverPath = __DIR__ . '/../../../public/uploads/covers/' . basename($user['cover_photo']);
+    if (file_exists($uploadedCoverPath)) {
+        $coverUrl = BASE_URL . '/public/uploads/covers/' . htmlspecialchars(basename($user['cover_photo']));
+    } else {
+        $coverUrl = BASE_URL . '/public/uploads/covers/' . htmlspecialchars($user['cover_photo']);
+    }
+}
+
 $formattedDate = !empty($user['created_at']) 
     ? date('F j, Y', strtotime($user['created_at'])) 
     : 'N/A';
@@ -45,8 +56,8 @@ if (!empty($user['full_name'])) {
 
         <!-- Profile Card -->
         <div class="card-modern overflow-hidden mb-4">
-            <!-- Header Banner Background -->
-            <div style="background: linear-gradient(135deg, #07193d 0%, #1e3a8a 100%); height: 160px;" class="position-relative">
+            <!-- Header Banner / Cover Photo -->
+            <div style="<?= $coverUrl ? "background: url('" . $coverUrl . "') center center / cover no-repeat;" : "background: linear-gradient(135deg, #07193d 0%, #1e3a8a 100%);" ?> height: 200px;" class="position-relative">
                 <div class="position-absolute top-0 end-0 m-3">
                     <span class="badge" style="background-color: var(--accent-yellow); color: #07193d; font-weight: 600;">
                         <i class="bi bi-patch-check-fill me-1"></i> Verified Profile
@@ -78,6 +89,24 @@ if (!empty($user['full_name'])) {
                 <!-- User Names -->
                 <h2 class="fw-bold mb-1 text-dark"><?= htmlspecialchars($user['full_name']); ?></h2>
                 <p class="text-muted fw-medium mb-3">@<?= htmlspecialchars($user['username']); ?></p>
+
+                <!-- Follower / Following Stats Badges -->
+                <div class="d-flex justify-content-center align-items-center gap-4 mb-4">
+                    <div class="text-center">
+                        <div class="fs-5 fw-bold text-dark" id="profileFollowersCount"><?= (int)($followersCount ?? 0) ?></div>
+                        <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.75rem;">Followers</small>
+                    </div>
+                    <div class="border-end" style="height: 24px;"></div>
+                    <div class="text-center">
+                        <div class="fs-5 fw-bold text-dark" id="profileFollowingCount"><?= (int)($followingCount ?? 0) ?></div>
+                        <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.75rem;">Following</small>
+                    </div>
+                    <div class="border-end" style="height: 24px;"></div>
+                    <div class="text-center">
+                        <div class="fs-5 fw-bold text-dark"><?= !empty($posts) ? count($posts) : 0; ?></div>
+                        <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.75rem;">Posts</small>
+                    </div>
+                </div>
 
                 <!-- Bio -->
                 <div class="col-md-9 mx-auto mb-4">
@@ -122,13 +151,28 @@ if (!empty($user['full_name'])) {
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="d-flex justify-content-center gap-2">
+                <div class="d-flex flex-wrap justify-content-center gap-2">
                     <?php if (!empty($isOwnProfile)): ?>
                         <a href="<?= BASE_URL ?>/index.php?action=edit_profile" class="btn btn-accent px-4">
                             <i class="bi bi-pencil-square me-1"></i> Edit Profile
                         </a>
+                    <?php else: ?>
+                        <!-- Follow / Unfollow AJAX Button -->
+                        <form action="<?= BASE_URL ?>/index.php?action=follow_user" method="POST" class="d-inline" id="profileFollowForm">
+                            <?= csrf_field(); ?>
+                            <input type="hidden" name="user_id" value="<?= (int)$user['id']; ?>">
+                            <button type="submit" id="btnProfileFollow" class="btn <?= !empty($isFollowing) ? 'btn-outline-secondary' : 'btn-navy' ?> px-4 fw-semibold rounded-pill">
+                                <i class="bi <?= !empty($isFollowing) ? 'bi-person-check-fill' : 'bi-person-plus-fill' ?> me-1"></i>
+                                <span><?= !empty($isFollowing) ? 'Following' : 'Follow' ?></span>
+                            </button>
+                        </form>
+
+                        <!-- Direct Message Button -->
+                        <a href="<?= BASE_URL ?>/index.php?action=messages&user_id=<?= (int)$user['id']; ?>" class="btn btn-outline-primary px-4 fw-semibold rounded-pill">
+                            <i class="bi bi-chat-dots me-1"></i> Message
+                        </a>
                     <?php endif; ?>
-                    <a href="<?= BASE_URL ?>/" class="btn btn-outline-secondary px-4 rounded-3">
+                    <a href="<?= BASE_URL ?>/" class="btn btn-outline-secondary px-4 rounded-pill">
                         <i class="bi bi-arrow-left me-1"></i> Back to Feed
                     </a>
                 </div>
@@ -160,8 +204,7 @@ if (!empty($user['full_name'])) {
 
                     // Time formatting
                     $postTime = date('M j, Y \a\t g:i a', strtotime($post['created_at']));
-                    $diffHours = round((time() - strtotime($post['created_at'])) / 3600);
-                    $timeBadge = ($diffHours < 24 && $diffHours >= 1) ? $diffHours . 'h ago' : ($diffHours < 1 ? 'Just now' : date('M j, Y', strtotime($post['created_at'])));
+                    $timeBadge = format_time_ago($post['created_at']);
                     ?>
                     <article class="post-card" id="post-<?= $post['id'] ?>">
                         <!-- Post Author Header -->
@@ -189,28 +232,29 @@ if (!empty($user['full_name'])) {
                             </div>
 
                             <!-- Post Menu Dropdown -->
+                            <?php if (!empty($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)$post['user_id']): ?>
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-link text-muted p-0 text-decoration-none" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Post actions">
                                     <i class="bi bi-three-dots fs-5"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                    <?php if (!empty($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)$post['user_id']): ?>
-                                        <li>
-                                            <a class="dropdown-item small text-primary" href="<?= BASE_URL ?>/index.php?action=edit_post&post_id=<?= $post['id'] ?>">
-                                                <i class="bi bi-pencil-square me-2"></i>Edit post
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item small text-danger" href="<?= BASE_URL ?>/index.php?action=delete_post&post_id=<?= $post['id'] ?>" onclick="return confirm('Are you sure you want to delete this post? This action cannot be undone.');">
-                                                <i class="bi bi-trash me-2"></i>Delete post
-                                            </a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                    <?php endif; ?>
-                                    <li><a class="dropdown-item small" href="#"><i class="bi bi-bookmark me-2"></i>Save post</a></li>
-                                    <li><a class="dropdown-item small" href="#"><i class="bi bi-link-45deg me-2"></i>Copy link</a></li>
+                                    <li>
+                                        <a class="dropdown-item small text-secondary" href="<?= BASE_URL ?>/index.php?action=edit_post&post_id=<?= $post['id'] ?>">
+                                            <i class="bi bi-pencil-square me-2 text-muted"></i>Edit post
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <form action="<?= BASE_URL ?>/index.php?action=delete_post" method="POST" class="m-0" onsubmit="return confirm('Are you sure you want to delete this post? This action cannot be undone.');">
+                                            <?= csrf_field(); ?>
+                                            <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
+                                            <button type="submit" class="dropdown-item small text-secondary border-0 bg-transparent w-100 text-start">
+                                                <i class="bi bi-trash me-2 text-muted"></i>Delete post
+                                            </button>
+                                        </form>
+                                    </li>
                                 </ul>
                             </div>
+                            <?php endif; ?>
                         </div>
 
                         <!-- Post Text Content -->
@@ -235,8 +279,8 @@ if (!empty($user['full_name'])) {
                             <?php endif; ?>
                         <?php endif; ?>
 
-                        <!-- Post Engagement Actions (Like / Comment / Edit / Delete) -->
-                        <div class="post-footer-actions d-flex align-items-center justify-content-between">
+                        <!-- Post Engagement Actions (Like / Comment) -->
+                        <div class="post-footer-actions d-flex align-items-center">
                             <div class="d-flex align-items-center gap-3">
                                 <form action="<?= BASE_URL ?>/index.php?action=like_post" method="POST" class="d-inline">
                                     <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
@@ -251,17 +295,6 @@ if (!empty($user['full_name'])) {
                                     <span><?= (int)$post['comments_count']; ?></span>
                                 </button>
                             </div>
-
-                            <?php if (!empty($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)$post['user_id']): ?>
-                                <div class="d-flex align-items-center gap-1">
-                                    <a href="<?= BASE_URL ?>/index.php?action=edit_post&post_id=<?= $post['id'] ?>" class="btn btn-sm btn-light text-primary border-0 rounded-pill px-2 py-1 small" title="Edit your post">
-                                        <i class="bi bi-pencil-square me-1"></i>Edit
-                                    </a>
-                                    <a href="<?= BASE_URL ?>/index.php?action=delete_post&post_id=<?= $post['id'] ?>" class="btn btn-sm btn-light text-danger border-0 rounded-pill px-2 py-1 small" onclick="return confirm('Are you sure you want to delete this post? This action cannot be undone.');" title="Delete your post">
-                                        <i class="bi bi-trash me-1"></i>Delete
-                                    </a>
-                                </div>
-                            <?php endif; ?>
                         </div>
 
                         <!-- Comments Section -->
@@ -274,16 +307,7 @@ if (!empty($user['full_name'])) {
                                         ? strtoupper(mb_substr($cParts[0], 0, 1) . mb_substr($cParts[count($cParts)-1], 0, 1))
                                         : strtoupper(mb_substr($comment['full_name'] ?? 'U', 0, 2));
 
-                                    $cTimeDiff = time() - strtotime($comment['created_at']);
-                                    if ($cTimeDiff < 60) {
-                                        $cTimeBadge = 'Just now';
-                                    } elseif ($cTimeDiff < 3600) {
-                                        $cTimeBadge = floor($cTimeDiff / 60) . 'm ago';
-                                    } elseif ($cTimeDiff < 86400) {
-                                        $cTimeBadge = floor($cTimeDiff / 3600) . 'h ago';
-                                    } else {
-                                        $cTimeBadge = date('M j, Y', strtotime($comment['created_at']));
-                                    }
+                                    $cTimeBadge = format_time_ago($comment['created_at']);
                                     $cFullTime = date('M j, Y \a\t g:i a', strtotime($comment['created_at']));
                                     ?>
                                     <div class="comment-bubble" id="comment-<?= $comment['id'] ?>">

@@ -178,7 +178,8 @@ class PostModel {
     public function deletePost($postId, $userId) {
         $sql = "DELETE FROM posts WHERE id = :post_id AND user_id = :user_id";
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([':post_id' => $postId, ':user_id' => $userId]);
+        $stmt->execute([':post_id' => $postId, ':user_id' => $userId]);
+        return $stmt->rowCount() > 0;
     }
 
     /**
@@ -215,12 +216,13 @@ class PostModel {
                 SET content = :content, image = :image 
                 WHERE id = :post_id AND user_id = :user_id";
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
+        $executed = $stmt->execute([
             ':content' => $content,
             ':image'   => $image,
             ':post_id' => $postId,
             ':user_id' => $userId
         ]);
+        return $executed && $stmt->rowCount() > 0;
     }
 
     /**

@@ -127,7 +127,7 @@ $currentUserId = $_SESSION['user_id'] ?? null;
 
                 <!-- Action Row -->
                 <div class="pt-3 border-top insights-border d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
-                    <button type="submit" name="generate_report" value="1" class="btn btn-outline-dark rounded-pill px-3 py-2 fw-medium btn-sm d-inline-flex align-items-center gap-2">
+                    <button type="submit" name="generate_report" value="1" class="btn btn-report-generate rounded-pill px-3 py-2 fw-medium btn-sm d-inline-flex align-items-center gap-2">
                         <i class="bi bi-bar-chart-line search-accent-icon"></i>
                         <span>Generate Full Community Report</span>
                     </button>

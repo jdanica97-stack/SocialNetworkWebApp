@@ -5,19 +5,22 @@
 require_once __DIR__ . '/../models/CommentModel.php';
 require_once __DIR__ . '/../models/PostModel.php';
 require_once __DIR__ . '/../models/UserModel.php';
+require_once __DIR__ . '/../models/NotificationModel.php';
 
 class CommentController {
     private $commentModel;
     private $postModel;
     private $userModel;
+    private $notificationModel;
 
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        $this->commentModel = new CommentModel();
-        $this->postModel    = new PostModel();
-        $this->userModel    = new UserModel();
+        $this->commentModel      = new CommentModel();
+        $this->postModel         = new PostModel();
+        $this->userModel         = new UserModel();
+        $this->notificationModel = new NotificationModel();
     }
 
     /**
@@ -47,6 +50,19 @@ class CommentController {
                 echo json_encode(['success' => false, 'error' => 'Invalid request method.']);
                 exit;
             }
+            header('Location: ' . BASE_URL . '/index.php');
+            exit;
+        }
+
+        // CSRF Token Validation
+        if (!validate_csrf_token()) {
+            $errMsg = 'Security Error: Invalid or expired CSRF token.';
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $errMsg]);
+                exit;
+            }
+            $_SESSION['error_message'] = $errMsg;
             header('Location: ' . BASE_URL . '/index.php');
             exit;
         }
@@ -107,8 +123,28 @@ class CommentController {
             exit;
         }
 
-        $newCommentId = $this->commentModel->createComment($postId, $userId, $content);
+        $newCommentId = false;
+        try {
+            $newCommentId = $this->commentModel->createComment($postId, $userId, $content);
+        } catch (Throwable $e) {
+            error_log("Comment creation DB error: " . $e->getMessage());
+            $newCommentId = false;
+        }
+
         if ($newCommentId) {
+            // Trigger notification for the post owner if commenter is someone else
+            if ((int)$post['user_id'] !== $userId) {
+                $actorName = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'Someone';
+                $previewSnippet = mb_strlen($content) > 60 ? mb_substr($content, 0, 57) . '...' : $content;
+                $this->notificationModel->createNotification(
+                    (int)$post['user_id'],
+                    $userId,
+                    'comment',
+                    $postId,
+                    $actorName . ' commented: "' . $previewSnippet . '"'
+                );
+            }
+
             $user = $this->userModel->findById($userId);
             $allComments = $this->commentModel->getCommentsByPost($postId);
             $commentsCount = count($allComments);
@@ -169,22 +205,19 @@ class CommentController {
         $userId    = (int)$_SESSION['user_id'];
 
         if ($commentId <= 0) {
-            $_SESSION['error_message'] = 'Invalid comment ID.';
-            header('Location: ' . BASE_URL . '/index.php');
+            ErrorHandler::renderErrorPage(400, 'Invalid Request', 'The provided comment identifier is invalid.');
             exit;
         }
 
         $comment = $this->commentModel->getCommentById($commentId);
         if (!$comment) {
-            $_SESSION['error_message'] = 'Comment not found or has been deleted.';
-            header('Location: ' . BASE_URL . '/index.php');
+            ErrorHandler::renderErrorPage(404, 'Comment Not Found', 'The comment you are attempting to edit could not be found or has been deleted.');
             exit;
         }
 
         // Strict Server-Side Ownership Check
         if ((int)$comment['user_id'] !== $userId) {
-            $_SESSION['error_message'] = 'Unauthorized: You can only edit your own comments.';
-            header('Location: ' . BASE_URL . '/index.php');
+            ErrorHandler::renderErrorPage(403, 'Permission Denied', 'You do not have permission to edit this comment. You can only edit your own comments.');
             exit;
         }
 
@@ -204,6 +237,13 @@ class CommentController {
         $this->requireAuth();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/index.php');
+            exit;
+        }
+
+        // CSRF Token Validation
+        if (!validate_csrf_token()) {
+            $_SESSION['error_message'] = 'Security Error: Invalid or expired CSRF token.';
             header('Location: ' . BASE_URL . '/index.php');
             exit;
         }
@@ -265,7 +305,20 @@ class CommentController {
     public function delete() {
         $this->requireAuth();
 
-        $commentId = (int)($_POST['comment_id'] ?? $_GET['comment_id'] ?? $_GET['id'] ?? 0);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $_SESSION['error_message'] = 'Invalid request method for deleting a comment.';
+            header('Location: ' . BASE_URL . '/index.php');
+            exit;
+        }
+
+        // CSRF Token Validation
+        if (!validate_csrf_token()) {
+            $_SESSION['error_message'] = 'Security Error: Invalid or expired CSRF token.';
+            header('Location: ' . BASE_URL . '/index.php');
+            exit;
+        }
+
+        $commentId = (int)($_POST['comment_id'] ?? 0);
         $userId    = (int)$_SESSION['user_id'];
 
         if ($commentId <= 0) {

@@ -3,15 +3,18 @@
 // Controller managing Admin Dashboard requests, server-side role verification, and moderation actions
 
 require_once __DIR__ . '/../models/AdminModel.php';
+require_once __DIR__ . '/../models/EventModel.php';
 
 class AdminController {
     private $adminModel;
+    private $eventModel;
 
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         $this->adminModel = new AdminModel();
+        $this->eventModel = new EventModel();
     }
 
     /**
@@ -57,7 +60,7 @@ class AdminController {
         $page       = max(1, (int)($_GET['page'] ?? 1));
         $perPage    = 10;
 
-        $validTabs = ['overview', 'users', 'posts', 'comments', 'stats'];
+        $validTabs = ['overview', 'users', 'posts', 'comments', 'events', 'stats'];
         if (!in_array($tab, $validTabs, true)) {
             $tab = 'overview';
         }
@@ -69,6 +72,7 @@ class AdminController {
         $usersData = [];
         $postsData = [];
         $commentsData = [];
+        $eventsData = [];
         $pagination = [
             'current_page' => $page,
             'total_pages'  => 1,
@@ -78,6 +82,9 @@ class AdminController {
 
         // Fetch tab-specific records
         switch ($tab) {
+            case 'events':
+                $eventsData = $this->eventModel->getAllEvents();
+                break;
             case 'users':
                 $totalUsers = $this->adminModel->getUsersCount($search, $roleFilter);
                 $totalPages = max(1, (int)ceil($totalUsers / $perPage));
@@ -131,6 +138,14 @@ class AdminController {
         $mostLikedPosts  = $this->adminModel->getMostLikedPosts(5);
 
         $pageTitle = 'Admin Dashboard';
+
+        // Check if request is an AJAX tab switch
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || !empty($_GET['ajax']);
+
+        if ($isAjax) {
+            require __DIR__ . '/../views/admin/dashboard.php';
+            exit;
+        }
 
         require_once __DIR__ . '/../views/layouts/header.php';
         require_once __DIR__ . '/../views/admin/dashboard.php';
@@ -269,6 +284,84 @@ class AdminController {
         }
 
         header('Location: ' . BASE_URL . '/index.php?action=admin&tab=comments');
+        exit;
+    }
+
+    /**
+     * Create or Update a Campus Event (Admin Action).
+     */
+    public function saveEvent() {
+        $this->requireAdmin();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/index.php?action=admin&tab=events');
+            exit;
+        }
+
+        $this->validateCsrf();
+
+        $id          = (int)($_POST['event_id'] ?? 0);
+        $title       = trim($_POST['title'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $eventDate   = trim($_POST['event_date'] ?? '');
+        $eventTime   = trim($_POST['event_time'] ?? '');
+        $location    = trim($_POST['location'] ?? '');
+
+        if (empty($title) || empty($eventDate) || empty($location)) {
+            $_SESSION['error_message'] = 'Please fill in all required event fields (Title, Date, and Location).';
+            header('Location: ' . BASE_URL . '/index.php?action=admin&tab=events');
+            exit;
+        }
+
+        if ($id > 0) {
+            $updated = $this->eventModel->updateEvent($id, $title, $description, $eventDate, $eventTime, $location);
+            if ($updated) {
+                $_SESSION['success_message'] = 'Campus event updated successfully!';
+            } else {
+                $_SESSION['error_message'] = 'Failed to update campus event.';
+            }
+        } else {
+            $createdBy = $_SESSION['user_id'] ?? null;
+            $created = $this->eventModel->createEvent($title, $description, $eventDate, $eventTime, $location, $createdBy);
+            if ($created) {
+                $_SESSION['success_message'] = 'New campus event published successfully!';
+            } else {
+                $_SESSION['error_message'] = 'Failed to publish campus event.';
+            }
+        }
+
+        header('Location: ' . BASE_URL . '/index.php?action=admin&tab=events');
+        exit;
+    }
+
+    /**
+     * Delete a Campus Event (Admin Action).
+     */
+    public function deleteEvent() {
+        $this->requireAdmin();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/index.php?action=admin&tab=events');
+            exit;
+        }
+
+        $this->validateCsrf();
+
+        $id = (int)($_POST['event_id'] ?? 0);
+        if ($id <= 0) {
+            $_SESSION['error_message'] = 'Invalid event ID.';
+            header('Location: ' . BASE_URL . '/index.php?action=admin&tab=events');
+            exit;
+        }
+
+        $deleted = $this->eventModel->deleteEvent($id);
+        if ($deleted) {
+            $_SESSION['success_message'] = 'Campus event deleted successfully.';
+        } else {
+            $_SESSION['error_message'] = 'Failed to delete campus event.';
+        }
+
+        header('Location: ' . BASE_URL . '/index.php?action=admin&tab=events');
         exit;
     }
 }

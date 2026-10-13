@@ -31,6 +31,11 @@ class AuthController {
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Validate CSRF Token
+            if (!validate_csrf_token()) {
+                $errors[] = 'Security Error: Invalid or expired CSRF token. Please try submitting again.';
+            }
+
             // Retrieve and sanitize inputs
             $fullName        = trim($_POST['full_name'] ?? '');
             $username        = trim($_POST['username'] ?? '');
@@ -70,14 +75,26 @@ class AuthController {
             // If validation passes, create user
             if (empty($errors)) {
                 $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-                $created = $this->userModel->create($username, $passwordHash, $fullName);
+                $created = false;
+                try {
+                    $created = $this->userModel->create($username, $passwordHash, $fullName);
+                } catch (PDOException $e) {
+                    error_log("User registration DB error: " . $e->getMessage());
+                    // Check for duplicate entry (SQLSTATE 23000)
+                    if ($e->getCode() == 23000 || strpos($e->getMessage(), 'Duplicate') !== false) {
+                        $errors[] = 'Username is already taken. Please choose another.';
+                    } else {
+                        $errors[] = 'A database error occurred while creating your account. Please try again.';
+                    }
+                } catch (Throwable $e) {
+                    error_log("User registration unexpected error: " . $e->getMessage());
+                    $errors[] = 'An unexpected error occurred while creating your account. Please try again.';
+                }
 
                 if ($created) {
                     $_SESSION['success_message'] = 'Registration successful! You can now log in.';
                     header('Location: ' . BASE_URL . '/index.php?action=login');
                     exit;
-                } else {
-                    $errors[] = 'An unexpected error occurred while creating your account. Please try again.';
                 }
             }
         }
@@ -101,6 +118,11 @@ class AuthController {
         $username = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Validate CSRF Token
+            if (!validate_csrf_token()) {
+                $errors[] = 'Security Error: Invalid or expired CSRF token. Please try submitting again.';
+            }
+
             $username = trim($_POST['username'] ?? '');
             $password = $_POST['password'] ?? '';
 
@@ -123,10 +145,11 @@ class AuthController {
                     session_regenerate_id(true);
 
                     // Set session variables
-                    $_SESSION['user_id']   = $user['id'];
-                    $_SESSION['username']  = $user['username'];
-                    $_SESSION['full_name'] = $user['full_name'];
-                    $_SESSION['role']      = $user['role'] ?? 'user';
+                    $_SESSION['user_id']       = $user['id'];
+                    $_SESSION['username']      = $user['username'];
+                    $_SESSION['full_name']     = $user['full_name'];
+                    $_SESSION['role']          = $user['role'] ?? 'user';
+                    $_SESSION['profile_image'] = $user['profile_image'] ?? null;
 
                     $_SESSION['success_message'] = 'Welcome back, ' . htmlspecialchars($user['full_name']) . '!';
 

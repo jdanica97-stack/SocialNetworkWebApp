@@ -48,6 +48,7 @@ require_once __DIR__ . '/../layouts/header.php';
         <?php endif; ?>
 
         <form action="<?= BASE_URL ?>/index.php?action=login" method="POST" novalidate>
+            <?= csrf_field(); ?>
             <!-- Username -->
             <div class="mb-3">
                 <label for="username" class="form-label fw-semibold small text-navy">Username</label>

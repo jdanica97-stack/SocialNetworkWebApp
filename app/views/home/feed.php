@@ -83,10 +83,21 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                 <!-- 1. Post Creation Card -->
                 <div class="composer-card">
                     <form action="<?= BASE_URL ?>/index.php?action=create_post" method="POST" enctype="multipart/form-data">
+                        <?= csrf_field(); ?>
                         <div class="composer-input-row">
-                            <div class="user-avatar-sm" style="width: 40px; height: 40px; font-size: 0.9rem;">
-                                <?= htmlspecialchars($userInitials ?? 'U'); ?>
-                            </div>
+                            <?php if (!empty($userAvatarPath)): ?>
+                                <img 
+                                    src="<?= $userAvatarPath ?>" 
+                                    alt="<?= htmlspecialchars($_SESSION['full_name'] ?? 'User'); ?>" 
+                                    class="user-avatar-sm" 
+                                    style="width: 40px; height: 40px; object-fit: cover;"
+                                    onerror="this.onerror=null; this.outerHTML='<div class=&quot;user-avatar-sm&quot; style=&quot;width: 40px; height: 40px; font-size: 0.9rem;&quot;><?= htmlspecialchars($userInitials ?? 'U') ?></div>';"
+                                >
+                            <?php else: ?>
+                                <div class="user-avatar-sm" style="width: 40px; height: 40px; font-size: 0.9rem;">
+                                    <?= htmlspecialchars($userInitials ?? 'U'); ?>
+                                </div>
+                            <?php endif; ?>
                             <textarea 
                                 name="content" 
                                 class="composer-input" 
@@ -147,8 +158,7 @@ $currentUserId = $_SESSION['user_id'] ?? null;
 
                     // Time formatting
                     $postTime = date('M j, Y \a\t g:i a', strtotime($post['created_at']));
-                    $diffHours = round((time() - strtotime($post['created_at'])) / 3600);
-                    $timeBadge = ($diffHours < 24 && $diffHours >= 1) ? $diffHours . 'h ago' : ($diffHours < 1 ? 'Just now' : date('M j', strtotime($post['created_at'])));
+                    $timeBadge = format_time_ago($post['created_at']);
                     ?>
                     <article class="post-card" id="post-<?= $post['id'] ?>">
                         <!-- Post Author Header -->
@@ -176,28 +186,29 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                             </div>
 
                             <!-- Post Menu Dropdown -->
+                            <?php if ($currentUserId && $currentUserId == $post['user_id']): ?>
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-link text-muted p-0 text-decoration-none" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Post actions">
                                     <i class="bi bi-three-dots fs-5"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                    <?php if ($currentUserId && $currentUserId == $post['user_id']): ?>
-                                        <li>
-                                            <a class="dropdown-item small text-primary" href="<?= BASE_URL ?>/index.php?action=edit_post&post_id=<?= $post['id'] ?>">
-                                                <i class="bi bi-pencil-square me-2"></i>Edit post
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item small text-danger" href="<?= BASE_URL ?>/index.php?action=delete_post&post_id=<?= $post['id'] ?>" onclick="return confirm('Are you sure you want to delete this post? This action cannot be undone.');">
-                                                <i class="bi bi-trash me-2"></i>Delete post
-                                            </a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                    <?php endif; ?>
-                                    <li><a class="dropdown-item small" href="#"><i class="bi bi-bookmark me-2"></i>Save post</a></li>
-                                    <li><a class="dropdown-item small" href="#"><i class="bi bi-link-45deg me-2"></i>Copy link</a></li>
+                                    <li>
+                                        <a class="dropdown-item small text-secondary" href="<?= BASE_URL ?>/index.php?action=edit_post&post_id=<?= $post['id'] ?>">
+                                             <i class="bi bi-pencil-square me-2 text-muted"></i>Edit post
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <form action="<?= BASE_URL ?>/index.php?action=delete_post" method="POST" class="m-0" onsubmit="return confirm('Are you sure you want to delete this post? This action cannot be undone.');">
+                                            <?= csrf_field(); ?>
+                                            <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
+                                            <button type="submit" class="dropdown-item small text-secondary border-0 bg-transparent w-100 text-start">
+                                                <i class="bi bi-trash me-2 text-muted"></i>Delete post
+                                            </button>
+                                        </form>
+                                    </li>
                                 </ul>
                             </div>
+                            <?php endif; ?>
                         </div>
 
                         <!-- Post Text Content -->
@@ -222,10 +233,11 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                             <?php endif; ?>
                         <?php endif; ?>
 
-                        <!-- Post Engagement Actions (Like / Comment / Edit / Delete) -->
-                        <div class="post-footer-actions d-flex align-items-center justify-content-between">
+                        <!-- Post Engagement Actions (Like / Comment) -->
+                        <div class="post-footer-actions d-flex align-items-center">
                             <div class="d-flex align-items-center gap-3">
                                 <form action="<?= BASE_URL ?>/index.php?action=like_post" method="POST" class="d-inline">
+                                    <?= csrf_field(); ?>
                                     <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
                                     <button type="submit" class="post-action-btn <?= !empty($post['is_liked']) ? 'liked' : '' ?>" title="Like">
                                         <i class="bi <?= !empty($post['is_liked']) ? 'bi-heart-fill' : 'bi-heart' ?>"></i>
@@ -238,17 +250,6 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                                     <span><?= (int)$post['comments_count']; ?></span>
                                 </button>
                             </div>
-
-                            <?php if ($currentUserId && $currentUserId == $post['user_id']): ?>
-                                <div class="d-flex align-items-center gap-1">
-                                    <a href="<?= BASE_URL ?>/index.php?action=edit_post&post_id=<?= $post['id'] ?>" class="btn btn-sm btn-light text-primary border-0 rounded-pill px-2 py-1 small" title="Edit your post">
-                                        <i class="bi bi-pencil-square me-1"></i>Edit
-                                    </a>
-                                    <a href="<?= BASE_URL ?>/index.php?action=delete_post&post_id=<?= $post['id'] ?>" class="btn btn-sm btn-light text-danger border-0 rounded-pill px-2 py-1 small" onclick="return confirm('Are you sure you want to delete this post? This action cannot be undone.');" title="Delete your post">
-                                        <i class="bi bi-trash me-1"></i>Delete
-                                    </a>
-                                </div>
-                            <?php endif; ?>
                         </div>
 
                         <!-- Comments Section -->
@@ -261,16 +262,7 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                                         ? strtoupper(mb_substr($cParts[0], 0, 1) . mb_substr($cParts[count($cParts)-1], 0, 1))
                                         : strtoupper(mb_substr($comment['full_name'] ?? 'U', 0, 2));
 
-                                    $cTimeDiff = time() - strtotime($comment['created_at']);
-                                    if ($cTimeDiff < 60) {
-                                        $cTimeBadge = 'Just now';
-                                    } elseif ($cTimeDiff < 3600) {
-                                        $cTimeBadge = floor($cTimeDiff / 60) . 'm ago';
-                                    } elseif ($cTimeDiff < 86400) {
-                                        $cTimeBadge = floor($cTimeDiff / 3600) . 'h ago';
-                                    } else {
-                                        $cTimeBadge = date('M j, Y', strtotime($comment['created_at']));
-                                    }
+                                    $cTimeBadge = format_time_ago($comment['created_at']);
                                     $cFullTime = date('M j, Y \a\t g:i a', strtotime($comment['created_at']));
                                     ?>
                                     <div class="comment-bubble" id="comment-<?= $comment['id'] ?>">
@@ -299,15 +291,29 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                                                     </small>
 
                                                     <?php if ($currentUserId && (int)$currentUserId === (int)$comment['user_id']): ?>
-                                                        <a href="<?= BASE_URL ?>/index.php?action=edit_comment&comment_id=<?= $comment['id'] ?>" class="comment-btn-action text-primary" title="Edit comment">
-                                                            <i class="bi bi-pencil-square"></i> Edit
-                                                        </a>
-                                                        <form action="<?= BASE_URL ?>/index.php?action=delete_comment" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this comment? This action cannot be undone.');">
-                                                            <input type="hidden" name="comment_id" value="<?= $comment['id'] ?>">
-                                                            <button type="submit" class="comment-btn-action text-danger" title="Delete comment">
-                                                                <i class="bi bi-trash"></i> Delete
+                                                        <div class="dropdown">
+                                                            <button class="btn btn-sm btn-link text-muted p-0 text-decoration-none" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Comment options" style="line-height: 1;">
+                                                                <i class="bi bi-three-dots"></i>
                                                             </button>
-                                                        </form>
+                                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-1" style="min-width: 120px; font-size: 0.85rem;">
+                                                                <li>
+                                                                    <a class="dropdown-item py-1 text-secondary d-flex align-items-center gap-2" href="<?= BASE_URL ?>/index.php?action=edit_comment&comment_id=<?= $comment['id'] ?>">
+                                                                        <i class="bi bi-pencil-square text-muted"></i>
+                                                                        <span>Edit</span>
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <form action="<?= BASE_URL ?>/index.php?action=delete_comment" method="POST" class="m-0" onsubmit="return confirm('Are you sure you want to delete this comment? This action cannot be undone.');">
+                                                                        <?= csrf_field(); ?>
+                                                                        <input type="hidden" name="comment_id" value="<?= $comment['id'] ?>">
+                                                                        <button type="submit" class="dropdown-item py-1 text-secondary d-flex align-items-center gap-2 border-0 bg-transparent w-100 text-start">
+                                                                            <i class="bi bi-trash text-muted"></i>
+                                                                            <span>Delete</span>
+                                                                        </button>
+                                                                    </form>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>
@@ -322,6 +328,7 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                             <!-- Add Comment Form -->
                             <?php if ($currentUserId): ?>
                                 <form action="<?= BASE_URL ?>/index.php?action=create_comment" method="POST" class="comment-input-row">
+                                    <?= csrf_field(); ?>
                                     <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
                                     <input 
                                         type="text" 
@@ -356,158 +363,61 @@ $currentUserId = $_SESSION['user_id'] ?? null;
         </div>
 
         <!-- ==============================================
-             RIGHT SIDEBAR: UPCOMING EVENTS, TRENDING, WHO TO FOLLOW
+             RIGHT SIDEBAR: UPCOMING EVENTS
              ============================================== -->
         <div class="col-lg-5 col-xl-4">
 
             <!-- 1. Upcoming Events Card -->
             <div class="widget-card">
-                <div class="widget-header">
-                    <h6 class="widget-title">Upcoming Events</h6>
-                    <a href="#" class="widget-link">View all</a>
+                <div class="widget-header d-flex justify-content-between align-items-center">
+                    <h6 class="widget-title mb-0">Upcoming Events</h6>
+                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                        <a href="<?= BASE_URL ?>/index.php?action=admin&tab=events" class="widget-link small text-primary fw-semibold">
+                            <i class="bi bi-gear-fill me-1"></i>Manage
+                        </a>
+                    <?php else: ?>
+                        <span class="badge bg-light text-secondary border micro-text">Campus Calendar</span>
+                    <?php endif; ?>
                 </div>
 
-                <div class="event-item">
-                    <div class="event-date-box">
-                        <span class="event-month">MAY</span>
-                        <span class="event-day">24</span>
-                    </div>
-                    <div class="event-info">
-                        <div class="event-title">Intramurals Opening</div>
-                        <div class="event-meta">May 24 &bull; 8:00 AM<br>SMCC Gymnasium</div>
-                    </div>
-                    <i class="bi bi-calendar3 event-icon"></i>
-                </div>
-
-                <div class="event-item">
-                    <div class="event-date-box">
-                        <span class="event-month">MAY</span>
-                        <span class="event-day">27</span>
-                    </div>
-                    <div class="event-info">
-                        <div class="event-title">Finals Week Tips</div>
-                        <div class="event-meta">May 27 &bull; 2:00 PM<br>Audio Visual Room</div>
-                    </div>
-                    <i class="bi bi-calendar3 event-icon"></i>
-                </div>
-
-                <div class="event-item">
-                    <div class="event-date-box">
-                        <span class="event-month">JUN</span>
-                        <span class="event-day">03</span>
-                    </div>
-                    <div class="event-info">
-                        <div class="event-title">Blood Donation Drive</div>
-                        <div class="event-meta">June 3 &bull; 9:00 AM<br>SMCC Covered Court</div>
-                    </div>
-                    <i class="bi bi-calendar3 event-icon"></i>
-                </div>
-            </div>
-
-            <!-- 2. Trending Topics Card -->
-            <div class="widget-card">
-                <div class="widget-header">
-                    <h6 class="widget-title">Trending Topics</h6>
-                </div>
-
-                <div class="trending-item">
-                    <a href="#" class="trending-tag"># FinalsWeek</a>
-                    <span class="trending-count">128 posts</span>
-                </div>
-                <div class="trending-item">
-                    <a href="#" class="trending-tag"># Intramurals2024</a>
-                    <span class="trending-count">96 posts</span>
-                </div>
-                <div class="trending-item">
-                    <a href="#" class="trending-tag"># SMCCPride</a>
-                    <span class="trending-count">75 posts</span>
-                </div>
-
-                <div class="mt-2 pt-2 border-top">
-                    <a href="#" class="widget-link small">View all</a>
-                </div>
-            </div>
-
-            <!-- 3. Who to Follow Card -->
-            <div class="widget-card">
-                <div class="widget-header">
-                    <h6 class="widget-title">Who to Follow</h6>
-                    <a href="#" class="widget-link">View all</a>
-                </div>
-
-                <?php if (!empty($suggestedUsers)): ?>
-                    <?php foreach ($suggestedUsers as $sUser): ?>
+                <?php if (!empty($upcomingEvents)): ?>
+                    <?php foreach ($upcomingEvents as $evt): ?>
                         <?php
-                        $sParts = explode(' ', trim($sUser['full_name']));
-                        $sInitials = count($sParts) >= 2
-                            ? strtoupper(mb_substr($sParts[0], 0, 1) . mb_substr($sParts[count($sParts)-1], 0, 1))
-                            : strtoupper(mb_substr($sUser['full_name'], 0, 2));
+                            $evtTimestamp = !empty($evt['event_date']) ? strtotime($evt['event_date']) : time();
+                            $evtMonth = strtoupper(date('M', $evtTimestamp));
+                            $evtDay = date('d', $evtTimestamp);
+                            $dateFormatted = date('M d', $evtTimestamp);
+                            if (!empty($evt['event_time'])) {
+                                $dateFormatted .= ' &bull; ' . htmlspecialchars($evt['event_time']);
+                            }
                         ?>
-                        <div class="follow-item">
-                            <div class="follow-user">
-                                <?php if (!empty($sUser['profile_image'])): ?>
-                                    <img 
-                                        src="<?= BASE_URL ?>/public/uploads/avatars/<?= htmlspecialchars(basename($sUser['profile_image'])) ?>" 
-                                        alt="<?= htmlspecialchars($sUser['full_name']); ?>" 
-                                        class="follow-avatar"
-                                        onerror="this.onerror=null; this.outerHTML='<div class=\'follow-avatar\'><?= htmlspecialchars($sInitials) ?></div>';"
-                                    >
-                                <?php else: ?>
-                                    <div class="follow-avatar">
-                                        <?= htmlspecialchars($sInitials) ?>
-                                    </div>
-                                <?php endif; ?>
-                                <div class="follow-info">
-                                    <span class="follow-name"><?= htmlspecialchars($sUser['full_name']); ?></span>
-                                    <span class="follow-username">@<?= htmlspecialchars($sUser['username']); ?></span>
+                        <div class="event-item">
+                            <div class="event-date-box">
+                                <span class="event-month"><?= htmlspecialchars($evtMonth); ?></span>
+                                <span class="event-day"><?= htmlspecialchars($evtDay); ?></span>
+                            </div>
+                            <div class="event-info">
+                                <div class="event-title"><?= htmlspecialchars($evt['title']); ?></div>
+                                <div class="event-meta">
+                                    <?= $dateFormatted; ?><br>
+                                    <span class="text-secondary"><?= htmlspecialchars($evt['location']); ?></span>
+                                    <?php if (!empty($evt['description'])): ?>
+                                        <div class="micro-text text-muted mt-1 text-truncate" style="max-width: 190px;" title="<?= htmlspecialchars($evt['description']); ?>">
+                                            <?= htmlspecialchars($evt['description']); ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
-                            <button class="btn btn-follow" type="button" onclick="this.textContent = (this.textContent === 'Follow' ? 'Following' : 'Follow')">Follow</button>
+                            <i class="bi bi-calendar-event event-icon text-muted"></i>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <!-- Campus accounts fallback matching reference mockup style -->
-                    <div class="follow-item">
-                        <div class="follow-user">
-                            <div class="follow-avatar bg-warning text-dark">
-                                <i class="bi bi-mortarboard-fill"></i>
-                            </div>
-                            <div class="follow-info">
-                                <span class="follow-name">SMCC Official</span>
-                                <span class="follow-username">@smcc_official</span>
-                            </div>
-                        </div>
-                        <button class="btn btn-follow" type="button">Follow</button>
-                    </div>
-
-                    <div class="follow-item">
-                        <div class="follow-user">
-                            <div class="follow-avatar bg-primary text-white">
-                                <i class="bi bi-newspaper"></i>
-                            </div>
-                            <div class="follow-info">
-                                <span class="follow-name">The Torch</span>
-                                <span class="follow-username">@thetorchsmcc</span>
-                            </div>
-                        </div>
-                        <button class="btn btn-follow" type="button">Follow</button>
-                    </div>
-
-                    <div class="follow-item">
-                        <div class="follow-user">
-                            <div class="follow-avatar bg-secondary text-white">
-                                <i class="bi bi-book"></i>
-                            </div>
-                            <div class="follow-info">
-                                <span class="follow-name">SMCC Library</span>
-                                <span class="follow-username">@smcclibrary</span>
-                            </div>
-                        </div>
-                        <button class="btn btn-follow" type="button">Follow</button>
+                    <div class="p-3 text-center text-muted small">
+                        <i class="bi bi-calendar-check fs-4 d-block mb-1 opacity-50"></i>
+                        No upcoming events scheduled right now.
                     </div>
                 <?php endif; ?>
             </div>
-
         </div>
     </div>
 </div>

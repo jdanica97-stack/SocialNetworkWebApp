@@ -1028,7 +1028,9 @@ body {
    DARK MODE STYLING & OVERRIDES
    Activates when data-bs-theme="dark" or .dark-theme is set
 ======================================================== */
-[data-bs-theme="dark"] {
+[data-bs-theme="dark"],
+.dark-theme,
+body.dark-theme {
     --sidebar-bg: #0b1329;
     --sidebar-hover: rgba(255, 255, 255, 0.08);
     --sidebar-active-bg: rgba(255, 255, 255, 0.14);
@@ -1294,54 +1296,120 @@ textarea::placeholder,
 [data-bs-theme="dark"] h3,
 [data-bs-theme="dark"] h4,
 [data-bs-theme="dark"] h5,
-[data-bs-theme="dark"] h6 {
+[data-bs-theme="dark"] h6,
+.dark-theme h1,
+.dark-theme h2,
+.dark-theme h3,
+.dark-theme h4,
+.dark-theme h5,
+.dark-theme h6 {
     color: #f8fafc !important;
 }
 
 [data-bs-theme="dark"] label,
-[data-bs-theme="dark"] .form-label {
+[data-bs-theme="dark"] .form-label,
+.dark-theme label,
+.dark-theme .form-label {
     color: #e2e8f0 !important;
 }
 
 /* Bootstrap Light / White Utility Overrides in Dark Mode */
-[data-bs-theme="dark"] .bg-white {
+[data-bs-theme="dark"] .bg-white,
+.dark-theme .bg-white {
     background-color: var(--card-bg) !important;
+    color: #f1f5f9 !important;
 }
 
-[data-bs-theme="dark"] .bg-light {
+[data-bs-theme="dark"] .bg-light,
+.dark-theme .bg-light {
     background-color: #1a253c !important;
+    color: #e2e8f0 !important;
 }
 
-[data-bs-theme="dark"] .text-dark {
+[data-bs-theme="dark"] .text-dark,
+.dark-theme .text-dark {
     color: #f8fafc !important;
 }
 
 [data-bs-theme="dark"] .text-navy,
-[data-bs-theme="dark"] .font-navy {
+[data-bs-theme="dark"] .font-navy,
+.dark-theme .text-navy,
+.dark-theme .font-navy {
     color: #f1f5f9 !important;
 }
 
-[data-bs-theme="dark"] a.text-navy {
+[data-bs-theme="dark"] a.text-navy,
+.dark-theme a.text-navy {
     color: #93c5fd !important;
 }
 
-[data-bs-theme="dark"] a.text-navy:hover {
+[data-bs-theme="dark"] a.text-navy:hover,
+.dark-theme a.text-navy:hover {
     color: #ffffff !important;
 }
 
-[data-bs-theme="dark"] .text-secondary {
+[data-bs-theme="dark"] .text-secondary,
+.dark-theme .text-secondary {
     color: #cbd5e1 !important;
 }
 
-[data-bs-theme="dark"] .text-muted {
+[data-bs-theme="dark"] .text-muted,
+.dark-theme .text-muted {
     color: #94a3b8 !important;
 }
 
-[data-bs-theme="dark"] .theme-toggle-btn {
+/* Ensure paragraph, span, div, small text visibility */
+[data-bs-theme="dark"] p,
+.dark-theme p {
+    color: inherit;
+}
+
+/* Specific component text visibility in Dark Mode */
+[data-bs-theme="dark"] .brand-link.text-dark,
+.dark-theme .brand-link.text-dark {
+    color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] .comment-author,
+.dark-theme .comment-author {
+    color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] .comment-text,
+.dark-theme .comment-text {
+    color: #cbd5e1 !important;
+}
+
+[data-bs-theme="dark"] .comment-content-box,
+.dark-theme .comment-content-box {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+
+[data-bs-theme="dark"] .list-group-item,
+.dark-theme .list-group-item {
+    background-color: var(--card-bg) !important;
+    color: #f1f5f9 !important;
+    border-color: #1e293b !important;
+}
+
+[data-bs-theme="dark"] .list-group-item .text-dark,
+.dark-theme .list-group-item .text-dark {
+    color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] .list-group-item:hover,
+.dark-theme .list-group-item:hover {
+    background-color: #1e293b !important;
+}
+
+[data-bs-theme="dark"] .theme-toggle-btn,
+.dark-theme .theme-toggle-btn {
     color: #f1bd27 !important;
 }
 
-[data-bs-theme="dark"] .theme-toggle-btn:hover {
+[data-bs-theme="dark"] .theme-toggle-btn:hover,
+.dark-theme .theme-toggle-btn:hover {
     background-color: rgba(241, 189, 39, 0.15) !important;
     color: #f1bd27 !important;
 }
@@ -1351,85 +1419,121 @@ textarea::placeholder,
 [data-bs-theme="dark"] .border-bottom,
 [data-bs-theme="dark"] .border-start,
 [data-bs-theme="dark"] .border-end,
-[data-bs-theme="dark"] .border-light-subtle {
+[data-bs-theme="dark"] .border-light-subtle,
+.dark-theme .border,
+.dark-theme .border-top,
+.dark-theme .border-bottom,
+.dark-theme .border-start,
+.dark-theme .border-end,
+.dark-theme .border-light-subtle {
     border-color: #243048 !important;
 }
 
 /* Modals & Dialogs (Delete confirmations, etc.) */
-[data-bs-theme="dark"] .modal-content {
+[data-bs-theme="dark"] .modal-content,
+.dark-theme .modal-content {
     background-color: var(--card-bg);
     border-color: var(--card-border);
     color: var(--text-primary);
 }
 
 [data-bs-theme="dark"] .modal-header,
-[data-bs-theme="dark"] .modal-footer {
+[data-bs-theme="dark"] .modal-footer,
+.dark-theme .modal-header,
+.dark-theme .modal-footer {
     border-color: #243048;
 }
 
-[data-bs-theme="dark"] .btn-close {
+[data-bs-theme="dark"] .btn-close,
+.dark-theme .btn-close {
     filter: invert(1) grayscale(100%) brightness(200%);
 }
 
 /* Footer */
 [data-bs-theme="dark"] footer.bg-white,
-[data-bs-theme="dark"] footer {
+[data-bs-theme="dark"] footer,
+.dark-theme footer.bg-white,
+.dark-theme footer {
     background-color: #111a2e !important;
     border-top-color: #1e293b !important;
     color: #cbd5e1 !important;
 }
 
-[data-bs-theme="dark"] footer a {
+[data-bs-theme="dark"] footer a,
+.dark-theme footer a {
     color: #94a3b8 !important;
 }
 
-[data-bs-theme="dark"] footer a:hover {
+[data-bs-theme="dark"] footer a:hover,
+.dark-theme footer a:hover {
     color: #ffffff !important;
 }
 
 /* Navy & Outline Buttons in Dark Mode */
-[data-bs-theme="dark"] .btn-navy {
+[data-bs-theme="dark"] .btn-navy,
+.dark-theme .btn-navy {
     background-color: #1e3a8a !important;
     border-color: #3b82f6 !important;
     color: #ffffff !important;
 }
 
 [data-bs-theme="dark"] .btn-navy:hover,
-[data-bs-theme="dark"] .btn-navy:focus {
+[data-bs-theme="dark"] .btn-navy:focus,
+.dark-theme .btn-navy:hover,
+.dark-theme .btn-navy:focus {
     background-color: #2563eb !important;
     border-color: #2563eb !important;
     color: #ffffff !important;
 }
 
-[data-bs-theme="dark"] .btn-outline-navy {
+[data-bs-theme="dark"] .btn-outline-navy,
+.dark-theme .btn-outline-navy {
     background-color: transparent !important;
     border-color: #3b82f6 !important;
     color: #60a5fa !important;
 }
 
 [data-bs-theme="dark"] .btn-outline-navy:hover,
-[data-bs-theme="dark"] .btn-outline-navy:focus {
+[data-bs-theme="dark"] .btn-outline-navy:focus,
+.dark-theme .btn-outline-navy:hover,
+.dark-theme .btn-outline-navy:focus {
     background-color: #2563eb !important;
     border-color: #2563eb !important;
     color: #ffffff !important;
 }
 
 /* Outline Buttons */
-[data-bs-theme="dark"] .btn-outline-secondary {
+[data-bs-theme="dark"] .btn-outline-secondary,
+.dark-theme .btn-outline-secondary {
     color: #cbd5e1;
     border-color: #475569;
 }
 
-[data-bs-theme="dark"] .btn-outline-secondary:hover {
+[data-bs-theme="dark"] .btn-outline-secondary:hover,
+.dark-theme .btn-outline-secondary:hover {
     background-color: #334155;
     color: #ffffff;
     border-color: #475569;
 }
 
 /* Badges */
-[data-bs-theme="dark"] .badge.bg-secondary-subtle {
+[data-bs-theme="dark"] .badge.bg-secondary-subtle,
+.dark-theme .badge.bg-secondary-subtle {
     background-color: #243048 !important;
     color: #94a3b8 !important;
+}
+
+/* Ensure Bootstrap bg-body and bg-card in Messages & Hubs adapt */
+[data-bs-theme="dark"] .bg-body,
+.dark-theme .bg-body {
+    background-color: var(--body-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] .bg-card,
+.dark-theme .bg-card {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
 }
 
 /* ========================================================
@@ -1974,6 +2078,253 @@ textarea::placeholder,
     background-color: #e5ad19 !important;
     color: #192f5d !important;
 }
+
+/* ========================================================
+   GENERATE FULL COMMUNITY REPORT BUTTON (LIGHT & DARK MODE)
+======================================================== */
+.btn-report-generate {
+    background-color: #fafafb !important;
+    color: #171719 !important;
+    border: 1px solid #dedee2 !important;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-report-generate:hover {
+    background-color: #f1f1f5 !important;
+    color: #171719 !important;
+    border-color: #c8c8d0 !important;
+}
+
+.btn-report-generate:focus,
+.btn-report-generate:focus-visible {
+    background-color: #fafafb !important;
+    color: #171719 !important;
+    border-color: #3478f6 !important;
+    box-shadow: 0 0 0 3px rgba(52, 120, 246, 0.35) !important;
+    outline: none !important;
+}
+
+.btn-report-generate:disabled,
+.btn-report-generate.disabled {
+    opacity: 0.65 !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+}
+
+/* Dark Mode Overrides for Generate Report Button */
+[data-bs-theme="dark"] .btn-report-generate,
+.dark-theme .btn-report-generate {
+    background-color: #202b3d !important;
+    color: #ffffff !important;
+    border: 1px solid #64748b !important;
+    opacity: 1 !important;
+}
+
+[data-bs-theme="dark"] .btn-report-generate:hover,
+.dark-theme .btn-report-generate:hover {
+    background-color: #2a3850 !important;
+    color: #ffffff !important;
+    border-color: #94a3b8 !important;
+}
+
+[data-bs-theme="dark"] .btn-report-generate:focus,
+[data-bs-theme="dark"] .btn-report-generate:focus-visible,
+.dark-theme .btn-report-generate:focus,
+.dark-theme .btn-report-generate:focus-visible {
+    background-color: #202b3d !important;
+    color: #ffffff !important;
+    border-color: #3478f6 !important;
+    box-shadow: 0 0 0 3px rgba(52, 120, 246, 0.5) !important;
+    outline: none !important;
+}
+
+[data-bs-theme="dark"] .btn-report-generate:disabled,
+.dark-theme .btn-report-generate:disabled {
+    opacity: 0.5 !important;
+    background-color: #1a2332 !important;
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
+}
+
+/* ========================================================
+   PROFILE PICTURE ADJUSTMENT & CROPPER MODAL STYLES
+======================================================== */
+.cropper-wrapper {
+    background-color: #0b1120;
+    min-height: 340px;
+    height: 380px;
+    max-height: 420px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    touch-action: none;
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.cropper-wrapper img {
+    max-width: 100%;
+    display: block;
+}
+
+/* Circular Crop Mask View */
+.cropper-wrapper .cropper-view-box,
+.cropper-wrapper .cropper-face {
+    border-radius: 50% !important;
+}
+
+.cropper-wrapper .cropper-view-box {
+    outline: 2px solid rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 0 0 2000px rgba(11, 17, 32, 0.65) !important;
+}
+
+/* Hide square handles since drag & zoom operates directly */
+.cropper-wrapper .cropper-point,
+.cropper-wrapper .cropper-line {
+    display: none !important;
+}
+
+.avatar-preview-box {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    background-color: #07193d;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.avatar-crop-preview {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50% !important;
+    overflow: hidden;
+}
+
+.avatar-edit-container {
+    transition: all 0.2s ease-in-out;
+}
+
+.avatar-edit-container:hover {
+    border-color: #cbd5e1 !important;
+}
+
+/* ========================================================
+   NOTIFICATION CLICK & POST HIGHLIGHT ANIMATION
+======================================================== */
+.notification-item {
+    cursor: pointer;
+    text-decoration: none !important;
+    transition: background-color 0.15s ease;
+}
+
+.notification-item:hover {
+    background-color: rgba(7, 25, 61, 0.05) !important;
+}
+
+[data-bs-theme="dark"] .notification-item:hover,
+.dark-theme .notification-item:hover {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+@keyframes postHighlightPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.6);
+        border-color: #0d6efd;
+    }
+    50% {
+        box-shadow: 0 0 0 6px rgba(13, 110, 253, 0.35);
+        border-color: #0d6efd;
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
+        border-color: inherit;
+    }
+}
+
+/* ========================================================
+   NAVIGATION MENU TOGGLE BUTTON (HEADER FAR-LEFT)
+======================================================== */
+.header-menu-toggle-btn {
+    width: auto;
+    height: auto;
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    color: #1e293b;
+    font-size: 1.6rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s ease, transform 0.15s ease;
+    padding: 4px;
+    flex-shrink: 0;
+}
+
+.minimalist-menu-icon {
+    display: block;
+    width: 22px;
+    height: 18px;
+    overflow: visible;
+    transition: transform 0.15s ease;
+}
+
+.header-menu-toggle-btn:hover {
+    background: transparent !important;
+    border: none !important;
+    color: #0f172a;
+    transform: scale(1.08);
+}
+
+.header-menu-toggle-btn:active,
+.header-menu-toggle-btn:focus,
+.header-menu-toggle-btn:focus-visible {
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    color: #0f172a;
+}
+
+[data-bs-theme="dark"] .header-menu-toggle-btn,
+.dark-theme .header-menu-toggle-btn {
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .header-menu-toggle-btn:hover,
+.dark-theme .header-menu-toggle-btn:hover {
+    background: transparent !important;
+    border: none !important;
+    color: #ffffff;
+    transform: scale(1.08);
+}
+
+[data-bs-theme="dark"] .header-menu-toggle-btn:active,
+[data-bs-theme="dark"] .header-menu-toggle-btn:focus,
+[data-bs-theme="dark"] .header-menu-toggle-btn:focus-visible,
+.dark-theme .header-menu-toggle-btn:active,
+.dark-theme .header-menu-toggle-btn:focus,
+.dark-theme .header-menu-toggle-btn:focus-visible {
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    color: #ffffff;
+}
+
+
+
+
+
+
+
+
 
 
 

@@ -4,17 +4,20 @@
 
 require_once __DIR__ . '/../models/UserModel.php';
 require_once __DIR__ . '/../models/PostModel.php';
+require_once __DIR__ . '/../models/FollowModel.php';
 
 class ProfileController {
     private $userModel;
     private $postModel;
+    private $followModel;
 
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        $this->userModel = new UserModel();
-        $this->postModel = new PostModel();
+        $this->userModel   = new UserModel();
+        $this->postModel   = new PostModel();
+        $this->followModel = new FollowModel();
     }
 
     /**
@@ -50,8 +53,7 @@ class ProfileController {
                 header('Location: ' . BASE_URL . '/index.php?action=login');
                 exit;
             } else {
-                $_SESSION['error_message'] = 'User profile not found.';
-                header('Location: ' . BASE_URL . '/index.php?action=profile');
+                ErrorHandler::renderErrorPage(404, 'Profile Not Found', 'The requested user profile does not exist or may have been removed.');
                 exit;
             }
         }
@@ -60,6 +62,10 @@ class ProfileController {
         $posts = $this->postModel->getPostsByUserId($userId, $loggedInUserId);
 
         $isOwnProfile = ($userId === $loggedInUserId);
+        $isFollowing = !$isOwnProfile ? $this->followModel->isFollowing($loggedInUserId, $userId) : false;
+        $followersCount = $this->followModel->getFollowersCount($userId);
+        $followingCount = $this->followModel->getFollowingCount($userId);
+
         $pageTitle = $isOwnProfile ? 'My Profile' : $user['full_name'] . "'s Profile";
         require __DIR__ . '/../views/profile/profile.php';
     }
@@ -87,6 +93,11 @@ class ProfileController {
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // CSRF validation
+            if (!validate_csrf_token()) {
+                $errors[] = 'Security Error: Invalid or expired CSRF token. Please try submitting again.';
+            }
+
             $fullName = trim($_POST['full_name'] ?? '');
             $bio      = trim($_POST['bio'] ?? '');
 
@@ -108,11 +119,69 @@ class ProfileController {
             // Normalize empty bio to null or empty string
             $cleanBio = ($bio === '') ? null : $bio;
 
-            // 3. Process Profile Picture Upload (if uploaded)
+            // 3. Process Profile Picture Upload (if uploaded or adjusted)
             $newProfileImage = null;
             $removePicture = !empty($_POST['remove_picture']);
+            $croppedImageData = trim($_POST['cropped_image_data'] ?? '');
 
-            if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] !== UPLOAD_ERR_NO_FILE) {
+            if ($removePicture) {
+                // User opted to remove existing picture
+                if (!empty($user['profile_image'])) {
+                    $uploadDir = __DIR__ . '/../../public/uploads/avatars/';
+                    $oldFilePath = $uploadDir . basename($user['profile_image']);
+                    if (file_exists($oldFilePath) && is_file($oldFilePath)) {
+                        @unlink($oldFilePath);
+                    }
+                }
+                $newProfileImage = ''; // flag to set null in db
+            } elseif (!empty($croppedImageData)) {
+                // Process adjusted / cropped base64 image from canvas
+                if (preg_match('#^data:(image/(?:jpeg|png|webp));base64,(.+)$#i', $croppedImageData, $matches)) {
+                    $rawImage = base64_decode($matches[2], true);
+                    if ($rawImage === false) {
+                        $errors[] = 'Invalid adjusted image data received.';
+                    } elseif (strlen($rawImage) > 5 * 1024 * 1024) {
+                        $errors[] = 'Profile picture must not exceed 5MB.';
+                    } else {
+                        $imageInfo = @getimagesizefromstring($rawImage);
+                        if ($imageInfo === false) {
+                            $errors[] = 'Adjusted image could not be verified as a valid image.';
+                        } else {
+                            $extension = 'jpg';
+                            if ($imageInfo[2] === IMAGETYPE_PNG) {
+                                $extension = 'png';
+                            } elseif (defined('IMAGETYPE_WEBP') && $imageInfo[2] === IMAGETYPE_WEBP) {
+                                $extension = 'webp';
+                            }
+
+                            $uploadDir = __DIR__ . '/../../public/uploads/avatars/';
+                            if (!is_dir($uploadDir)) {
+                                mkdir($uploadDir, 0755, true);
+                            }
+
+                            $safeFileName = 'avatar_' . $userId . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
+                            $destination  = $uploadDir . $safeFileName;
+
+                            if (file_put_contents($destination, $rawImage) !== false) {
+                                $newProfileImage = $safeFileName;
+
+                                // Clean up previous image file if it exists in uploads/avatars/
+                                if (!empty($user['profile_image'])) {
+                                    $oldFilePath = $uploadDir . basename($user['profile_image']);
+                                    if (file_exists($oldFilePath) && is_file($oldFilePath)) {
+                                        @unlink($oldFilePath);
+                                    }
+                                }
+                            } else {
+                                $errors[] = 'Could not save the adjusted image file. Please check folder permissions.';
+                            }
+                        }
+                    }
+                } else {
+                    $errors[] = 'Invalid image format received from adjustment tool.';
+                }
+            } elseif (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] !== UPLOAD_ERR_NO_FILE) {
+                // Standard file upload fallback
                 $fileError = $_FILES['profile_image']['error'];
                 if ($fileError !== UPLOAD_ERR_OK) {
                     $errors[] = 'Failed to upload profile picture. (Error code: ' . $fileError . ')';
@@ -174,35 +243,143 @@ class ProfileController {
                         }
                     }
                 }
-            } elseif ($removePicture) {
-                // User opted to remove existing picture
-                if (!empty($user['profile_image'])) {
-                    $uploadDir = __DIR__ . '/../../public/uploads/avatars/';
-                    $oldFilePath = $uploadDir . basename($user['profile_image']);
-                    if (file_exists($oldFilePath) && is_file($oldFilePath)) {
-                        @unlink($oldFilePath);
+            }
+
+            // 3.5. Process Cover Photo Upload / Removal / Crop
+            $newCoverPhoto = null;
+            $removeCover = !empty($_POST['remove_cover']);
+            $croppedCoverData = trim($_POST['cropped_cover_data'] ?? '');
+
+            if ($removeCover) {
+                if (!empty($user['cover_photo'])) {
+                    $coverDir = __DIR__ . '/../../public/uploads/covers/';
+                    $oldCoverPath = $coverDir . basename($user['cover_photo']);
+                    if (file_exists($oldCoverPath) && is_file($oldCoverPath)) {
+                        @unlink($oldCoverPath);
                     }
                 }
-                $newProfileImage = ''; // flag to set null in db
+                $newCoverPhoto = ''; // flag to set null in db
+            } elseif (!empty($croppedCoverData)) {
+                if (preg_match('#^data:(image/(?:jpeg|png|webp));base64,(.+)$#i', $croppedCoverData, $matches)) {
+                    $rawCover = base64_decode($matches[2], true);
+                    if ($rawCover === false) {
+                        $errors[] = 'Invalid cover photo data received.';
+                    } elseif (strlen($rawCover) > 5 * 1024 * 1024) {
+                        $errors[] = 'Cover photo must not exceed 5MB.';
+                    } else {
+                        $coverInfo = @getimagesizefromstring($rawCover);
+                        if ($coverInfo === false) {
+                            $errors[] = 'Cover photo could not be verified as a valid image.';
+                        } else {
+                            $cExtension = 'jpg';
+                            if ($coverInfo[2] === IMAGETYPE_PNG) {
+                                $cExtension = 'png';
+                            } elseif (defined('IMAGETYPE_WEBP') && $coverInfo[2] === IMAGETYPE_WEBP) {
+                                $cExtension = 'webp';
+                            }
+
+                            $coverDir = __DIR__ . '/../../public/uploads/covers/';
+                            if (!is_dir($coverDir)) {
+                                mkdir($coverDir, 0755, true);
+                            }
+
+                            $safeCoverName = 'cover_' . $userId . '_' . bin2hex(random_bytes(8)) . '.' . $cExtension;
+                            $coverDestination = $coverDir . $safeCoverName;
+
+                            if (file_put_contents($coverDestination, $rawCover) !== false) {
+                                $newCoverPhoto = $safeCoverName;
+
+                                if (!empty($user['cover_photo'])) {
+                                    $oldCoverPath = $coverDir . basename($user['cover_photo']);
+                                    if (file_exists($oldCoverPath) && is_file($oldCoverPath)) {
+                                        @unlink($oldCoverPath);
+                                    }
+                                }
+                            } else {
+                                $errors[] = 'Could not save cover photo. Please check folder permissions.';
+                            }
+                        }
+                    }
+                } else {
+                    $errors[] = 'Invalid cover photo format received.';
+                }
+            } elseif (isset($_FILES['cover_photo']) && $_FILES['cover_photo']['error'] !== UPLOAD_ERR_NO_FILE) {
+                $coverError = $_FILES['cover_photo']['error'];
+                if ($coverError !== UPLOAD_ERR_OK) {
+                    $errors[] = 'Failed to upload cover photo. (Error code: ' . $coverError . ')';
+                } else {
+                    $tmpCoverPath = $_FILES['cover_photo']['tmp_name'];
+                    $coverName    = $_FILES['cover_photo']['name'];
+                    $coverSize    = $_FILES['cover_photo']['size'];
+
+                    if ($coverSize > 5 * 1024 * 1024) {
+                        $errors[] = 'Cover photo must not exceed 5MB.';
+                    }
+
+                    $cExtension = strtolower(pathinfo($coverName, PATHINFO_EXTENSION));
+                    $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                    if (!in_array($cExtension, $allowedExts, true)) {
+                        $errors[] = 'Invalid cover photo extension. Only JPG, PNG, GIF, and WEBP formats are allowed.';
+                    }
+
+                    $coverInfo = @getimagesize($tmpCoverPath);
+                    if ($coverInfo === false) {
+                        $errors[] = 'Uploaded cover file is not a valid image.';
+                    }
+
+                    if (empty($errors)) {
+                        $coverDir = __DIR__ . '/../../public/uploads/covers/';
+                        if (!is_dir($coverDir)) {
+                            mkdir($coverDir, 0755, true);
+                        }
+
+                        $safeCoverName = 'cover_' . $userId . '_' . bin2hex(random_bytes(8)) . '.' . $cExtension;
+                        $coverDestination = $coverDir . $safeCoverName;
+
+                        if (move_uploaded_file($tmpCoverPath, $coverDestination)) {
+                            $newCoverPhoto = $safeCoverName;
+
+                            if (!empty($user['cover_photo'])) {
+                                $oldCoverPath = $coverDir . basename($user['cover_photo']);
+                                if (file_exists($oldCoverPath) && is_file($oldCoverPath)) {
+                                    @unlink($oldCoverPath);
+                                }
+                            }
+                        } else {
+                            $errors[] = 'Could not save the uploaded cover photo file.';
+                        }
+                    }
+                }
             }
 
             // 4. If all validations pass, save changes to DB
             if (empty($errors)) {
-                $updated = $this->userModel->updateProfile($userId, $fullName, $cleanBio);
+                try {
+                    $updated = $this->userModel->updateProfile($userId, $fullName, $cleanBio);
 
-                if ($newProfileImage !== null) {
-                    $imageToSave = ($newProfileImage === '') ? null : $newProfileImage;
-                    $this->userModel->updateProfileImage($userId, $imageToSave);
-                }
+                    if ($newProfileImage !== null) {
+                        $imageToSave = ($newProfileImage === '') ? null : $newProfileImage;
+                        $this->userModel->updateProfileImage($userId, $imageToSave);
+                        $_SESSION['profile_image'] = $imageToSave;
+                    }
 
-                if ($updated !== false) {
-                    // Update session display name if it changed
-                    $_SESSION['full_name'] = $fullName;
-                    $_SESSION['success_message'] = 'Your profile has been updated successfully!';
-                    header('Location: ' . BASE_URL . '/index.php?action=profile');
-                    exit;
-                } else {
-                    $errors[] = 'Failed to update profile. Please try again.';
+                    if ($newCoverPhoto !== null) {
+                        $coverToSave = ($newCoverPhoto === '') ? null : $newCoverPhoto;
+                        $this->userModel->updateCoverPhoto($userId, $coverToSave);
+                    }
+
+                    if ($updated !== false) {
+                        // Update session display name if it changed
+                        $_SESSION['full_name'] = $fullName;
+                        $_SESSION['success_message'] = 'Your profile has been updated successfully!';
+                        header('Location: ' . BASE_URL . '/index.php?action=profile');
+                        exit;
+                    } else {
+                        $errors[] = 'Failed to update profile. Please try again.';
+                    }
+                } catch (Throwable $e) {
+                    error_log("Profile update DB error: " . $e->getMessage());
+                    $errors[] = 'We could not save your profile changes due to a system issue. Please try again.';
                 }
             }
         }

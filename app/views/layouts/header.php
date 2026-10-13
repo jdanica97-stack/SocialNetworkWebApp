@@ -17,19 +17,42 @@ $isLoggedIn = isset($_SESSION['user_id']);
 
 // Generate CSRF token if not set
 if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    if (function_exists('csrf_token')) {
+        csrf_token();
+    } else {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
 }
 
 // Get current user avatar if logged in
 $userInitials = 'U';
 $userAvatarPath = null;
 if ($isLoggedIn) {
+    // Sync latest profile details if UserModel available or query DB to keep session fresh
+    if (!isset($_SESSION['profile_image_synced']) || $_SESSION['profile_image_synced'] < (time() - 60)) {
+        require_once __DIR__ . '/../../models/UserModel.php';
+        $headerUserModel = new UserModel();
+        $currentUserData = $headerUserModel->findById((int)$_SESSION['user_id']);
+        if ($currentUserData) {
+            $_SESSION['profile_image'] = $currentUserData['profile_image'] ?? null;
+            $_SESSION['full_name'] = $currentUserData['full_name'] ?? $_SESSION['full_name'];
+            $_SESSION['profile_image_synced'] = time();
+        }
+    }
+
     $name = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User';
     $parts = explode(' ', trim($name));
     if (count($parts) >= 2) {
         $userInitials = strtoupper(mb_substr($parts[0], 0, 1) . mb_substr($parts[count($parts)-1], 0, 1));
     } else {
         $userInitials = strtoupper(mb_substr($name, 0, 2));
+    }
+
+    if (!empty($_SESSION['profile_image'])) {
+        $uploadedPath = __DIR__ . '/../../../public/uploads/avatars/' . basename($_SESSION['profile_image']);
+        if (file_exists($uploadedPath)) {
+            $userAvatarPath = BASE_URL . '/public/uploads/avatars/' . htmlspecialchars(basename($_SESSION['profile_image']));
+        }
     }
 }
 ?>
@@ -38,6 +61,7 @@ if ($isLoggedIn) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
     <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - SMCC Connect' : 'SMCC Connect'; ?></title>
 
     <!-- Bootstrap 5.3 CSS CDN -->
@@ -68,7 +92,7 @@ if ($isLoggedIn) {
     </script>
 
     <!-- Custom Modern Stylesheet -->
-    <link rel="stylesheet" href="<?= BASE_URL ?>/public/assets/css/style.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/public/assets/css/style.css?v=<?= filemtime(__DIR__ . '/../../../public/assets/css/style.css') ?>">
 </head>
 <body class="<?= $isLoggedIn ? 'app-logged-in' : 'app-logged-out' ?>">
 
@@ -81,8 +105,8 @@ if ($isLoggedIn) {
         <!-- LEFT SIDEBAR (Only for Logged-In Users) -->
         <aside class="app-sidebar" id="appSidebar">
             <!-- Sidebar Brand / Logo -->
-            <div class="sidebar-header">
-                <a href="<?= BASE_URL ?>/" class="brand-link" onclick="toggleSidebar(event)" title="Close Navigation Menu">
+            <div class="sidebar-header d-flex align-items-center justify-content-between">
+                <a href="<?= BASE_URL ?>/" class="brand-link" onclick="toggleSidebar(event)" title="SMCC Connect">
                     <div class="brand-icon-box">
                         <i class="bi bi-people-fill"></i>
                     </div>
@@ -104,16 +128,16 @@ if ($isLoggedIn) {
                     <i class="bi bi-house-door-fill"></i>
                     <span>Home</span>
                 </a>
+                <a href="<?= BASE_URL ?>/index.php?action=profile" class="nav-link <?= ($currentAction === 'profile') ? 'active' : '' ?>">
+                    <i class="bi bi-person-fill"></i>
+                    <span>Profile</span>
+                </a>
                 <a href="<?= BASE_URL ?>/index.php?action=messages" class="nav-link <?= ($currentAction === 'messages') ? 'active' : '' ?>">
                     <i class="bi bi-chat-dots"></i>
                     <span>Messages</span>
                 </a>
-                <a href="<?= BASE_URL ?>/index.php?action=saved" class="nav-link <?= ($currentAction === 'saved') ? 'active' : '' ?>">
-                    <i class="bi bi-bookmark"></i>
-                    <span>Saved</span>
-                </a>
-                <a href="<?= BASE_URL ?>/index.php?action=edit_profile" class="nav-link <?= ($currentAction === 'edit_profile') ? 'active' : '' ?>">
-                    <i class="bi bi-gear"></i>
+                <a href="<?= BASE_URL ?>/index.php?action=settings" class="nav-link <?= (strpos($currentAction, 'settings') === 0) ? 'active' : '' ?>">
+                    <i class="bi bi-gear-fill"></i>
                     <span>Settings</span>
                 </a>
             </div>
@@ -135,13 +159,29 @@ if ($isLoggedIn) {
         <header class="app-header">
             <div class="header-container">
                 <?php if ($isLoggedIn): ?>
-                    <!-- Website Logo (Clicking Toggles Side Panel) -->
-                    <div class="d-flex align-items-center me-3">
-                        <a href="<?= BASE_URL ?>/" class="brand-link text-dark" id="headerLogoBtn" onclick="toggleSidebar(event)" title="Toggle Side Panel">
-                            <div class="brand-icon-box">
+                    <!-- Header Left: Menu Toggle Icon -> Yellow Logo -> SMCC Connect Brand Name -->
+                    <div class="header-brand-group d-flex align-items-center me-3 gap-2">
+                        <!-- Navigation Menu Toggle Button -->
+                        <button class="header-menu-toggle-btn btn border-0 shadow-none bg-transparent d-flex align-items-center justify-content-center p-1" 
+                                type="button" 
+                                id="headerNavToggleBtn" 
+                                onclick="toggleSidebar(event)" 
+                                title="Toggle sidebar"
+                                aria-label="Toggle sidebar"
+                                style="border: none !important; background: transparent !important; outline: none !important; box-shadow: none !important;">
+                            <svg class="minimalist-menu-icon" width="22" height="18" viewBox="0 0 22 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <line x1="2" y1="3" x2="20" y2="3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                                <line x1="5" y1="9" x2="17" y2="9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                                <line x1="8" y1="15" x2="14" y2="15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+
+                        <!-- Brand: Yellow Logo Container and Brand Name -->
+                        <a href="<?= BASE_URL ?>/" class="brand-link text-dark align-items-center gap-2" id="headerLogoBtn" title="SMCC Connect Home">
+                            <div class="brand-icon-box flex-shrink-0">
                                 <i class="bi bi-people-fill"></i>
                             </div>
-                            <span class="fs-5 font-navy ms-1 fw-bold d-none d-sm-inline">SMCC Connect</span>
+                            <span class="fs-5 font-navy fw-bold d-none d-sm-inline">SMCC Connect</span>
                         </a>
                     </div>
 
@@ -160,19 +200,48 @@ if ($isLoggedIn) {
                             <i class="theme-toggle-icon bi bi-moon-fill"></i>
                         </button>
 
-                        <button class="header-icon-btn" title="Notifications" aria-label="Notifications">
-                            <i class="bi bi-bell"></i>
-                        </button>
-                        <button class="header-icon-btn" title="Messages" aria-label="Messages">
+                        <!-- Notifications Dropdown -->
+                        <div class="dropdown">
+                            <button class="header-icon-btn position-relative dropdown-toggle" id="notificationsDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications" aria-label="Notifications">
+                                <i class="bi bi-bell"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notifBadge" style="font-size: 0.65rem;">
+                                    0
+                                </span>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-0" aria-labelledby="notificationsDropdownBtn" style="width: 320px; max-width: 90vw;">
+                                <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-body">
+                                    <h6 class="mb-0 fw-bold text-dark">Notifications</h6>
+                                    <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none small" id="btnMarkAllNotifsRead">
+                                        Mark all read
+                                    </button>
+                                </div>
+                                <div class="overflow-y-auto" id="notificationsDropdownList" style="max-height: 350px;">
+                                    <div class="p-4 text-center text-muted small" id="notifEmptyState">
+                                        <i class="bi bi-bell-slash fs-3 d-block mb-1 opacity-50"></i>
+                                        No new notifications
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Messages Button with Live Unread Counter -->
+                        <a href="<?= BASE_URL ?>/index.php?action=messages" class="header-icon-btn position-relative" title="Messages" aria-label="Messages">
                             <i class="bi bi-chat-text"></i>
-                        </button>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary d-none" id="messagesBadge" style="font-size: 0.65rem;">
+                                0
+                            </span>
+                        </a>
 
                         <!-- User Profile Dropdown -->
                         <div class="dropdown">
                             <a href="#" class="header-user-btn dropdown-toggle" id="headerUserDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <div class="user-avatar-sm">
-                                    <?= htmlspecialchars($userInitials); ?>
-                                </div>
+                                <?php if (!empty($userAvatarPath)): ?>
+                                    <img src="<?= $userAvatarPath ?>" alt="<?= htmlspecialchars($_SESSION['full_name'] ?? 'User'); ?>" class="user-avatar-sm" onerror="this.onerror=null; this.outerHTML='<div class=\'user-avatar-sm\'><?= htmlspecialchars($userInitials) ?></div>';">
+                                <?php else: ?>
+                                    <div class="user-avatar-sm">
+                                        <?= htmlspecialchars($userInitials); ?>
+                                    </div>
+                                <?php endif; ?>
                                 <span class="header-user-name d-none d-sm-inline"><?= htmlspecialchars($_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User'); ?></span>
                                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
                                     <span class="badge bg-warning text-dark ms-1">Admin</span>
@@ -208,6 +277,12 @@ if ($isLoggedIn) {
                                     <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= BASE_URL ?>/index.php?action=edit_profile">
                                         <i class="bi bi-pencil-square text-muted"></i>
                                         <span>Edit Profile</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= BASE_URL ?>/index.php?action=settings">
+                                        <i class="bi bi-gear text-muted"></i>
+                                        <span>Settings</span>
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider my-1"></li>
@@ -246,3 +321,22 @@ if ($isLoggedIn) {
 
         <!-- PAGE CONTENT CONTAINER -->
         <main class="<?= $isLoggedIn ? 'p-3 p-md-4 flex-grow-1' : 'auth-main flex-grow-1 d-flex align-items-center justify-content-center p-3 p-md-4' ?>">
+
+            <!-- Global Flash Messages -->
+            <?php if (!empty($_SESSION['error_message']) && $currentAction !== 'home' && $currentAction !== 'insights' && $currentAction !== 'admin'): ?>
+                <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4 mx-auto" style="max-width: 900px;" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <?= htmlspecialchars($_SESSION['error_message']); ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <?php unset($_SESSION['error_message']); ?>
+            <?php endif; ?>
+
+            <?php if (!empty($_SESSION['success_message']) && $currentAction !== 'home' && $currentAction !== 'insights' && $currentAction !== 'admin' && $currentAction !== 'login'): ?>
+                <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4 mx-auto" style="max-width: 900px;" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <?= htmlspecialchars($_SESSION['success_message']); ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <?php unset($_SESSION['success_message']); ?>
+            <?php endif; ?>

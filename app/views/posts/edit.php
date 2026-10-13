@@ -69,6 +69,7 @@ $authorInitials = count($authorParts) >= 2
 
             <!-- Edit Form -->
             <form action="<?= BASE_URL ?>/index.php?action=update_post" method="POST" enctype="multipart/form-data">
+                <?= csrf_field(); ?>
                 <input type="hidden" name="post_id" value="<?= (int)$post['id']; ?>">
 
                 <!-- Content Textarea -->

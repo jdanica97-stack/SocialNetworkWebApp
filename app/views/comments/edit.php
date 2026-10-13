@@ -87,6 +87,7 @@ $postAuthorInitials = count($postAuthorParts) >= 2
 
             <!-- Edit Comment Form -->
             <form action="<?= BASE_URL ?>/index.php?action=update_comment" method="POST">
+                <?= csrf_field(); ?>
                 <input type="hidden" name="comment_id" value="<?= (int)$comment['id']; ?>">
 
                 <!-- Content Textarea -->

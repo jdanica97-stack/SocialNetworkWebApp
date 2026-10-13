@@ -118,34 +118,56 @@ if (session_status() === PHP_SESSION_NONE) {
     </div>
 </div>
 
-<!-- NAVIGATION TABS -->
-<ul class="nav nav-tabs nav-fill mb-4 border-bottom-0 gap-1">
-    <li class="nav-item">
-        <a class="nav-link rounded-3 fw-semibold <?= ($tab === 'overview') ? 'active bg-white shadow-sm border' : 'bg-light text-secondary'; ?>" href="<?= BASE_URL ?>/index.php?action=admin&tab=overview">
-            <i class="bi bi-speedometer2 me-1 text-primary"></i> Overview
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link rounded-3 fw-semibold <?= ($tab === 'users') ? 'active bg-white shadow-sm border' : 'bg-light text-secondary'; ?>" href="<?= BASE_URL ?>/index.php?action=admin&tab=users">
-            <i class="bi bi-people-fill me-1 text-success"></i> User Management
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link rounded-3 fw-semibold <?= ($tab === 'posts') ? 'active bg-white shadow-sm border' : 'bg-light text-secondary'; ?>" href="<?= BASE_URL ?>/index.php?action=admin&tab=posts">
-            <i class="bi bi-file-earmark-post me-1 text-info"></i> Post Management
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link rounded-3 fw-semibold <?= ($tab === 'comments') ? 'active bg-white shadow-sm border' : 'bg-light text-secondary'; ?>" href="<?= BASE_URL ?>/index.php?action=admin&tab=comments">
-            <i class="bi bi-chat-left-dots-fill me-1 text-warning"></i> Comment Moderation
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link rounded-3 fw-semibold <?= ($tab === 'stats') ? 'active bg-white shadow-sm border' : 'bg-light text-secondary'; ?>" href="<?= BASE_URL ?>/index.php?action=admin&tab=stats">
-            <i class="bi bi-graph-up-arrow me-1 text-danger"></i> Platform Activity Stats
-        </a>
-    </li>
-</ul>
+<!-- ADMIN TABS AND CONTENT WRAPPER -->
+<div id="adminDashboardTabsWrapper">
+    <!-- NAVIGATION TABS -->
+    <ul class="nav nav-tabs nav-fill mb-4 border-bottom-0 gap-1" id="adminTabs">
+        <li class="nav-item">
+            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'overview') ? 'active bg-white shadow-sm border' : 'bg-light text-secondary'; ?>" 
+               href="<?= BASE_URL ?>/index.php?action=admin&tab=overview" 
+               data-tab="overview">
+                <i class="bi bi-speedometer2 me-1 text-primary"></i> Overview
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'users') ? 'active bg-white shadow-sm border' : 'bg-light text-secondary'; ?>" 
+               href="<?= BASE_URL ?>/index.php?action=admin&tab=users" 
+               data-tab="users">
+                <i class="bi bi-people-fill me-1 text-success"></i> User Management
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'posts') ? 'active bg-white shadow-sm border' : 'bg-light text-secondary'; ?>" 
+               href="<?= BASE_URL ?>/index.php?action=admin&tab=posts" 
+               data-tab="posts">
+                <i class="bi bi-file-earmark-post me-1 text-info"></i> Post Management
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'comments') ? 'active bg-white shadow-sm border' : 'bg-light text-secondary'; ?>" 
+               href="<?= BASE_URL ?>/index.php?action=admin&tab=comments" 
+               data-tab="comments">
+                <i class="bi bi-chat-left-dots-fill me-1 text-warning"></i> Comment Moderation
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'events') ? 'active bg-white shadow-sm border' : 'bg-light text-secondary'; ?>" 
+               href="<?= BASE_URL ?>/index.php?action=admin&tab=events" 
+               data-tab="events">
+                <i class="bi bi-calendar-event-fill me-1 text-primary"></i> Campus Events
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'stats') ? 'active bg-white shadow-sm border' : 'bg-light text-secondary'; ?>" 
+               href="<?= BASE_URL ?>/index.php?action=admin&tab=stats" 
+               data-tab="stats">
+                <i class="bi bi-graph-up-arrow me-1 text-danger"></i> Platform Activity Stats
+            </a>
+        </li>
+    </ul>
+
+    <!-- DYNAMIC TAB PANELS CONTAINER -->
+    <div id="adminTabPanelsContainer">
 
 <!-- TAB CONTENT 1: OVERVIEW -->
 <?php if ($tab === 'overview'): ?>
@@ -228,33 +250,6 @@ if (session_status() === PHP_SESSION_NONE) {
                 <?php else: ?>
                     <div class="text-center py-4 text-muted">No liked posts recorded.</div>
                 <?php endif; ?>
-            </div>
-        </div>
-    </div>
-
-    <!-- SQL CONCEPTS DEMONSTRATION BOX -->
-    <div class="card-modern p-4 shadow-sm mb-4 bg-light border">
-        <h5 class="fw-bold text-dark mb-3">
-            <i class="bi bi-code-slash text-primary me-2"></i> Step 12 SQL Database Implementation Verification
-        </h5>
-        <div class="row g-3 small">
-            <div class="col-md-4">
-                <div class="p-3 bg-white rounded-3 border h-100">
-                    <strong class="text-primary d-block mb-1"><i class="bi bi-check-circle-fill me-1"></i> SELECT & WHERE</strong>
-                    <p class="text-muted mb-0">Used for search filters, role verification, and record lookups.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="p-3 bg-white rounded-3 border h-100">
-                    <strong class="text-success d-block mb-1"><i class="bi bi-check-circle-fill me-1"></i> JOIN & LEFT JOIN</strong>
-                    <p class="text-muted mb-0">Combines users, posts, comments, and likes safely without excluding zero-item records.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="p-3 bg-white rounded-3 border h-100">
-                    <strong class="text-warning text-dark d-block mb-1"><i class="bi bi-check-circle-fill me-1"></i> Aggregate & GROUP BY</strong>
-                    <p class="text-muted mb-0">Calculates summary stats using <code>COUNT(DISTINCT)</code> and <code>GROUP BY</code> clauses.</p>
-                </div>
             </div>
         </div>
     </div>
@@ -740,3 +735,292 @@ if (session_status() === PHP_SESSION_NONE) {
         </div>
     </div>
 <?php endif; ?>
+
+<!-- TAB CONTENT 6: CAMPUS EVENTS MANAGEMENT -->
+<?php if ($tab === 'events'): ?>
+    <div class="card-modern p-4 mb-4 shadow-sm">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 border-bottom pb-3 mb-4">
+            <div>
+                <h5 class="fw-bold text-dark mb-1">
+                    <i class="bi bi-calendar-event-fill text-primary me-2"></i> Campus Events Management
+                </h5>
+                <p class="text-muted small mb-0">
+                    Publish, update, and manage official campus events shown on students' feeds and events widget.
+                </p>
+            </div>
+            <div>
+                <button type="button" class="btn btn-navy btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalCreateEvent">
+                    <i class="bi bi-plus-lg me-1"></i> Add New Event
+                </button>
+            </div>
+        </div>
+
+        <?php if (!empty($eventsData)): ?>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 130px;">Date & Time</th>
+                            <th>Event Title</th>
+                            <th>Location</th>
+                            <th>Description</th>
+                            <th>Posted By</th>
+                            <th class="text-end" style="width: 140px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($eventsData as $ev): ?>
+                            <?php 
+                                $evDateObj = !empty($ev['event_date']) ? strtotime($ev['event_date']) : time();
+                                $isPast = ($evDateObj < strtotime('today'));
+                            ?>
+                            <tr class="<?= $isPast ? 'opacity-75' : ''; ?>">
+                                <td>
+                                    <div class="fw-bold <?= $isPast ? 'text-muted' : 'text-primary'; ?>">
+                                        <?= date('M d, Y', $evDateObj); ?>
+                                    </div>
+                                    <?php if (!empty($ev['event_time'])): ?>
+                                        <div class="text-muted micro-text">
+                                            <i class="bi bi-clock me-1"></i><?= htmlspecialchars($ev['event_time']); ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    <?php if ($isPast): ?>
+                                        <span class="badge bg-secondary micro-text">Past</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-success-subtle text-success micro-text">Upcoming</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <strong class="text-dark"><?= htmlspecialchars($ev['title']); ?></strong>
+                                </td>
+                                <td>
+                                    <span class="small text-secondary">
+                                        <i class="bi bi-geo-alt-fill text-danger me-1"></i><?= htmlspecialchars($ev['location']); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="small text-muted" style="max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="<?= htmlspecialchars($ev['description'] ?? ''); ?>">
+                                        <?= !empty($ev['description']) ? htmlspecialchars($ev['description']) : '<em class="text-muted">No description</em>'; ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="small text-secondary">
+                                        <?= htmlspecialchars($ev['organizer_name'] ?? 'Administrator'); ?>
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <!-- Edit Event Button -->
+                                        <button type="button" 
+                                                class="btn btn-outline-primary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#modalEditEvent<?= (int)$ev['id']; ?>"
+                                                title="Edit Event">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                        <!-- Delete Event Button -->
+                                        <form action="<?= BASE_URL ?>/index.php?action=admin_delete_event" method="POST" class="d-inline" onsubmit="return confirm('Delete this campus event? Students will no longer see it on their feed.');">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
+                                            <input type="hidden" name="event_id" value="<?= (int)$ev['id']; ?>">
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete Event">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- EDIT EVENT MODAL -->
+                            <div class="modal fade" id="modalEditEvent<?= (int)$ev['id']; ?>" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content border-0 shadow">
+                                        <form action="<?= BASE_URL ?>/index.php?action=admin_save_event" method="POST">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
+                                            <input type="hidden" name="event_id" value="<?= (int)$ev['id']; ?>">
+                                            <div class="modal-header border-bottom">
+                                                <h5 class="modal-title fw-bold text-dark">
+                                                    <i class="bi bi-pencil-square text-primary me-2"></i>Edit Campus Event
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body p-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-bold">Event Title <span class="text-danger">*</span></label>
+                                                    <input type="text" name="title" class="form-control" value="<?= htmlspecialchars($ev['title']); ?>" required>
+                                                </div>
+                                                <div class="row g-2 mb-3">
+                                                    <div class="col-6">
+                                                        <label class="form-label small fw-bold">Event Date <span class="text-danger">*</span></label>
+                                                        <input type="date" name="event_date" class="form-control" value="<?= htmlspecialchars($ev['event_date']); ?>" required>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <label class="form-label small fw-bold">Event Time</label>
+                                                        <input type="text" name="event_time" class="form-control" placeholder="e.g. 8:00 AM" value="<?= htmlspecialchars($ev['event_time'] ?? ''); ?>">
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-bold">Location <span class="text-danger">*</span></label>
+                                                    <input type="text" name="location" class="form-control" placeholder="e.g. SMCC Gymnasium" value="<?= htmlspecialchars($ev['location']); ?>" required>
+                                                </div>
+                                                <div class="mb-0">
+                                                    <label class="form-label small fw-bold">Description</label>
+                                                    <textarea name="description" rows="3" class="form-control" placeholder="Optional details for students..."><?= htmlspecialchars($ev['description'] ?? ''); ?></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-top bg-light">
+                                                <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4">Update Event</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php else: ?>
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-calendar-x fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                <h6 class="fw-bold">No campus events found</h6>
+                <p class="small text-muted mb-3">Publish upcoming events so students can see them in their newsfeed widget.</p>
+                <button type="button" class="btn btn-navy btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalCreateEvent">
+                    <i class="bi bi-plus-lg me-1"></i> Add Event Now
+                </button>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- CREATE EVENT MODAL -->
+    <div class="modal fade" id="modalCreateEvent" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <form action="<?= BASE_URL ?>/index.php?action=admin_save_event" method="POST">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
+                    <input type="hidden" name="event_id" value="0">
+                    <div class="modal-header border-bottom">
+                        <h5 class="modal-title fw-bold text-dark">
+                            <i class="bi bi-calendar-plus text-primary me-2"></i>Publish Campus Event
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Event Title <span class="text-danger">*</span></label>
+                            <input type="text" name="title" class="form-control" placeholder="e.g. Intramurals Opening Ceremony" required>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Event Date <span class="text-danger">*</span></label>
+                                <input type="date" name="event_date" class="form-control" value="<?= date('Y-m-d'); ?>" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Event Time</label>
+                                <input type="text" name="event_time" class="form-control" placeholder="e.g. 8:00 AM">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Location <span class="text-danger">*</span></label>
+                            <input type="text" name="location" class="form-control" placeholder="e.g. SMCC Gymnasium" required>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label small fw-bold">Description</label>
+                            <textarea name="description" rows="3" class="form-control" placeholder="Provide event details, instructions, or agenda for students..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top bg-light">
+                        <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-navy btn-sm rounded-pill px-4">Publish Event</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
+    </div><!-- Close #adminTabPanelsContainer -->
+</div><!-- Close #adminDashboardTabsWrapper -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var tabsNav = document.getElementById('adminTabs');
+    var panelsContainer = document.getElementById('adminTabPanelsContainer');
+    if (!tabsNav || !panelsContainer) return;
+
+    tabsNav.addEventListener('click', function(e) {
+        var link = e.target.closest('.admin-tab-btn');
+        if (!link) return;
+
+        e.preventDefault();
+
+        var tabName = link.getAttribute('data-tab');
+        var targetUrl = link.getAttribute('href');
+
+        // Update active class on tab buttons immediately
+        tabsNav.querySelectorAll('.admin-tab-btn').forEach(function(btn) {
+            btn.classList.remove('active', 'bg-white', 'shadow-sm', 'border');
+            btn.classList.add('bg-light', 'text-secondary');
+        });
+        link.classList.remove('bg-light', 'text-secondary');
+        link.classList.add('active', 'bg-white', 'shadow-sm', 'border');
+
+        // Smooth subtle fade on container while loading
+        panelsContainer.style.opacity = '0.5';
+        panelsContainer.style.transition = 'opacity 0.15s ease';
+
+        // Fetch new tab content via AJAX
+        var fetchUrl = targetUrl + (targetUrl.indexOf('?') !== -1 ? '&' : '?') + 'ajax=1';
+
+        fetch(fetchUrl, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(function(res) {
+            return res.text();
+        })
+        .then(function(html) {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var newContent = doc.getElementById('adminTabPanelsContainer');
+
+            if (newContent) {
+                panelsContainer.innerHTML = newContent.innerHTML;
+            } else {
+                // Fallback: extract anything outside hero header
+                var fallbackContent = doc.getElementById('adminDashboardTabsWrapper');
+                if (fallbackContent) {
+                    var inner = fallbackContent.querySelector('#adminTabPanelsContainer');
+                    if (inner) panelsContainer.innerHTML = inner.innerHTML;
+                }
+            }
+
+            // Update browser URL without reloading or jumping
+            window.history.pushState({ tab: tabName }, '', targetUrl);
+
+            panelsContainer.style.opacity = '1';
+
+            // Re-initialize any bootstrap components (tooltips, dropdowns, modals) in dynamic content
+            if (window.bootstrap) {
+                var tooltips = panelsContainer.querySelectorAll('[data-bs-toggle="tooltip"]');
+                tooltips.forEach(function(el) { new bootstrap.Tooltip(el); });
+            }
+        })
+        .catch(function(err) {
+            console.error('Tab load failed:', err);
+            // Fallback to normal navigation if fetch fails
+            window.location.href = targetUrl;
+        });
+    });
+
+    // Handle back/forward browser buttons
+    window.addEventListener('popstate', function(e) {
+        if (e.state && e.state.tab) {
+            var btn = tabsNav.querySelector('[data-tab="' + e.state.tab + '"]');
+            if (btn) btn.click();
+        } else {
+            window.location.reload();
+        }
+    });
+});
+</script>
