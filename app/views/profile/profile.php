@@ -166,9 +166,9 @@ if (!empty($user['full_name'])) {
                         <form action="<?= BASE_URL ?>/index.php?action=follow_user" method="POST" class="d-inline" id="profileFollowForm">
                             <?= csrf_field(); ?>
                             <input type="hidden" name="user_id" value="<?= (int)$user['id']; ?>">
-                            <button type="submit" id="btnProfileFollow" class="btn <?= !empty($isFollowing) ? 'btn-outline-secondary' : 'btn-navy' ?> px-4 fw-semibold rounded-pill">
-                                <i class="bi <?= !empty($isFollowing) ? 'bi-person-check-fill' : 'bi-person-plus-fill' ?> me-1"></i>
-                                <span><?= !empty($isFollowing) ? 'Following' : 'Follow' ?></span>
+                            <button type="submit" id="btnProfileFollow" class="btn <?= !empty($isFollowing) ? 'btn-outline-secondary' : (!empty($isFollowedBy) ? 'btn-primary' : 'btn-navy') ?> px-4 fw-semibold rounded-pill" data-is-followed-by="<?= !empty($isFollowedBy) ? '1' : '0' ?>">
+                                <i class="bi <?= !empty($isFollowing) ? 'bi-person-check-fill' : (!empty($isFollowedBy) ? 'bi-arrow-repeat' : 'bi-person-plus-fill') ?> me-1"></i>
+                                <span><?= !empty($isFollowing) ? 'Following' : (!empty($isFollowedBy) ? 'Follow Back' : 'Follow') ?></span>
                             </button>
                         </form>
 
@@ -596,11 +596,22 @@ function openFollowListModal(type, targetUserId) {
                             <a href="${profileUrl}" class="text-dark fw-bold text-decoration-none d-block small text-truncate">
                                 ${escapeHtml(u.full_name)}
                                 ${u.is_self ? '<span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.65rem;">You</span>' : ''}
+                                ${(!u.is_self && u.is_followed_by) ? '<span class="badge bg-secondary-subtle text-secondary border ms-1" style="font-size: 0.65rem;">Follows you</span>' : ''}
                             </a>
                             <a href="${profileUrl}" class="text-muted text-decoration-none d-block small text-truncate">@${escapeHtml(u.username)}</a>
                         </div>
                     </div>
-                    <div class="ms-2 flex-shrink-0">
+                    <div class="ms-2 flex-shrink-0 d-flex align-items-center gap-2">
+                        ${!u.is_self ? `
+                            <form action="<?= BASE_URL ?>/index.php?action=follow_user" method="POST" class="m-0 d-inline">
+                                <?= csrf_field(); ?>
+                                <input type="hidden" name="user_id" value="${u.id}">
+                                <button type="submit" class="btn btn-sm ${u.is_following ? 'btn-outline-secondary' : (u.is_followed_by ? 'btn-primary' : 'btn-navy')} rounded-pill px-3 fw-semibold" style="font-size: 0.78rem;" data-is-followed-by="${u.is_followed_by ? '1' : '0'}">
+                                    <i class="bi ${u.is_following ? 'bi-person-check-fill' : (u.is_followed_by ? 'bi-arrow-repeat' : 'bi-person-plus-fill')} me-1"></i>
+                                    <span>${u.is_following ? 'Following' : (u.is_followed_by ? 'Follow Back' : 'Follow')}</span>
+                                </button>
+                            </form>
+                        ` : ''}
                         <a href="${profileUrl}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold" style="font-size: 0.78rem;">
                             View
                         </a>

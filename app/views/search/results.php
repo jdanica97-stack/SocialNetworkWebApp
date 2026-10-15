@@ -218,6 +218,9 @@ $authorId = $_GET['author_id'] ?? null;
                                     <div class="min-w-0">
                                         <a href="<?= BASE_URL ?>/index.php?action=profile&user_id=<?= $user['id']; ?>" class="fw-bold text-dark text-decoration-none d-block text-truncate">
                                             <?= htmlspecialchars($user['full_name']); ?>
+                                            <?php if (!empty($user['is_followed_by'])): ?>
+                                                <span class="badge bg-secondary-subtle text-secondary border ms-1" style="font-size: 0.68rem;">Follows you</span>
+                                            <?php endif; ?>
                                         </a>
                                         <div class="text-muted small text-truncate">
                                             @<?= htmlspecialchars($user['username']); ?> &bull; 
@@ -232,6 +235,16 @@ $authorId = $_GET['author_id'] ?? null;
                                 </div>
 
                                 <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                    <?php if ($currentUserId && (int)$currentUserId !== (int)$user['id']): ?>
+                                        <form action="<?= BASE_URL ?>/index.php?action=follow_user" method="POST" class="m-0 d-inline">
+                                            <?= csrf_field(); ?>
+                                            <input type="hidden" name="user_id" value="<?= (int)$user['id']; ?>">
+                                            <button type="submit" class="btn btn-sm <?= !empty($user['is_following']) ? 'btn-outline-secondary' : (!empty($user['is_followed_by']) ? 'btn-primary' : 'btn-navy') ?> rounded-pill px-3 fw-semibold" data-is-followed-by="<?= !empty($user['is_followed_by']) ? '1' : '0' ?>" style="font-size: 0.78rem;">
+                                                <i class="bi <?= !empty($user['is_following']) ? 'bi-person-check-fill' : (!empty($user['is_followed_by']) ? 'bi-arrow-repeat' : 'bi-person-plus-fill') ?> me-1"></i>
+                                                <span><?= !empty($user['is_following']) ? 'Following' : (!empty($user['is_followed_by']) ? 'Follow Back' : 'Follow') ?></span>
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
                                     <a href="<?= BASE_URL ?>/index.php?action=search&author_id=<?= $user['id']; ?>&type=posts" class="btn btn-sm btn-outline-secondary rounded-pill px-3" title="Filter posts by this author">
                                         <i class="bi bi-funnel me-1"></i> Posts
                                     </a>

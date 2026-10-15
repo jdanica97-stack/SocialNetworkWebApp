@@ -126,23 +126,37 @@ $highlightCommentId = (int)($highlightCommentId ?? ($_GET['comment_id'] ?? 0));
                     <?php if ($hasRealImage): ?>
                         <div class="post-image-container mb-3">
                             <a href="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($singleImg)) ?>" class="post-lightbox-trigger" data-gallery="post-<?= (int)$post['id'] ?>" title="View full image">
-                                <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($singleImg)) ?>" alt="Post attachment" class="img-fluid rounded-3">
+                                <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($singleImg)) ?>" alt="Post attachment" loading="lazy">
                             </a>
+                        </div>
+                    <?php else: ?>
+                        <div class="post-image-placeholder mb-3">
+                            <i class="bi bi-image"></i>
                         </div>
                     <?php endif; ?>
                 <?php elseif ($totalPostImages > 1): ?>
-                    <div class="d-flex flex-column gap-3 mb-3">
-                        <?php foreach ($postImages as $idx => $imgFile): ?>
+                    <div class="post-gallery post-gallery-<?= min($totalPostImages, 4) ?> mb-3" data-post-id="<?= (int)$post['id'] ?>">
+                        <?php foreach (array_slice($postImages, 0, 4) as $idx => $imgFile): ?>
                             <?php
-                            $realPath = __DIR__ . '/../../../public/uploads/posts/' . basename($imgFile);
-                            if (!file_exists($realPath)) continue;
+                            $isLastQuadrant = ($idx === 3 && $totalPostImages > 4);
+                            $remainingCount = $totalPostImages - 4;
                             ?>
-                            <div class="post-image-container mb-0">
+                            <div class="post-gallery-item">
                                 <a href="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($imgFile)) ?>" class="post-lightbox-trigger" data-gallery="post-<?= (int)$post['id'] ?>" title="View image <?= $idx + 1 ?>">
-                                    <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($imgFile)) ?>" alt="Post attachment <?= $idx + 1 ?>" class="img-fluid rounded-3">
+                                    <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($imgFile)) ?>" alt="Post image <?= $idx + 1 ?>" loading="lazy">
+                                    <?php if ($isLastQuadrant): ?>
+                                        <div class="post-gallery-overlay">
+                                            <span>+<?= $remainingCount ?></span>
+                                        </div>
+                                    <?php endif; ?>
                                 </a>
                             </div>
                         <?php endforeach; ?>
+                        <?php if ($totalPostImages > 4): ?>
+                            <?php foreach (array_slice($postImages, 4) as $extraIdx => $extraImg): ?>
+                                <a href="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($extraImg)) ?>" class="post-lightbox-trigger d-none" data-gallery="post-<?= (int)$post['id'] ?>" title="View image <?= 5 + $extraIdx ?>"></a>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
 

@@ -62,4 +62,23 @@ class FollowModelTest extends TestCase {
         $this->assertCount(1, $following);
         $this->assertEquals('usertwo', $following[0]['username']);
     }
+
+    public function testReciprocalFollowRelationship(): void {
+        $userA = $this->createTestUser('userRecipA');
+        $userB = $this->createTestUser('userRecipB');
+
+        // Initially neither follows the other
+        $this->assertFalse($this->followModel->isFollowing($userA['id'], $userB['id']));
+        $this->assertFalse($this->followModel->isFollowing($userB['id'], $userA['id']));
+
+        // User A follows User B -> User B can now "Follow Back"
+        $this->followModel->follow($userA['id'], $userB['id']);
+        $this->assertTrue($this->followModel->isFollowing($userA['id'], $userB['id']));
+        $this->assertFalse($this->followModel->isFollowing($userB['id'], $userA['id']));
+
+        // User B follows User A back
+        $this->followModel->follow($userB['id'], $userA['id']);
+        $this->assertTrue($this->followModel->isFollowing($userA['id'], $userB['id']));
+        $this->assertTrue($this->followModel->isFollowing($userB['id'], $userA['id']));
+    }
 }

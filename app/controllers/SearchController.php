@@ -4,10 +4,12 @@
 
 require_once __DIR__ . '/../models/UserModel.php';
 require_once __DIR__ . '/../models/PostModel.php';
+require_once __DIR__ . '/../models/FollowModel.php';
 
 class SearchController {
     private $userModel;
     private $postModel;
+    private $followModel;
 
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
@@ -15,6 +17,7 @@ class SearchController {
         }
         $this->userModel = new UserModel();
         $this->postModel = new PostModel();
+        $this->followModel = new FollowModel();
     }
 
     /**
@@ -70,6 +73,19 @@ class SearchController {
             // Execute search queries inside models using prepared statements
             if ($type === 'all' || $type === 'users') {
                 $users = $this->userModel->searchUsers($query);
+                if (!empty($users) && $currentUserId) {
+                    foreach ($users as &$u) {
+                        $uId = (int)$u['id'];
+                        if ($uId !== $currentUserId) {
+                            $u['is_following'] = $this->followModel->isFollowing($currentUserId, $uId);
+                            $u['is_followed_by'] = $this->followModel->isFollowing($uId, $currentUserId);
+                        } else {
+                            $u['is_following'] = false;
+                            $u['is_followed_by'] = false;
+                        }
+                    }
+                    unset($u);
+                }
             }
 
             if ($type === 'all' || $type === 'posts') {
