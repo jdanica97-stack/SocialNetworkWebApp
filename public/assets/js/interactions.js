@@ -3,6 +3,25 @@
  * Prevents full page reloads for seamless user experience.
  */
 
+/**
+ * Global helper to hide and unhide comment sections smoothly across the app
+ */
+window.toggleComments = function(postId) {
+    if (!postId) return;
+    const box = document.getElementById('comments-box-' + postId);
+    if (!box) return;
+
+    if (box.classList.contains('d-none')) {
+        box.classList.remove('d-none');
+        const input = box.querySelector('input[name="content"], textarea[name="content"]');
+        if (input) {
+            setTimeout(() => input.focus(), 60);
+        }
+    } else {
+        box.classList.add('d-none');
+    }
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     
     // Global BASE_URL fallback helper
@@ -229,6 +248,17 @@ document.addEventListener('DOMContentLoaded', function() {
         composerForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
+            const contentInput = composerForm.querySelector('textarea[name="content"], input[name="content"]');
+            const fileInput = composerForm.querySelector('input[type="file"]');
+            const hasContent = contentInput && contentInput.value.trim().length > 0;
+            const hasFiles = fileInput && fileInput.files && fileInput.files.length > 0;
+
+            if (!hasContent && !hasFiles) {
+                alert('Please enter some text or select at least one photo to publish a post.');
+                if (contentInput) contentInput.focus();
+                return;
+            }
+
             const submitBtn = composerForm.querySelector('button[type="submit"]');
             const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Post';
 
@@ -264,7 +294,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (data && data.success) {
                     composerForm.reset();
-                    if (typeof window.clearSelectedImage === 'function') {
+                    if (typeof window.clearAllSelectedImages === 'function') {
+                        window.clearAllSelectedImages();
+                    } else if (typeof window.clearSelectedImage === 'function') {
                         window.clearSelectedImage();
                     }
                     prependNewPostToFeed(data.post);
@@ -280,6 +312,73 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error publishing post:', err);
             });
         });
+    }
+
+    function buildPostImagesHtml(post) {
+        let images = [];
+        if (Array.isArray(post.images) && post.images.length > 0) {
+            images = post.images;
+        } else if (post.image) {
+            if (typeof post.image === 'string' && post.image.startsWith('[') && post.image.endsWith(']')) {
+                try {
+                    const parsed = JSON.parse(post.image);
+                    if (Array.isArray(parsed)) images = parsed;
+                } catch (e) {
+                    images = [post.image];
+                }
+            } else {
+                images = [post.image];
+            }
+        }
+
+        const total = images.length;
+        if (total === 0) return '';
+
+        if (total === 1) {
+            return `
+                <div class="post-image-container mb-3">
+                    <a href="${baseUrl}/public/uploads/posts/${escapeHtml(images[0])}" class="post-lightbox-trigger" data-gallery="post-${post.id}" title="View full image">
+                        <img src="${baseUrl}/public/uploads/posts/${escapeHtml(images[0])}" alt="Post attachment" loading="lazy">
+                    </a>
+                </div>
+            `;
+        }
+
+        const countClass = Math.min(total, 4);
+        let galleryItemsHtml = '';
+
+        images.slice(0, 4).forEach((img, idx) => {
+            const isLastQuadrant = (idx === 3 && total > 4);
+            const remainingCount = total - 4;
+            const overlayHtml = isLastQuadrant
+                ? `<div class="post-gallery-overlay"><span>+${remainingCount}</span></div>`
+                : '';
+
+            galleryItemsHtml += `
+                <div class="post-gallery-item">
+                    <a href="${baseUrl}/public/uploads/posts/${escapeHtml(img)}" class="post-lightbox-trigger" data-gallery="post-${post.id}" title="View image ${idx + 1}">
+                        <img src="${baseUrl}/public/uploads/posts/${escapeHtml(img)}" alt="Post image ${idx + 1}" loading="lazy">
+                        ${overlayHtml}
+                    </a>
+                </div>
+            `;
+        });
+
+        let hiddenLinksHtml = '';
+        if (total > 4) {
+            images.slice(4).forEach((extraImg, extraIdx) => {
+                hiddenLinksHtml += `
+                    <a href="${baseUrl}/public/uploads/posts/${escapeHtml(extraImg)}" class="post-lightbox-trigger d-none" data-gallery="post-${post.id}" title="View image ${5 + extraIdx}"></a>
+                `;
+            });
+        }
+
+        return `
+            <div class="post-gallery post-gallery-${countClass} mb-3" data-post-id="${post.id}">
+                ${galleryItemsHtml}
+                ${hiddenLinksHtml}
+            </div>
+        `;
     }
 
     function prependNewPostToFeed(post) {
@@ -301,9 +400,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ? `<a href="${postAuthorUrl}" class="text-decoration-none flex-shrink-0" title="View ${escapeHtml(post.full_name)}'s profile"><img src="${baseUrl}/public/uploads/avatars/${post.profile_image}" alt="${escapeHtml(post.full_name)}" class="post-avatar" onerror="this.onerror=null; this.outerHTML='<div class=\\'post-avatar\\'>${escapeHtml(post.initials)}</div>';"></a>`
             : `<a href="${postAuthorUrl}" class="text-decoration-none flex-shrink-0" title="View ${escapeHtml(post.full_name)}'s profile"><div class="post-avatar">${escapeHtml(post.initials)}</div></a>`;
 
-        const imageHtml = post.image 
-            ? `<div class="post-image-container"><img src="${baseUrl}/public/uploads/posts/${post.image}" alt="Post attachment"></div>`
-            : '';
+        const imageHtml = buildPostImagesHtml(post);
 
         const postCardHtml = `
             <article class="post-card" id="post-${post.id}">
@@ -423,15 +520,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (submitBtn) {
                     const icon = submitBtn.querySelector('i');
                     const textSpan = submitBtn.querySelector('span');
+                    const isSm = submitBtn.classList.contains('btn-sm');
+                    const isFollowedBy = (typeof data.is_followed_by !== 'undefined')
+                        ? Boolean(data.is_followed_by)
+                        : (submitBtn.getAttribute('data-is-followed-by') === '1');
+
+                    submitBtn.setAttribute('data-is-followed-by', isFollowedBy ? '1' : '0');
+                    const padClass = isSm ? 'px-3' : 'px-4';
+                    const smClass = isSm ? 'btn-sm' : '';
 
                     if (data.is_following) {
-                        submitBtn.className = 'btn btn-outline-secondary px-4 fw-semibold rounded-pill';
+                        submitBtn.className = `btn btn-outline-secondary ${smClass} ${padClass} fw-semibold rounded-pill`.replace(/\s+/g, ' ').trim();
                         if (icon) icon.className = 'bi bi-person-check-fill me-1';
                         if (textSpan) textSpan.textContent = 'Following';
                     } else {
-                        submitBtn.className = 'btn btn-navy px-4 fw-semibold rounded-pill';
-                        if (icon) icon.className = 'bi bi-person-plus-fill me-1';
-                        if (textSpan) textSpan.textContent = 'Follow';
+                        if (isFollowedBy) {
+                            submitBtn.className = `btn btn-primary ${smClass} ${padClass} fw-semibold rounded-pill`.replace(/\s+/g, ' ').trim();
+                            if (icon) icon.className = 'bi bi-arrow-repeat me-1';
+                            if (textSpan) textSpan.textContent = 'Follow Back';
+                        } else {
+                            submitBtn.className = `btn btn-navy ${smClass} ${padClass} fw-semibold rounded-pill`.replace(/\s+/g, ' ').trim();
+                            if (icon) icon.className = 'bi bi-person-plus-fill me-1';
+                            if (textSpan) textSpan.textContent = 'Follow';
+                        }
                     }
                 }
 
@@ -565,66 +676,18 @@ document.addEventListener('DOMContentLoaded', function() {
             item.addEventListener('click', function(e) {
                 const notifId = this.getAttribute('data-notification-id');
                 const isRead = this.getAttribute('data-is-read');
-                const notifType = this.getAttribute('data-type');
-                const entityId = this.getAttribute('data-entity-id');
-                const postId = this.getAttribute('data-post-id');
-                const commentId = this.getAttribute('data-comment-id');
+                const targetUrl = this.getAttribute('href');
 
                 // Mark this notification as read on the backend asynchronously
                 if (isRead === '0' && notifId) {
                     markSingleNotificationRead(notifId);
                 }
 
-                // If clicking a like/comment notification while already on the home/feed page
-                const isCurrentFeedPage = window.location.pathname.endsWith('/index.php') || window.location.pathname.endsWith('/') || window.location.search === '' || window.location.search === '?action=home';
-                if ((notifType === 'like' || notifType === 'comment') && isCurrentFeedPage && !window.location.search.includes('action=')) {
-                    // Close notification dropdown
-                    const dropdownInstance = bootstrap.Dropdown.getInstance(document.getElementById('notificationsDropdownBtn'));
-                    if (dropdownInstance) {
-                        dropdownInstance.hide();
-                    }
-
-                    if (notifType === 'comment') {
-                        // Priority: Target comment directly
-                        let targetComment = commentId ? document.getElementById('comment-' + commentId) : null;
-                        const targetPostId = postId || entityId;
-                        const commentsBox = targetPostId ? document.getElementById('comments-box-' + targetPostId) : null;
-
-                        // Ensure comments container is revealed
-                        if (commentsBox && commentsBox.classList.contains('d-none')) {
-                            commentsBox.classList.remove('d-none');
-                        }
-
-                        // If comment element was already rendered or newly revealed
-                        if (!targetComment && commentId) {
-                            targetComment = document.getElementById('comment-' + commentId);
-                        }
-
-                        if (targetComment) {
-                            e.preventDefault();
-                            targetComment.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            highlightCommentElement(targetComment);
-                            return;
-                        } else if (targetPostId) {
-                            const targetPost = document.getElementById('post-' + targetPostId);
-                            if (targetPost) {
-                                e.preventDefault();
-                                targetPost.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                highlightPostElement(targetPost);
-                                return;
-                            }
-                        }
-                    } else if (notifType === 'like') {
-                        const targetPost = document.getElementById('post-' + (postId || entityId));
-                        if (targetPost) {
-                            e.preventDefault();
-                            targetPost.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            highlightPostElement(targetPost);
-                            return;
-                        }
-                    }
+                // Unconditionally direct the user to the dedicated post view page or profile
+                if (targetUrl && targetUrl !== '#' && !targetUrl.startsWith('javascript:')) {
+                    e.preventDefault();
+                    window.location.href = targetUrl;
                 }
-                // Otherwise allow standard navigation to targetUrl
             });
         });
     }
@@ -644,7 +707,8 @@ document.addEventListener('DOMContentLoaded', function() {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-Token': csrfToken
-            }
+            },
+            keepalive: true
         })
         .then(res => res.json())
         .then(data => {

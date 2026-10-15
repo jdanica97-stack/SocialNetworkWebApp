@@ -55,6 +55,8 @@ class MessageModel {
                     u.profile_image AS other_profile_image,
                     m.id AS last_message_id,
                     m.message AS last_message,
+                    m.is_edited AS last_message_is_edited,
+                    m.is_unsent AS last_message_is_unsent,
                     m.created_at AS last_message_time,
                     m.sender_id AS last_sender_id,
                     (SELECT COUNT(*) FROM messages 
@@ -139,4 +141,90 @@ class MessageModel {
         $stmt->execute([':user_id' => (int)$userId]);
         return (int)$stmt->fetchColumn();
     }
+
+    /**
+     * Get a single message by ID.
+     *
+     * @param int $messageId
+     * @return array|false
+     */
+    public function getMessageById($messageId) {
+        $messageId = (int)$messageId;
+        if ($messageId <= 0) {
+            return false;
+        }
+
+        $sql = "SELECT m.*, 
+                       s.username AS sender_username, s.full_name AS sender_name, s.profile_image AS sender_image
+                FROM messages m
+                JOIN users s ON m.sender_id = s.id
+                WHERE m.id = :id
+                LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id' => $messageId]);
+        return $stmt->fetch();
+    }
+
+    /**
+     * Update/edit an existing message (author-only check).
+     *
+     * @param int $messageId
+     * @param int $senderId
+     * @param string $newMessage
+     * @return bool
+     */
+    public function updateMessage($messageId, $senderId, $newMessage) {
+        $messageId = (int)$messageId;
+        $senderId = (int)$senderId;
+        $newMessage = trim($newMessage);
+
+        if ($messageId <= 0 || $senderId <= 0 || empty($newMessage)) {
+            return false;
+        }
+
+        $msg = $this->getMessageById($messageId);
+        if (!$msg || (int)$msg['sender_id'] !== $senderId || !empty($msg['is_unsent'])) {
+            return false;
+        }
+
+        $sql = "UPDATE messages 
+                SET message = :message, is_edited = 1 
+                WHERE id = :id AND sender_id = :sender_id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':message'   => $newMessage,
+            ':id'        => $messageId,
+            ':sender_id' => $senderId
+        ]);
+    }
+
+    /**
+     * Unsend a message (author-only check, marks is_unsent = 1).
+     *
+     * @param int $messageId
+     * @param int $senderId
+     * @return bool
+     */
+    public function unsendMessage($messageId, $senderId) {
+        $messageId = (int)$messageId;
+        $senderId = (int)$senderId;
+
+        if ($messageId <= 0 || $senderId <= 0) {
+            return false;
+        }
+
+        $msg = $this->getMessageById($messageId);
+        if (!$msg || (int)$msg['sender_id'] !== $senderId) {
+            return false;
+        }
+
+        $sql = "UPDATE messages SET is_unsent = 1 WHERE id = :id AND sender_id = :sender_id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':id'        => $messageId,
+            ':sender_id' => $senderId
+        ]);
+    }
+
 }
+

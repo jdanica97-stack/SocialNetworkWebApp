@@ -114,12 +114,14 @@ class FollowController {
 
         $followersCount = $this->followModel->getFollowersCount($followingId);
         $followingCount = $this->followModel->getFollowingCount($followingId);
+        $isFollowedBy   = $this->followModel->isFollowing($followingId, $followerId);
 
         if ($isAjax) {
             header('Content-Type: application/json');
             echo json_encode([
                 'success'         => true,
                 'is_following'    => $newStatus,
+                'is_followed_by'  => $isFollowedBy,
                 'followers_count' => $followersCount,
                 'following_count' => $followingCount,
                 'user_id'         => $followingId

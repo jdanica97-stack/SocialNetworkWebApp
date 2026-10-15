@@ -126,8 +126,9 @@ class InsightsController {
             }
         }
 
-        // 5. Execute Community Reports Queries ONLY if Generate Report button was pressed or action=reports
-        $isReportRequested = !empty($_GET['generate_report']) || ($_GET['action'] ?? '') === 'reports';
+        // 5. Execute Community Reports Queries ONLY if user is an Admin and requested report
+        $isAdmin = (isset($_SESSION['role']) && $_SESSION['role'] === 'admin');
+        $isReportRequested = $isAdmin && (!empty($_GET['generate_report']) || ($_GET['action'] ?? '') === 'reports');
         $reportGenerated = false;
 
         $summaryMetrics = [
@@ -140,6 +141,13 @@ class InsightsController {
         $mostActiveMembers = [];
         $postActivityTimeline = [];
         $detailedReportRows = [];
+
+        // If non-admin attempts to access action=reports directly, inform them and redirect to insights
+        if (($_GET['action'] ?? '') === 'reports' && !$isAdmin) {
+            $_SESSION['error_message'] = 'Community Reports generation is restricted to administrators.';
+            header('Location: ' . BASE_URL . '/index.php?action=insights');
+            exit;
+        }
 
         if ($isReportRequested && empty($errorMessage)) {
             $filterParams = [

@@ -353,9 +353,13 @@ class AdminModel {
         $post = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($post && !empty($post['image'])) {
-            $imagePath = __DIR__ . '/../../public/uploads/posts/' . basename($post['image']);
-            if (file_exists($imagePath) && is_file($imagePath)) {
-                @unlink($imagePath);
+            require_once __DIR__ . '/PostModel.php';
+            $images = PostModel::parseImages($post['image']);
+            foreach ($images as $img) {
+                $imagePath = __DIR__ . '/../../public/uploads/posts/' . basename($img);
+                if (file_exists($imagePath) && is_file($imagePath)) {
+                    @unlink($imagePath);
+                }
             }
         }
 
@@ -451,9 +455,89 @@ class AdminModel {
         $deleted = $delStmt->execute([':id' => $userId]);
 
         if ($deleted && $delStmt->rowCount() > 0) {
-            return ['success' => true, 'message' => 'User account and associated records have been removed successfully.'];
+            // Automatically resequence user IDs so there are no missing IDs/gaps,
+            // and ensure AUTO_INCREMENT is reset to the next consecutive number (or 1 if empty)
+            $this->reorderUserIds($currentAdminId);
+
+            return ['success' => true, 'message' => 'User account has been removed and database IDs have been synchronized successfully.'];
         }
 
         return ['success' => false, 'message' => 'Failed to delete user account.'];
+    }
+
+    /**
+     * Resequence user IDs consecutively starting from 1 (1, 2, 3...)
+     * and reset AUTO_INCREMENT to MAX(id) + 1 (or 1 if table is empty).
+     * All child tables (posts, comments, likes, follows, messages, notifications, events)
+     * automatically update via ON UPDATE CASCADE.
+     *
+     * @param int|null $currentAdminId If provided and current admin's ID changes, updates session.
+     * @return bool
+     */
+    public function reorderUserIds($currentAdminId = null) {
+        $users = $this->db->query("SELECT id FROM users ORDER BY id ASC")->fetchAll(PDO::FETCH_COLUMN);
+        if (empty($users)) {
+            $this->db->exec("ALTER TABLE users AUTO_INCREMENT = 1");
+            return true;
+        }
+
+        // Check if IDs are already 1..N with no gaps
+        $isSequential = true;
+        foreach ($users as $index => $id) {
+            if ((int)$id !== ($index + 1)) {
+                $isSequential = false;
+                break;
+            }
+        }
+
+        if ($isSequential) {
+            $nextId = count($users) + 1;
+            $this->db->exec("ALTER TABLE users AUTO_INCREMENT = {$nextId}");
+            return true;
+        }
+
+        try {
+            $this->db->beginTransaction();
+
+            // Step 1: Shift all IDs by a large offset to prevent primary key collision
+            $offset = 1000000;
+            $this->db->exec("UPDATE users SET id = id + {$offset} ORDER BY id DESC");
+
+            // Step 2: Assign sequential IDs starting from 1
+            $shiftedUsers = $this->db->query("SELECT id FROM users ORDER BY id ASC")->fetchAll(PDO::FETCH_COLUMN);
+            $newId = 1;
+            $updateStmt = $this->db->prepare("UPDATE users SET id = :new_id WHERE id = :old_id");
+
+            $newAdminId = null;
+            foreach ($shiftedUsers as $oldId) {
+                $originalId = (int)$oldId - $offset;
+                $updateStmt->execute([
+                    ':new_id' => $newId,
+                    ':old_id' => $oldId
+                ]);
+                if ($currentAdminId !== null && (int)$originalId === (int)$currentAdminId) {
+                    $newAdminId = $newId;
+                }
+                $newId++;
+            }
+
+            $this->db->commit();
+
+            // Step 3: Reset AUTO_INCREMENT to next sequential number
+            $this->db->exec("ALTER TABLE users AUTO_INCREMENT = {$newId}");
+
+            // Update session if logged-in admin ID changed
+            if ($newAdminId !== null && isset($_SESSION['user_id'])) {
+                $_SESSION['user_id'] = $newAdminId;
+            }
+
+            return true;
+        } catch (Exception $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log("Reorder user IDs error: " . $e->getMessage());
+            return false;
+        }
     }
 }

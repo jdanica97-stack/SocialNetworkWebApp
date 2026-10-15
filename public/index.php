@@ -183,6 +183,12 @@ switch ($action) {
         $adminController->deletePost();
         break;
 
+    case 'admin_reorder_users':
+        require_once __DIR__ . '/../app/controllers/AdminController.php';
+        $adminController = new AdminController();
+        $adminController->reorderUsers();
+        break;
+
     case 'admin_delete_comment':
         require_once __DIR__ . '/../app/controllers/AdminController.php';
         $adminController = new AdminController();
@@ -240,6 +246,18 @@ switch ($action) {
         $msgController->send();
         break;
 
+    case 'edit_message':
+        require_once __DIR__ . '/../app/controllers/MessageController.php';
+        $msgController = new MessageController();
+        $msgController->edit();
+        break;
+
+    case 'unsend_message':
+        require_once __DIR__ . '/../app/controllers/MessageController.php';
+        $msgController = new MessageController();
+        $msgController->unsend();
+        break;
+
     case 'poll_messages':
         require_once __DIR__ . '/../app/controllers/MessageController.php';
         $msgController = new MessageController();
@@ -251,6 +269,7 @@ switch ($action) {
         $msgController = new MessageController();
         $msgController->getUnreadCount();
         break;
+
 
     // Additional Navigation Pages
     case 'people':
@@ -309,7 +328,7 @@ switch ($action) {
         $currentUserId = $_SESSION['user_id'];
         $feedFilter = $_GET['filter'] ?? 'newest';
         $posts = $postModel->getAllPosts($currentUserId, $feedFilter);
-        $upcomingEvents = $eventModel->getUpcomingEvents(5);
+        $upcomingEvents = $eventModel->getUpcomingEvents(10);
 
         require_once __DIR__ . '/../app/views/layouts/header.php';
         require_once __DIR__ . '/../app/views/home/feed.php';

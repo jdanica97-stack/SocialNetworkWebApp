@@ -38,8 +38,9 @@ class PostModel {
         $stmt->execute([':current_user_id' => $currentUserId ?? 0]);
         $posts = $stmt->fetchAll();
 
-        // Attach comments to each post
+        // Attach comments and parsed images to each post
         foreach ($posts as &$post) {
+            $post['images'] = self::parseImages($post['image'] ?? null);
             $post['comments'] = $this->getCommentsByPostId($post['id']);
         }
 
@@ -76,8 +77,9 @@ class PostModel {
         ]);
         $posts = $stmt->fetchAll();
 
-        // Attach comments to each post
+        // Attach comments and parsed images to each post
         foreach ($posts as &$post) {
+            $post['images'] = self::parseImages($post['image'] ?? null);
             $post['comments'] = $this->getCommentsByPostId($post['id']);
         }
 
@@ -97,23 +99,70 @@ class PostModel {
     }
 
     /**
+     * Parse an image column into a clean array of image filenames.
+     * Supports JSON array string, comma-separated string, PHP array, or single filename string.
+     *
+     * @param mixed $imageField
+     * @return array
+     */
+    public static function parseImages($imageField) {
+        if (empty($imageField)) {
+            return [];
+        }
+        if (is_array($imageField)) {
+            return array_values(array_filter($imageField));
+        }
+        $trimmed = trim((string)$imageField);
+        if ($trimmed === '' || $trimmed === '[]' || $trimmed === '{}') {
+            return [];
+        }
+        $first = substr($trimmed, 0, 1);
+        $last  = substr($trimmed, -1);
+        if (($first === '[' && $last === ']') || ($first === '{' && $last === '}')) {
+            $decoded = json_decode($trimmed, true);
+            if (is_array($decoded)) {
+                return array_values(array_filter($decoded, function($img) {
+                    return !empty($img) && is_string($img);
+                }));
+            }
+        }
+        if (strpos($trimmed, ',') !== false) {
+            $parts = array_map('trim', explode(',', $trimmed));
+            return array_values(array_filter($parts));
+        }
+        return [$trimmed];
+    }
+
+    /**
      * Create a new post.
      *
      * @param int $userId
      * @param string $content
-     * @param string|null $image
+     * @param string|array|null $image Single filename or array of filenames
      * @return int|bool
      */
     public function createPost($userId, $content, $image = null) {
+        $imageValue = null;
+        if (is_array($image)) {
+            $clean = array_values(array_filter($image));
+            if (count($clean) === 1) {
+                $imageValue = $clean[0];
+            } elseif (count($clean) > 1) {
+                $imageValue = json_encode($clean);
+            }
+        } elseif (!empty($image)) {
+            $imageValue = (string)$image;
+        }
+
         $sql = "INSERT INTO posts (user_id, content, image, created_at) VALUES (:user_id, :content, :image, NOW())";
         $stmt = $this->db->prepare($sql);
         $success = $stmt->execute([
             ':user_id' => $userId,
             ':content' => $content,
-            ':image'   => $image
+            ':image'   => $imageValue
         ]);
 
-        return $success ? $this->db->lastInsertId() : false;
+        return $success ? (int)$this->db->lastInsertId() : false;
     }
 
     /**
@@ -199,7 +248,11 @@ class PostModel {
                 LIMIT 1";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $postId]);
-        return $stmt->fetch();
+        $post = $stmt->fetch();
+        if ($post) {
+            $post['images'] = self::parseImages($post['image'] ?? null);
+        }
+        return $post;
     }
 
     /**
@@ -233,6 +286,7 @@ class PostModel {
         $post = $stmt->fetch();
 
         if ($post) {
+            $post['images'] = self::parseImages($post['image'] ?? null);
             $post['comments'] = $this->getCommentsByPostId($post['id']);
         }
 
@@ -245,21 +299,40 @@ class PostModel {
      * @param int $postId
      * @param int $userId
      * @param string $content
-     * @param string|null $image
+     * @param string|array|null $image
      * @return bool
      */
     public function updatePost($postId, $userId, $content, $image = null) {
+        // Verify ownership first
+        $checkStmt = $this->db->prepare("SELECT id FROM posts WHERE id = :post_id AND user_id = :user_id");
+        $checkStmt->execute([':post_id' => $postId, ':user_id' => $userId]);
+        if (!$checkStmt->fetch()) {
+            return false;
+        }
+
+        $imageValue = null;
+        if (is_array($image)) {
+            $clean = array_values(array_filter($image));
+            if (count($clean) === 1) {
+                $imageValue = $clean[0];
+            } elseif (count($clean) > 1) {
+                $imageValue = json_encode($clean);
+            }
+        } elseif (!empty($image)) {
+            $imageValue = (string)$image;
+        }
+
         $sql = "UPDATE posts 
                 SET content = :content, image = :image 
                 WHERE id = :post_id AND user_id = :user_id";
         $stmt = $this->db->prepare($sql);
         $executed = $stmt->execute([
             ':content' => $content,
-            ':image'   => $image,
+            ':image'   => $imageValue,
             ':post_id' => $postId,
             ':user_id' => $userId
         ]);
-        return $executed && $stmt->rowCount() > 0;
+        return $executed;
     }
 
     /**
@@ -336,8 +409,9 @@ class PostModel {
         $stmt->execute($params);
         $posts = $stmt->fetchAll();
 
-        // Attach comments to each post
+        // Attach comments and parsed images to each post
         foreach ($posts as &$post) {
+            $post['images'] = self::parseImages($post['image'] ?? null);
             $post['comments'] = $this->getCommentsByPostId($post['id']);
         }
 
@@ -479,6 +553,7 @@ class PostModel {
         $posts = $stmt->fetchAll();
 
         foreach ($posts as &$post) {
+            $post['images'] = self::parseImages($post['image'] ?? null);
             $post['comments'] = $this->getCommentsByPostId($post['id']);
         }
 

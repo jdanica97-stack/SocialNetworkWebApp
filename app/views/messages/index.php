@@ -98,8 +98,20 @@ if (!empty($activeUser['full_name'])) {
                                         </small>
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between">
+                                        <?php
+                                        if (!empty($conv['last_message_is_unsent'])) {
+                                            $lastText = ((int)$conv['last_sender_id'] === (int)$_SESSION['user_id'])
+                                                ? '<span class="fst-italic opacity-75"><i class="bi bi-slash-circle me-1"></i>You unsent a message</span>'
+                                                : '<span class="fst-italic opacity-75"><i class="bi bi-slash-circle me-1"></i>Unsent a message</span>';
+                                        } else {
+                                            $lastText = htmlspecialchars($conv['last_message'] ?? '');
+                                            if (!empty($conv['last_message_is_edited'])) {
+                                                $lastText .= ' <small class="fst-italic opacity-75">(edited)</small>';
+                                            }
+                                        }
+                                        ?>
                                         <p class="mb-0 text-muted small text-truncate" style="max-width: 180px;">
-                                            <?= htmlspecialchars($conv['last_message']) ?>
+                                            <?= $lastText ?>
                                         </p>
                                         <?php if (!empty($conv['unread_count']) && (int)$conv['unread_count'] > 0): ?>
                                             <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.7rem;">
@@ -156,14 +168,66 @@ if (!empty($activeUser['full_name'])) {
                     <?php else: ?>
                         <?php foreach ($messages as $msg): 
                             $isMe = ((int)$msg['sender_id'] === (int)$_SESSION['user_id']);
+                            $isUnsent = !empty($msg['is_unsent']);
+                            $isEdited = !empty($msg['is_edited']);
                         ?>
-                            <div class="d-flex flex-column <?= $isMe ? 'align-items-end' : 'align-items-start' ?> mb-1">
-                                <div class="p-2 px-3 rounded-4 shadow-sm" style="max-width: 75%; <?= $isMe ? 'background-color: #07193d; color: #fff;' : 'background-color: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color);' ?>">
-                                    <div class="text-break" style="white-space: pre-wrap; font-size: 0.93rem;"><?= htmlspecialchars($msg['message']) ?></div>
-                                </div>
-                                <small class="text-muted px-1 mt-1" style="font-size: 0.7rem;">
-                                    <?= date('g:i A', strtotime($msg['created_at'])) ?>
-                                </small>
+                            <div class="message-row d-flex flex-column <?= $isMe ? 'align-items-end' : 'align-items-start' ?> mb-1" 
+                                 data-message-id="<?= (int)$msg['id'] ?>" 
+                                 data-content="<?= htmlspecialchars($msg['message'], ENT_QUOTES) ?>"
+                                 data-edited="<?= $isEdited ? '1' : '0' ?>"
+                                 data-unsent="<?= $isUnsent ? '1' : '0' ?>">
+                                
+                                <?php if ($isUnsent): ?>
+                                    <!-- Unsent Message Bubble -->
+                                    <div class="p-2 px-3 rounded-4 shadow-sm border border-secondary-subtle" style="max-width: 75%; background-color: var(--bs-tertiary-bg); color: var(--bs-secondary-color);">
+                                        <div class="fst-italic small d-flex align-items-center gap-1">
+                                            <i class="bi bi-slash-circle"></i>
+                                            <span><?= $isMe ? 'You unsent a message' : htmlspecialchars($activeUser['full_name']) . ' unsent a message' ?></span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1 px-1 mt-1">
+                                        <small class="text-muted" style="font-size: 0.7rem;">
+                                            <?= date('g:i A', strtotime($msg['created_at'])) ?>
+                                        </small>
+                                    </div>
+                                <?php else: ?>
+                                    <!-- Active Message Bubble -->
+                                    <div class="d-flex align-items-center gap-1 <?= $isMe ? 'flex-row' : '' ?>" style="max-width: 80%;">
+                                        <?php if ($isMe): ?>
+                                            <div class="dropdown message-actions-dropdown">
+                                                <button class="message-action-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Message actions">
+                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-1" style="font-size: 0.85rem; min-width: 120px;">
+                                                    <li>
+                                                        <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-1 btn-edit-msg action-item-edit" data-id="<?= (int)$msg['id'] ?>">
+                                                            <i class="bi bi-pencil"></i>
+                                                            <span>Edit</span>
+                                                        </button>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider my-1"></li>
+                                                    <li>
+                                                        <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-1 btn-unsend-msg action-item-delete" data-id="<?= (int)$msg['id'] ?>">
+                                                            <i class="bi bi-trash3"></i>
+                                                            <span>Unsend</span>
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <div class="p-2 px-3 rounded-4 shadow-sm" style="<?= $isMe ? 'background-color: #07193d; color: #fff;' : 'background-color: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color);' ?>">
+                                            <div class="text-break message-text-content" style="white-space: pre-wrap; font-size: 0.93rem;"><?= htmlspecialchars($msg['message']) ?></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-center gap-1 px-1 mt-1">
+                                        <small class="text-muted" style="font-size: 0.7rem;">
+                                            <?= date('g:i A', strtotime($msg['created_at'])) ?>
+                                        </small>
+                                        <small class="text-muted fst-italic edited-badge <?= $isEdited ? '' : 'd-none' ?>" style="font-size: 0.68rem;">• Edited</small>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -248,6 +312,78 @@ if (!empty($activeUser['full_name'])) {
 </div>
 
 <!-- ==============================================
+     MODAL: EDIT MESSAGE
+     ============================================== -->
+<div class="modal fade" id="editMessageModal" tabindex="-1" aria-labelledby="editMessageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-bottom py-3">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="editMessageModalLabel">
+                    <i class="bi bi-pencil-square text-primary"></i>
+                    <span>Edit Message</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formEditMessage">
+                <div class="modal-body p-3">
+                    <input type="hidden" name="message_id" id="modalEditMessageId" value="">
+                    <label for="modalEditMessageText" class="form-label small fw-semibold text-muted mb-1">Message Content</label>
+                    <textarea 
+                        name="message" 
+                        id="modalEditMessageText" 
+                        class="form-control rounded-3" 
+                        rows="3" 
+                        placeholder="Edit your message..." 
+                        required
+                    ></textarea>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <small class="text-muted" style="font-size: 0.75rem;">
+                            <i class="bi bi-info-circle me-1"></i> Edited messages will show an "Edited" label.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-2 px-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" id="btnSaveEditMessage" class="btn btn-sm btn-navy rounded-pill px-4">
+                        <i class="bi bi-check-lg me-1"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================
+     MODAL: UNSEND CONFIRMATION
+     ============================================== -->
+<div class="modal fade" id="unsendMessageModal" tabindex="-1" aria-labelledby="unsendMessageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-bottom py-3">
+                <h5 class="modal-title fw-bold text-danger d-flex align-items-center gap-2" id="unsendMessageModalLabel">
+                    <i class="bi bi-trash3-fill"></i>
+                    <span>Unsend Message?</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3">
+                <input type="hidden" id="modalUnsendMessageId" value="">
+                <p class="text-dark mb-2">Are you sure you want to unsend this message?</p>
+                <p class="text-muted small mb-3">This message will be removed for everyone in this conversation.</p>
+                <div class="p-2 px-3 rounded-3 bg-light border text-muted fst-italic text-break small" id="modalUnsendMessagePreview">
+                </div>
+            </div>
+            <div class="modal-footer border-top py-2 px-3">
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="btnConfirmUnsend" class="btn btn-sm btn-danger rounded-pill px-4">
+                    <i class="bi bi-trash3 me-1"></i> Unsend
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================
      DIRECT MESSAGES JAVASCRIPT LOGIC
      ============================================== -->
 <script>
@@ -266,6 +402,83 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     scrollToBottom();
+
+    // Render single message node
+    function renderMessageNode(msg) {
+        const isMe = !!msg.is_me;
+        const isUnsent = !!msg.is_unsent;
+        const isEdited = !!msg.is_edited;
+        const activeUserName = "<?= !empty($activeUser['full_name']) ? htmlspecialchars($activeUser['full_name'], ENT_QUOTES) : 'Peer' ?>";
+
+        const row = document.createElement('div');
+        row.className = `message-row d-flex flex-column ${isMe ? 'align-items-end' : 'align-items-start'} mb-1`;
+        row.setAttribute('data-message-id', msg.id);
+        row.setAttribute('data-content', msg.content || '');
+        row.setAttribute('data-edited', isEdited ? '1' : '0');
+        row.setAttribute('data-unsent', isUnsent ? '1' : '0');
+
+        if (isUnsent) {
+            const unsentText = isMe ? 'You unsent a message' : (activeUserName + ' unsent a message');
+            row.innerHTML = `
+                <div class="p-2 px-3 rounded-4 shadow-sm border border-secondary-subtle" style="max-width: 75%; background-color: var(--bs-tertiary-bg); color: var(--bs-secondary-color);">
+                    <div class="fst-italic small d-flex align-items-center gap-1">
+                        <i class="bi bi-slash-circle"></i>
+                        <span>${escapeHtml(unsentText)}</span>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-1 px-1 mt-1">
+                    <small class="text-muted" style="font-size: 0.7rem;">${escapeHtml(msg.time)}</small>
+                </div>
+            `;
+            return row;
+        }
+
+        let dropdownHtml = '';
+        if (isMe) {
+            dropdownHtml = `
+                <div class="dropdown message-actions-dropdown">
+                    <button class="message-action-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Message actions">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-1" style="font-size: 0.85rem; min-width: 120px;">
+                        <li>
+                            <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-1 btn-edit-msg action-item-edit" data-id="${msg.id}">
+                                <i class="bi bi-pencil"></i>
+                                <span>Edit</span>
+                            </button>
+                        </li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li>
+                            <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-1 btn-unsend-msg action-item-delete" data-id="${msg.id}">
+                                <i class="bi bi-trash3"></i>
+                                <span>Unsend</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        const bubbleStyle = isMe
+            ? 'background-color: #07193d; color: #fff;'
+            : 'background-color: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color);';
+
+
+        row.innerHTML = `
+            <div class="d-flex align-items-center gap-1" style="max-width: 80%;">
+                ${dropdownHtml}
+                <div class="p-2 px-3 rounded-4 shadow-sm" style="${bubbleStyle}">
+                    <div class="text-break message-text-content" style="white-space: pre-wrap; font-size: 0.93rem;">${escapeHtml(msg.content)}</div>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-1 px-1 mt-1">
+                <small class="text-muted" style="font-size: 0.7rem;">${escapeHtml(msg.time)}</small>
+                <small class="text-muted fst-italic edited-badge ${msg.is_edited ? '' : 'd-none'}" style="font-size: 0.68rem;">• Edited</small>
+            </div>
+        `;
+
+        return row;
+    }
 
     // User Search filter in modal
     if (filterInput && usersList) {
@@ -320,16 +533,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     const emptyState = document.getElementById('chatEmptyState');
                     if (emptyState) emptyState.remove();
 
-                    // Append outgoing message
-                    const msgDiv = document.createElement('div');
-                    msgDiv.className = 'd-flex flex-column align-items-end mb-1';
-                    msgDiv.innerHTML = `
-                        <div class="p-2 px-3 rounded-4 shadow-sm" style="max-width: 75%; background-color: #07193d; color: #fff;">
-                            <div class="text-break" style="white-space: pre-wrap; font-size: 0.93rem;">${escapeHtml(data.message.content)}</div>
-                        </div>
-                        <small class="text-muted px-1 mt-1" style="font-size: 0.7rem;">${escapeHtml(data.message.time)}</small>
-                    `;
-                    messagesArea.appendChild(msgDiv);
+                    // Append outgoing message node
+                    const msgNode = renderMessageNode(data.message);
+                    messagesArea.appendChild(msgNode);
                     scrollToBottom();
                 } else if (data && data.error) {
                     alert(data.error);
@@ -338,6 +544,156 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(err => {
                 if (sendBtn) sendBtn.disabled = false;
                 console.error('Send message error:', err);
+            });
+        });
+    }
+
+    // Event delegation on messages area for Edit and Unsend
+    if (messagesArea) {
+        messagesArea.addEventListener('click', function(e) {
+            // Edit trigger
+            const editBtn = e.target.closest('.btn-edit-msg');
+            if (editBtn) {
+                const msgRow = editBtn.closest('.message-row');
+                if (!msgRow) return;
+                const msgId = msgRow.getAttribute('data-message-id');
+                const content = msgRow.getAttribute('data-content');
+                document.getElementById('modalEditMessageId').value = msgId;
+                document.getElementById('modalEditMessageText').value = content;
+                const editModalEl = document.getElementById('editMessageModal');
+                const modal = bootstrap.Modal.getOrCreateInstance(editModalEl);
+                modal.show();
+                return;
+            }
+
+            // Unsend trigger
+            const unsendBtn = e.target.closest('.btn-unsend-msg');
+            if (unsendBtn) {
+                const msgRow = unsendBtn.closest('.message-row');
+                if (!msgRow) return;
+                const msgId = msgRow.getAttribute('data-message-id');
+                const content = msgRow.getAttribute('data-content');
+                document.getElementById('modalUnsendMessageId').value = msgId;
+                document.getElementById('modalUnsendMessagePreview').textContent = content;
+                const unsendModalEl = document.getElementById('unsendMessageModal');
+                const modal = bootstrap.Modal.getOrCreateInstance(unsendModalEl);
+                modal.show();
+                return;
+            }
+        });
+    }
+
+    // Handle Edit Form Submission
+    const formEdit = document.getElementById('formEditMessage');
+    if (formEdit) {
+        formEdit.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const msgId = document.getElementById('modalEditMessageId').value;
+            const newText = document.getElementById('modalEditMessageText').value.trim();
+
+            if (!msgId || !newText) return;
+
+            const saveBtn = document.getElementById('btnSaveEditMessage');
+            if (saveBtn) saveBtn.disabled = true;
+
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+            const formData = new FormData();
+            formData.append('message_id', msgId);
+            formData.append('message', newText);
+            formData.append('ajax', '1');
+
+            fetch(`${window.BASE_URL}/index.php?action=edit_message`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': csrfToken
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (saveBtn) saveBtn.disabled = false;
+                if (data && data.success) {
+                    const row = messagesArea.querySelector(`.message-row[data-message-id="${msgId}"]`);
+                    if (row) {
+                        row.setAttribute('data-content', data.message.content);
+                        row.setAttribute('data-edited', '1');
+                        const textEl = row.querySelector('.message-text-content');
+                        if (textEl) textEl.textContent = data.message.content;
+                        const badge = row.querySelector('.edited-badge');
+                        if (badge) badge.classList.remove('d-none');
+                    }
+                    const modalEl = document.getElementById('editMessageModal');
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    if (modalInstance) modalInstance.hide();
+                } else {
+                    alert(data.error || 'Failed to edit message.');
+                }
+            })
+            .catch(err => {
+                if (saveBtn) saveBtn.disabled = false;
+                console.error('Edit message error:', err);
+            });
+        });
+    }
+
+    // Handle Unsend Confirmation
+    const btnConfirmUnsend = document.getElementById('btnConfirmUnsend');
+    if (btnConfirmUnsend) {
+        btnConfirmUnsend.addEventListener('click', function() {
+            const msgId = document.getElementById('modalUnsendMessageId').value;
+            if (!msgId) return;
+
+            btnConfirmUnsend.disabled = true;
+
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+            const formData = new FormData();
+            formData.append('message_id', msgId);
+            formData.append('ajax', '1');
+
+            fetch(`${window.BASE_URL}/index.php?action=unsend_message`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': csrfToken
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                btnConfirmUnsend.disabled = false;
+                if (data && data.success) {
+                    const modalEl = document.getElementById('unsendMessageModal');
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    if (modalInstance) modalInstance.hide();
+
+                    const row = messagesArea.querySelector(`.message-row[data-message-id="${msgId}"]`);
+                    if (row) {
+                        row.setAttribute('data-unsent', '1');
+                        const timeText = row.querySelector('small.text-muted')?.textContent || 'Just now';
+                        row.innerHTML = `
+                            <div class="p-2 px-3 rounded-4 shadow-sm border border-secondary-subtle" style="max-width: 75%; background-color: var(--bs-tertiary-bg); color: var(--bs-secondary-color);">
+                                <div class="fst-italic small d-flex align-items-center gap-1">
+                                    <i class="bi bi-slash-circle"></i>
+                                    <span>You unsent a message</span>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-1 px-1 mt-1">
+                                <small class="text-muted" style="font-size: 0.7rem;">${escapeHtml(timeText)}</small>
+                            </div>
+                        `;
+                    }
+                } else {
+                    alert(data.error || 'Failed to unsend message.');
+                }
+            })
+            .catch(err => {
+                btnConfirmUnsend.disabled = false;
+                console.error('Unsend message error:', err);
             });
         });
     }
@@ -352,27 +708,36 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(res => res.json())
             .then(data => {
                 if (data && data.success && Array.isArray(data.messages)) {
-                    // Check if message count increased
-                    const currentBubbles = messagesArea.querySelectorAll('.d-flex.flex-column.mb-1');
-                    if (data.messages.length > currentBubbles.length) {
-                        // Re-render or append newest
-                        const emptyState = document.getElementById('chatEmptyState');
-                        if (emptyState) emptyState.remove();
+                    const currentRows = messagesArea.querySelectorAll('.message-row');
+                    const currentFingerprint = Array.from(currentRows)
+                        .map(el => el.getAttribute('data-message-id') + ':' + el.getAttribute('data-content') + ':' + el.getAttribute('data-edited') + ':' + (el.getAttribute('data-unsent') || '0'))
+                        .join('|');
+                    const newFingerprint = data.messages
+                        .map(m => m.id + ':' + m.content + ':' + (m.is_edited ? '1' : '0') + ':' + (m.is_unsent ? '1' : '0'))
+                        .join('|');
+
+
+                    if (currentFingerprint !== newFingerprint) {
+                        const isNearBottom = (messagesArea.scrollHeight - messagesArea.scrollTop - messagesArea.clientHeight) < 80;
 
                         messagesArea.innerHTML = '';
-                        data.messages.forEach(msg => {
-                            const isMe = msg.is_me;
-                            const bubble = document.createElement('div');
-                            bubble.className = `d-flex flex-column ${isMe ? 'align-items-end' : 'align-items-start'} mb-1`;
-                            bubble.innerHTML = `
-                                <div class="p-2 px-3 rounded-4 shadow-sm" style="max-width: 75%; ${isMe ? 'background-color: #07193d; color: #fff;' : 'background-color: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color);'}">
-                                    <div class="text-break" style="white-space: pre-wrap; font-size: 0.93rem;">${escapeHtml(msg.content)}</div>
+                        if (data.messages.length === 0) {
+                            messagesArea.innerHTML = `
+                                <div class="my-auto text-center text-muted py-5" id="chatEmptyState">
+                                    <i class="bi bi-chat-heart fs-1 text-primary mb-2 d-block opacity-75"></i>
+                                    <p class="fw-semibold mb-1">Say hello!</p>
+                                    <small>This is the start of your direct conversation.</small>
                                 </div>
-                                <small class="text-muted px-1 mt-1" style="font-size: 0.7rem;">${escapeHtml(msg.time)}</small>
                             `;
-                            messagesArea.appendChild(bubble);
-                        });
-                        scrollToBottom();
+                        } else {
+                            data.messages.forEach(msg => {
+                                messagesArea.appendChild(renderMessageNode(msg));
+                            });
+                        }
+
+                        if (isNearBottom || currentRows.length === 0) {
+                            scrollToBottom();
+                        }
                     }
                 }
             })
@@ -388,6 +753,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
 
 <?php
 require_once __DIR__ . '/../layouts/footer.php';

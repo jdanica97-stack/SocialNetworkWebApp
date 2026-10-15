@@ -89,16 +89,16 @@ $highlightCommentId = (int)($highlightCommentId ?? ($_GET['comment_id'] ?? 0));
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                             <li>
-                                <a class="dropdown-item small text-secondary" href="<?= BASE_URL ?>/index.php?action=edit_post&post_id=<?= $post['id'] ?>">
-                                     <i class="bi bi-pencil-square me-2 text-muted"></i>Edit post
+                                <a class="dropdown-item small action-item-edit" href="<?= BASE_URL ?>/index.php?action=edit_post&post_id=<?= $post['id'] ?>">
+                                     <i class="bi bi-pencil-square me-2"></i>Edit post
                                 </a>
                             </li>
                             <li>
                                 <form action="<?= BASE_URL ?>/index.php?action=delete_post" method="POST" class="m-0" onsubmit="return confirm('Are you sure you want to delete this post? This action cannot be undone.');">
                                     <?= csrf_field(); ?>
                                     <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                    <button type="submit" class="dropdown-item small text-secondary border-0 bg-transparent w-100 text-start">
-                                        <i class="bi bi-trash me-2 text-muted"></i>Delete post
+                                    <button type="submit" class="dropdown-item small action-item-delete border-0 bg-transparent w-100 text-start">
+                                        <i class="bi bi-trash me-2"></i>Delete post
                                     </button>
                                 </form>
                             </li>
@@ -112,17 +112,38 @@ $highlightCommentId = (int)($highlightCommentId ?? ($_GET['comment_id'] ?? 0));
                     <?= nl2br(htmlspecialchars($post['content'])); ?>
                 </div>
 
-                <!-- Optional Post Image -->
-                <?php if (!empty($post['image'])): ?>
+                <!-- Optional Post Image(s) -->
+                <?php
+                $postImages = !empty($post['images']) ? $post['images'] : PostModel::parseImages($post['image'] ?? null);
+                $totalPostImages = count($postImages);
+                ?>
+                <?php if ($totalPostImages === 1): ?>
                     <?php
-                    $postImgFile = __DIR__ . '/../../../public/uploads/posts/' . basename($post['image']);
+                    $singleImg = $postImages[0];
+                    $postImgFile = __DIR__ . '/../../../public/uploads/posts/' . basename($singleImg);
                     $hasRealImage = file_exists($postImgFile);
                     ?>
                     <?php if ($hasRealImage): ?>
                         <div class="post-image-container mb-3">
-                            <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($post['image'])) ?>" alt="Post attachment" class="img-fluid rounded-3 w-100">
+                            <a href="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($singleImg)) ?>" class="post-lightbox-trigger" data-gallery="post-<?= (int)$post['id'] ?>" title="View full image">
+                                <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($singleImg)) ?>" alt="Post attachment" class="img-fluid rounded-3">
+                            </a>
                         </div>
                     <?php endif; ?>
+                <?php elseif ($totalPostImages > 1): ?>
+                    <div class="d-flex flex-column gap-3 mb-3">
+                        <?php foreach ($postImages as $idx => $imgFile): ?>
+                            <?php
+                            $realPath = __DIR__ . '/../../../public/uploads/posts/' . basename($imgFile);
+                            if (!file_exists($realPath)) continue;
+                            ?>
+                            <div class="post-image-container mb-0">
+                                <a href="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($imgFile)) ?>" class="post-lightbox-trigger" data-gallery="post-<?= (int)$post['id'] ?>" title="View image <?= $idx + 1 ?>">
+                                    <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($imgFile)) ?>" alt="Post attachment <?= $idx + 1 ?>" class="img-fluid rounded-3">
+                                </a>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
                 <?php endif; ?>
 
                 <!-- Post Engagement Actions (Like / Comment) -->
@@ -137,15 +158,15 @@ $highlightCommentId = (int)($highlightCommentId ?? ($_GET['comment_id'] ?? 0));
                             </button>
                         </form>
 
-                        <div class="post-action-btn" title="Comments">
+                        <button type="button" class="post-action-btn" onclick="toggleComments(<?= $post['id'] ?>)" title="Toggle Comments" aria-label="Toggle Comments">
                             <i class="bi bi-chat"></i>
                             <span><?= (int)$post['comments_count']; ?></span>
-                        </div>
+                        </button>
                     </div>
                 </div>
 
                 <!-- Dedicated Comments Discussion Section -->
-                <div class="comments-container d-block mt-3" id="comments-box-<?= $post['id'] ?>">
+                <div class="comments-container mt-3" id="comments-box-<?= $post['id'] ?>">
                     <h6 class="fw-bold text-dark mb-3 small d-flex align-items-center gap-2">
                         <i class="bi bi-chat-dots text-primary"></i>
                         <span>Comments (<?= (int)$post['comments_count']; ?>)</span>
@@ -199,8 +220,8 @@ $highlightCommentId = (int)($highlightCommentId ?? ($_GET['comment_id'] ?? 0));
                                                     </button>
                                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-1" style="min-width: 120px; font-size: 0.85rem;">
                                                         <li>
-                                                            <a class="dropdown-item py-1 text-secondary d-flex align-items-center gap-2" href="<?= BASE_URL ?>/index.php?action=edit_comment&comment_id=<?= $comment['id'] ?>">
-                                                                <i class="bi bi-pencil-square text-muted"></i>
+                                                            <a class="dropdown-item py-1 action-item-edit d-flex align-items-center gap-2" href="<?= BASE_URL ?>/index.php?action=edit_comment&comment_id=<?= $comment['id'] ?>">
+                                                                <i class="bi bi-pencil-square"></i>
                                                                 <span>Edit</span>
                                                             </a>
                                                         </li>
@@ -208,8 +229,8 @@ $highlightCommentId = (int)($highlightCommentId ?? ($_GET['comment_id'] ?? 0));
                                                             <form action="<?= BASE_URL ?>/index.php?action=delete_comment" method="POST" class="m-0" onsubmit="return confirm('Are you sure you want to delete this comment? This action cannot be undone.');">
                                                                 <?= csrf_field(); ?>
                                                                 <input type="hidden" name="comment_id" value="<?= $comment['id'] ?>">
-                                                                <button type="submit" class="dropdown-item py-1 text-secondary d-flex align-items-center gap-2 border-0 bg-transparent w-100 text-start">
-                                                                    <i class="bi bi-trash text-muted"></i>
+                                                                <button type="submit" class="dropdown-item py-1 action-item-delete d-flex align-items-center gap-2 border-0 bg-transparent w-100 text-start">
+                                                                    <i class="bi bi-trash"></i>
                                                                     <span>Delete</span>
                                                                 </button>
                                                             </form>
@@ -264,6 +285,18 @@ $highlightCommentId = (int)($highlightCommentId ?? ($_GET['comment_id'] ?? 0));
 </div>
 
 <script>
+function toggleComments(postId) {
+    const box = document.getElementById('comments-box-' + postId);
+    if (!box) return;
+    if (box.classList.contains('d-none')) {
+        box.classList.remove('d-none');
+        const input = box.querySelector('input[name="content"], textarea[name="content"]');
+        if (input) setTimeout(() => input.focus(), 60);
+    } else {
+        box.classList.add('d-none');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // If a comment was specifically targeted by notification, scroll smoothly into view
     <?php if ($highlightCommentId): ?>

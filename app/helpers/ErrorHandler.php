@@ -7,6 +7,40 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 class ErrorHandler {
+    private static $logFile = __DIR__ . '/../../storage/logs/app.log';
+
+    /**
+     * Sanitize message to prevent passwords, tokens, and hashes from appearing in logs.
+     */
+    public static function sanitizeLogMessage(string $msg): string {
+        $msg = preg_replace('/(password|passwd|pwd)(\s*[:=]\s*|\s*=>\s*[\'"]?)[^\s,;\'"]+/i', '$1$2***', $msg);
+        $msg = preg_replace('/(csrf_token|token|session_id)(\s*[:=]\s*|\s*=>\s*[\'"]?)[^\s,;\'"]+/i', '$1$2***', $msg);
+        $msg = preg_replace('/(mysql:host=[^;]+;port=\d+;dbname=[^;]+;charset=[^;]+)/i', '$1', $msg);
+        return $msg;
+    }
+
+    /**
+     * Write sanitized message to system error_log and storage/logs/app.log.
+     */
+    public static function writeLog(string $level, string $message, array $context = []): void {
+        $timestamp = date('Y-m-d H:i:s');
+        $sanitizedMessage = self::sanitizeLogMessage($message);
+        $contextStr = !empty($context) ? ' ' . json_encode(array_map(function($v) {
+            return is_string($v) ? self::sanitizeLogMessage($v) : $v;
+        }, $context)) : '';
+
+        $entry = "[{$timestamp}] [{$level}] {$sanitizedMessage}{$contextStr}" . PHP_EOL;
+
+        // Write to PHP/Apache error log
+        error_log("[SMCC Connect {$level}] {$sanitizedMessage}");
+
+        // Also write to dedicated app log file if directory exists
+        $dir = dirname(self::$logFile);
+        if (is_dir($dir) && is_writable($dir)) {
+            @file_put_contents(self::$logFile, $entry, FILE_APPEND | LOCK_EX);
+        }
+    }
+
     /**
      * Register global exception and error handlers.
      */
@@ -33,8 +67,8 @@ class ErrorHandler {
             return false;
         }
 
-        // Log the technical warning or error
-        error_log("[SMCC Connect PHP Error {$errno}] {$errstr} in {$errfile} on line {$errline}");
+        // Log the sanitized technical warning or error
+        self::writeLog("PHP Error {$errno}", "{$errstr} in {$errfile} on line {$errline}");
 
         // For severe warnings or errors, throw ErrorException
         if (in_array($errno, [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR], true)) {
@@ -49,14 +83,15 @@ class ErrorHandler {
      */
     public static function handleException(Throwable $exception): void {
         // Securely log technical details to server log without exposing secrets
-        error_log(sprintf(
-            "[SMCC Connect Uncaught Exception] %s: %s in %s:%d\nStack Trace:\n%s",
+        $details = sprintf(
+            "%s: %s in %s:%d\nStack Trace:\n%s",
             get_class($exception),
             $exception->getMessage(),
             $exception->getFile(),
             $exception->getLine(),
             $exception->getTraceAsString()
-        ));
+        );
+        self::writeLog("Uncaught Exception", $details);
 
         // Detect if request is AJAX
         $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')

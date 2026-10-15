@@ -63,6 +63,7 @@ class ProfileController {
 
         $isOwnProfile = ($userId === $loggedInUserId);
         $isFollowing = !$isOwnProfile ? $this->followModel->isFollowing($loggedInUserId, $userId) : false;
+        $isFollowedBy = !$isOwnProfile ? $this->followModel->isFollowing($userId, $loggedInUserId) : false;
         $followersCount = $this->followModel->getFollowersCount($userId);
         $followingCount = $this->followModel->getFollowingCount($userId);
 
@@ -445,6 +446,10 @@ class ProfileController {
                 ? $this->followModel->isFollowing($currentUserId, (int)$u['id']) 
                 : null;
 
+            $isFollowedByThisUser = ($currentUserId !== (int)$u['id'])
+                ? $this->followModel->isFollowing((int)$u['id'], $currentUserId)
+                : false;
+
             $formatted[] = [
                 'id' => (int)$u['id'],
                 'username' => $u['username'],
@@ -452,6 +457,7 @@ class ProfileController {
                 'profile_image' => $u['profile_image'],
                 'initials' => $uInitials,
                 'is_following' => $isFollowingThisUser,
+                'is_followed_by' => $isFollowedByThisUser,
                 'is_self' => ($currentUserId === (int)$u['id'])
             ];
         }

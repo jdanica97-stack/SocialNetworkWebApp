@@ -87,59 +87,77 @@ $authorInitials = count($authorParts) >= 2
                     ><?= htmlspecialchars($formData['content'] ?? $post['content']); ?></textarea>
                 </div>
 
-                <!-- Existing Image (if any) -->
-                <?php if (!empty($post['image'])): ?>
+                <!-- Existing Attachments (if any) -->
+                <?php
+                $currentImages = !empty($post['images']) ? $post['images'] : PostModel::parseImages($post['image'] ?? null);
+                ?>
+                <?php if (!empty($currentImages)): ?>
                     <div class="mb-4 p-3 bg-light rounded-3 border">
-                        <label class="form-label fw-semibold text-secondary small d-block">Current Attachment</label>
-                        <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3">
-                            <div class="position-relative d-inline-block">
-                                <img 
-                                    src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($post['image'])); ?>" 
-                                    alt="Current attachment" 
-                                    class="rounded-3 border shadow-sm"
-                                    style="max-height: 140px; max-width: 200px; object-fit: cover;"
-                                    onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\'badge bg-secondary\'>Attached: <?= htmlspecialchars(basename($post['image'])); ?></span>';"
-                                >
-                            </div>
-                            <div>
-                                <div class="form-check text-danger">
-                                    <input class="form-check-input" type="checkbox" name="remove_image" id="remove_image" value="1">
-                                    <label class="form-check-label fw-semibold small" for="remove_image">
-                                        <i class="bi bi-trash3 me-1"></i> Remove current image
-                                    </label>
-                                </div>
-                                <small class="text-muted d-block mt-1">Check this box to delete the image from this post.</small>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label fw-semibold text-secondary small mb-0">
+                                Current Attachments (<?= count($currentImages); ?>)
+                            </label>
+                            <div class="form-check text-danger mb-0">
+                                <input class="form-check-input" type="checkbox" name="remove_image" id="remove_all_images" value="1" onchange="toggleRemoveAllImages(this)">
+                                <label class="form-check-label small fw-semibold" for="remove_all_images">
+                                    Remove all
+                                </label>
                             </div>
                         </div>
+
+                        <div class="row g-2" id="existingImagesList">
+                            <?php foreach ($currentImages as $cIdx => $cImg): ?>
+                                <div class="col-6 col-sm-4 col-md-3 existing-image-item">
+                                    <div class="card h-100 border shadow-sm position-relative overflow-hidden">
+                                        <img 
+                                            src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($cImg)); ?>" 
+                                            alt="Attachment <?= $cIdx + 1 ?>" 
+                                            style="height: 100px; width: 100%; object-fit: cover;"
+                                            onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\'p-2 small text-muted\'>Attachment</span>';"
+                                        >
+                                        <div class="card-footer p-1 bg-white border-top text-center">
+                                            <div class="form-check form-check-inline m-0">
+                                                <input class="form-check-input remove-single-image" type="checkbox" name="remove_images[]" id="remove_img_<?= $cIdx ?>" value="<?= htmlspecialchars($cImg); ?>">
+                                                <label class="form-check-label micro-text text-danger" for="remove_img_<?= $cIdx ?>">
+                                                    Delete
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <small class="text-muted d-block mt-2">Check the "Delete" box on any photo you want to remove.</small>
                     </div>
                 <?php endif; ?>
 
-                <!-- Upload New / Replace Image -->
+                <!-- Upload New Photos -->
                 <div class="mb-4">
                     <label for="postImageInput" class="form-label fw-semibold text-secondary small">
-                        <?= !empty($post['image']) ? 'Replace Image (Optional)' : 'Add Image (Optional)'; ?>
+                        <?= !empty($currentImages) ? 'Add More Photos (Optional)' : 'Add Photos (Optional)'; ?>
                     </label>
                     <input 
                         type="file" 
                         id="postImageInput" 
-                        name="post_image" 
+                        name="post_images[]" 
                         accept="image/jpeg,image/png,image/gif,image/webp" 
                         class="form-control"
-                        onchange="previewNewImage(this)"
+                        multiple
+                        onchange="previewNewImages(this)"
                     >
                     <div class="form-text small text-muted">
-                        Supported: JPG, JPEG, PNG, GIF, WEBP. Max size: 5MB.
+                        Supported: JPG, JPEG, PNG, GIF, WEBP. Max size: 5MB per image. Select multiple files if desired.
                     </div>
 
-                    <!-- New Image Preview Box -->
+                    <!-- New Images Multi-Preview Box -->
                     <div id="newImagePreviewContainer" class="mt-3 d-none">
-                        <small class="text-success fw-semibold d-block mb-1"><i class="bi bi-eye me-1"></i> New Image Preview:</small>
-                        <div class="position-relative d-inline-block">
-                            <img id="newImagePreview" src="#" alt="New Preview" style="max-height: 140px; border-radius: 8px;" class="border shadow-sm">
-                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 rounded-circle p-0" style="width: 22px; height: 22px; line-height: 20px;" onclick="clearNewImage()">
-                                &times;
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <small class="text-success fw-semibold"><i class="bi bi-eye me-1"></i> New Photos Preview:</small>
+                            <button type="button" class="btn btn-sm btn-link text-danger text-decoration-none p-0 small" onclick="clearNewImages()">
+                                Clear new
                             </button>
                         </div>
+                        <div id="newImagePreviewGrid" class="d-flex flex-wrap gap-2"></div>
                     </div>
                 </div>
 
@@ -159,26 +177,82 @@ $authorInitials = count($authorParts) >= 2
 </div>
 
 <script>
-function previewNewImage(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const preview = document.getElementById('newImagePreview');
-            const container = document.getElementById('newImagePreviewContainer');
-            if (preview && container) {
-                preview.src = e.target.result;
-                container.classList.remove('d-none');
-            }
-        };
-        reader.readAsDataURL(input.files[0]);
+let editFilesDataTransfer = new DataTransfer();
+
+function previewNewImages(input) {
+    if (!input.files || input.files.length === 0) return;
+
+    for (let i = 0; i < input.files.length; i++) {
+        if (editFilesDataTransfer.items.length >= 10) {
+            alert('You can upload a maximum of 10 photos per post.');
+            break;
+        }
+        editFilesDataTransfer.items.add(input.files[i]);
     }
+
+    input.files = editFilesDataTransfer.files;
+    renderEditPreviews();
 }
 
-function clearNewImage() {
+function removeEditImage(index) {
+    const newDt = new DataTransfer();
+    const files = editFilesDataTransfer.files;
+    for (let i = 0; i < files.length; i++) {
+        if (i !== index) {
+            newDt.items.add(files[i]);
+        }
+    }
+    editFilesDataTransfer = newDt;
     const input = document.getElementById('postImageInput');
-    const container = document.getElementById('newImagePreviewContainer');
+    if (input) input.files = editFilesDataTransfer.files;
+    renderEditPreviews();
+}
+
+function clearNewImages() {
+    editFilesDataTransfer = new DataTransfer();
+    const input = document.getElementById('postImageInput');
     if (input) input.value = '';
-    if (container) container.classList.add('d-none');
+    renderEditPreviews();
+}
+
+function renderEditPreviews() {
+    const container = document.getElementById('newImagePreviewContainer');
+    const grid = document.getElementById('newImagePreviewGrid');
+    if (!container || !grid) return;
+
+    const files = editFilesDataTransfer.files;
+    if (files.length === 0) {
+        container.classList.add('d-none');
+        grid.innerHTML = '';
+        return;
+    }
+
+    container.classList.remove('d-none');
+    grid.innerHTML = '';
+
+    Array.from(files).forEach((file, idx) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const card = document.createElement('div');
+            card.className = 'position-relative d-inline-block';
+            card.style.margin = '4px';
+            card.innerHTML = `
+                <img src="${e.target.result}" alt="Preview" style="width: 76px; height: 76px; object-fit: cover; border-radius: 8px;" class="border shadow-sm">
+                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle p-0" style="width: 20px; height: 20px; line-height: 18px; transform: translate(30%, -30%); font-size: 13px;" onclick="removeEditImage(${idx})" title="Remove photo">
+                    &times;
+                </button>
+            `;
+            grid.appendChild(card);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function toggleRemoveAllImages(master) {
+    const checkboxes = document.querySelectorAll('.remove-single-image');
+    checkboxes.forEach(cb => {
+        cb.checked = master.checked;
+    });
 }
 </script>
 

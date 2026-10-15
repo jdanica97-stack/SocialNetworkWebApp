@@ -18,7 +18,14 @@ class Database {
      */
     public static function connect() {
         if (self::$conn === null) {
-            $dsn = "mysql:host=" . self::$host . ";port=" . self::$port . ";dbname=" . self::$db_name . ";charset=" . self::$charset;
+            $host = getenv('DB_HOST') ?: self::$host;
+            $port = getenv('DB_PORT') ?: self::$port;
+            $dbName = getenv('DB_NAME') ?: (defined('DB_NAME') ? DB_NAME : self::$db_name);
+            $username = getenv('DB_USER') ?: self::$username;
+            $password = (getenv('DB_PASS') !== false) ? getenv('DB_PASS') : self::$password;
+            $charset = self::$charset;
+
+            $dsn = "mysql:host=" . $host . ";port=" . $port . ";dbname=" . $dbName . ";charset=" . $charset;
 
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -27,7 +34,7 @@ class Database {
             ];
 
             try {
-                self::$conn = new PDO($dsn, self::$username, self::$password, $options);
+                self::$conn = new PDO($dsn, $username, $password, $options);
                 self::$conn->exec("SET time_zone = '+08:00';");
             } catch (PDOException $e) {
                 // Log actual error securely to server log without exposing details to users
@@ -41,6 +48,20 @@ class Database {
         }
 
         return self::$conn;
+    }
+
+    /**
+     * Inject a test or mock PDO instance (for automated testing).
+     */
+    public static function setConnection(?PDO $conn): void {
+        self::$conn = $conn;
+    }
+
+    /**
+     * Disconnect and clear the cached PDO connection.
+     */
+    public static function disconnect(): void {
+        self::$conn = null;
     }
 }
 

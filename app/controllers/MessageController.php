@@ -116,6 +116,7 @@ class MessageController {
                     'receiver_id' => $receiverId,
                     'content'     => $text,
                     'time'        => date('g:i A'),
+                    'is_edited'   => false,
                     'is_me'       => true
                 ]
             ]);
@@ -124,6 +125,134 @@ class MessageController {
 
         header('Content-Type: application/json');
         echo json_encode(['success' => false, 'error' => 'Failed to send message']);
+        exit;
+    }
+
+    /**
+     * Edit a sent message via AJAX.
+     */
+    public function edit() {
+        $this->requireAuth();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Content-Type: application/json');
+            http_response_code(405);
+            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+            exit;
+        }
+
+        if (!validate_csrf_token()) {
+            header('Content-Type: application/json');
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Invalid CSRF token']);
+            exit;
+        }
+
+        $currentUserId = (int)$_SESSION['user_id'];
+        $messageId = (int)($_POST['message_id'] ?? 0);
+        $newContent = trim($_POST['message'] ?? '');
+
+        if ($messageId <= 0) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Invalid message ID']);
+            exit;
+        }
+
+        if (empty($newContent)) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Message cannot be empty']);
+            exit;
+        }
+
+        $message = $this->messageModel->getMessageById($messageId);
+        if (!$message) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Message not found']);
+            exit;
+        }
+
+        if ((int)$message['sender_id'] !== $currentUserId) {
+            header('Content-Type: application/json');
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'You can only edit your own messages']);
+            exit;
+        }
+
+        $updated = $this->messageModel->updateMessage($messageId, $currentUserId, $newContent);
+        if ($updated) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => [
+                    'id'        => $messageId,
+                    'content'   => $newContent,
+                    'is_edited' => true
+                ]
+            ]);
+            exit;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => 'Failed to update message']);
+        exit;
+    }
+
+    /**
+     * Unsend (delete) a message via AJAX.
+     */
+    public function unsend() {
+        $this->requireAuth();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Content-Type: application/json');
+            http_response_code(405);
+            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+            exit;
+        }
+
+        if (!validate_csrf_token()) {
+            header('Content-Type: application/json');
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Invalid CSRF token']);
+            exit;
+        }
+
+        $currentUserId = (int)$_SESSION['user_id'];
+        $messageId = (int)($_POST['message_id'] ?? 0);
+
+        if ($messageId <= 0) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Invalid message ID']);
+            exit;
+        }
+
+        $message = $this->messageModel->getMessageById($messageId);
+        if (!$message) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Message not found']);
+            exit;
+        }
+
+        if ((int)$message['sender_id'] !== $currentUserId) {
+            header('Content-Type: application/json');
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'You can only unsend your own messages']);
+            exit;
+        }
+
+        $unsent = $this->messageModel->unsendMessage($messageId, $currentUserId);
+        if ($unsent) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success'    => true,
+                'message_id' => $messageId,
+                'is_unsent'  => true
+            ]);
+            exit;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => 'Failed to unsend message']);
         exit;
     }
 
@@ -152,6 +281,8 @@ class MessageController {
                 'sender_id'   => (int)$m['sender_id'],
                 'receiver_id' => (int)$m['receiver_id'],
                 'content'     => $m['message'],
+                'is_edited'   => !empty($m['is_edited']),
+                'is_unsent'   => !empty($m['is_unsent']),
                 'time'        => date('g:i A', strtotime($m['created_at'])),
                 'is_me'       => ((int)$m['sender_id'] === $currentUserId)
             ];
@@ -164,6 +295,7 @@ class MessageController {
         ]);
         exit;
     }
+
 
     /**
      * Get total unread messages count for navbar polling.
@@ -181,3 +313,4 @@ class MessageController {
         exit;
     }
 }
+

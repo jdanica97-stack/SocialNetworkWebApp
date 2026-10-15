@@ -20,6 +20,22 @@ class UserModel {
      * @return bool
      */
     public function create($username, $passwordHash, $fullName) {
+        // If user ID 1 is unoccupied (e.g. user 1 was deleted or table is empty),
+        // ensure this user is assigned ID 1 rather than skipping / proceeding to 2.
+        $user1Exists = (bool)$this->db->query("SELECT id FROM users WHERE id = 1 LIMIT 1")->fetch();
+        if (!$user1Exists) {
+            $sql = "INSERT INTO users (id, username, password, full_name) VALUES (1, :username, :password, :full_name)";
+            $stmt = $this->db->prepare($sql);
+            $res = $stmt->execute([
+                ':username'  => $username,
+                ':password'  => $passwordHash,
+                ':full_name' => $fullName
+            ]);
+            // Ensure next auto-increment proceeds sequentially
+            $this->db->exec("ALTER TABLE users AUTO_INCREMENT = 2");
+            return $res;
+        }
+
         $sql = "INSERT INTO users (username, password, full_name) VALUES (:username, :password, :full_name)";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([

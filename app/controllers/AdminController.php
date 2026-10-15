@@ -39,8 +39,7 @@ class AdminController {
      * Validate CSRF token for state-changing POST requests.
      */
     private function validateCsrf() {
-        $token = $_POST['csrf_token'] ?? '';
-        if (empty($token) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+        if (!validate_csrf_token()) {
             $_SESSION['error_message'] = 'Security Error: Invalid or expired CSRF token. Action blocked.';
             $tab = $_GET['tab'] ?? $_POST['tab'] ?? 'overview';
             header('Location: ' . BASE_URL . '/index.php?action=admin&tab=' . urlencode($tab));
@@ -215,6 +214,25 @@ class AdminController {
             $_SESSION['success_message'] = $res['message'];
         } else {
             $_SESSION['error_message'] = $res['message'];
+        }
+
+        header('Location: ' . BASE_URL . '/index.php?action=admin&tab=users');
+        exit;
+    }
+
+    /**
+     * Re-sequence user IDs starting from 1 (Admin Action).
+     */
+    public function reorderUsers() {
+        $this->requireAdmin();
+
+        $currentAdminId = (int)$_SESSION['user_id'];
+        $res = $this->adminModel->reorderUserIds($currentAdminId);
+
+        if ($res) {
+            $_SESSION['success_message'] = 'User IDs and Auto-Increment counter have been re-sequenced successfully starting from ID 1.';
+        } else {
+            $_SESSION['error_message'] = 'Failed to re-sequence user IDs. Please check database logs.';
         }
 
         header('Location: ' . BASE_URL . '/index.php?action=admin&tab=users');

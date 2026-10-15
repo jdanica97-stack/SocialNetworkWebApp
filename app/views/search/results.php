@@ -342,17 +342,48 @@ $authorId = $_GET['author_id'] ?? null;
                             <?= nl2br(htmlspecialchars($post['content'])); ?>
                         </div>
 
-                        <!-- Optional Post Image -->
-                        <?php if (!empty($post['image'])): ?>
+                        <!-- Optional Post Image(s) -->
+                        <?php
+                        $postImages = !empty($post['images']) ? $post['images'] : PostModel::parseImages($post['image'] ?? null);
+                        $totalPostImages = count($postImages);
+                        ?>
+                        <?php if ($totalPostImages === 1): ?>
                             <?php
-                            $postImgFile = __DIR__ . '/../../../public/uploads/posts/' . basename($post['image']);
+                            $singleImg = $postImages[0];
+                            $postImgFile = __DIR__ . '/../../../public/uploads/posts/' . basename($singleImg);
                             $hasRealImage = file_exists($postImgFile);
                             ?>
                             <?php if ($hasRealImage): ?>
-                                <div class="post-image-container">
-                                    <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($post['image'])) ?>" alt="Post attachment">
+                                <div class="post-image-container mb-3">
+                                    <a href="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($singleImg)) ?>" class="post-lightbox-trigger" data-gallery="post-<?= (int)$post['id'] ?>" title="View full image">
+                                        <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($singleImg)) ?>" alt="Post attachment" loading="lazy">
+                                    </a>
                                 </div>
                             <?php endif; ?>
+                        <?php elseif ($totalPostImages > 1): ?>
+                            <div class="post-gallery post-gallery-<?= min($totalPostImages, 4) ?> mb-3" data-post-id="<?= (int)$post['id'] ?>">
+                                <?php foreach (array_slice($postImages, 0, 4) as $idx => $imgFile): ?>
+                                    <?php
+                                    $isLastQuadrant = ($idx === 3 && $totalPostImages > 4);
+                                    $remainingCount = $totalPostImages - 4;
+                                    ?>
+                                    <div class="post-gallery-item">
+                                        <a href="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($imgFile)) ?>" class="post-lightbox-trigger" data-gallery="post-<?= (int)$post['id'] ?>" title="View image <?= $idx + 1 ?>">
+                                            <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($imgFile)) ?>" alt="Post image <?= $idx + 1 ?>" loading="lazy">
+                                            <?php if ($isLastQuadrant): ?>
+                                                <div class="post-gallery-overlay">
+                                                    <span>+<?= $remainingCount ?></span>
+                                                </div>
+                                            <?php endif; ?>
+                                        </a>
+                                    </div>
+                                <?php endforeach; ?>
+                                <?php if ($totalPostImages > 4): ?>
+                                    <?php foreach (array_slice($postImages, 4) as $extraIdx => $extraImg): ?>
+                                        <a href="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($extraImg)) ?>" class="post-lightbox-trigger d-none" data-gallery="post-<?= (int)$post['id'] ?>" title="View image <?= 5 + $extraIdx ?>"></a>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
                         <?php endif; ?>
 
                         <!-- Post Engagement Actions (Like / Comment) -->
@@ -460,8 +491,13 @@ $authorId = $_GET['author_id'] ?? null;
 <script>
 function toggleComments(postId) {
     const box = document.getElementById('comments-box-' + postId);
-    if (box) {
-        box.classList.toggle('d-none');
+    if (!box) return;
+    if (box.classList.contains('d-none')) {
+        box.classList.remove('d-none');
+        const input = box.querySelector('input[name="content"], textarea[name="content"]');
+        if (input) setTimeout(() => input.focus(), 60);
+    } else {
+        box.classList.add('d-none');
     }
 }
 </script>

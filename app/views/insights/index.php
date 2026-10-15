@@ -127,10 +127,14 @@ $currentUserId = $_SESSION['user_id'] ?? null;
 
                 <!-- Action Row -->
                 <div class="pt-3 border-top insights-border d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
-                    <button type="submit" name="generate_report" value="1" class="btn btn-report-generate rounded-pill px-3 py-2 fw-medium btn-sm d-inline-flex align-items-center gap-2">
-                        <i class="bi bi-bar-chart-line search-accent-icon"></i>
-                        <span>Generate Full Community Report</span>
-                    </button>
+                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                        <button type="submit" name="generate_report" value="1" class="btn btn-report-generate rounded-pill px-3 py-2 fw-medium btn-sm d-inline-flex align-items-center gap-2">
+                            <i class="bi bi-bar-chart-line search-accent-icon"></i>
+                            <span>Generate Full Community Report</span>
+                        </button>
+                    <?php else: ?>
+                        <div></div>
+                    <?php endif; ?>
 
                     <button type="submit" class="btn btn-black rounded-pill px-4 py-2 fw-semibold btn-sm shadow-sm d-inline-flex align-items-center gap-2">
                         <i class="bi bi-search"></i>
@@ -147,9 +151,9 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                 <i class="bi bi-search fs-5"></i>
             </div>
 
-            <h5 class="fw-bold insights-title text-center mb-1">Explore Community & Generate Reports</h5>
+            <h5 class="fw-bold insights-title text-center mb-1">Explore Community<?= (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') ? ' & Generate Reports' : ''; ?></h5>
             <p class="text-secondary small text-center mb-4 col-md-10 mx-auto">
-                Discover community members, search posts, analyze user interactions, and generate database reports.
+                Discover community members, search posts, and analyze user interactions<?= (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') ? ', and generate database reports' : ''; ?>.
             </p>
 
             <!-- RESULTS DISPLAY -->
@@ -334,8 +338,8 @@ $currentUserId = $_SESSION['user_id'] ?? null;
 
             <?php endif; ?>
 
-            <!-- COMMUNITY REPORTS DISPLAY (WHEN GENERATED) -->
-            <?php if (!empty($reportGenerated)): ?>
+            <!-- COMMUNITY REPORTS DISPLAY (WHEN GENERATED FOR ADMIN) -->
+            <?php if (!empty($reportGenerated) && isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
                 <div class="pt-3 border-top insights-border mt-3" id="communityReportsDetails">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <h6 class="fw-bold insights-title mb-0">
@@ -440,8 +444,13 @@ $currentUserId = $_SESSION['user_id'] ?? null;
 <script>
 function toggleComments(postId) {
     const box = document.getElementById('comments-box-' + postId);
-    if (box) {
-        box.classList.toggle('d-none');
+    if (!box) return;
+    if (box.classList.contains('d-none')) {
+        box.classList.remove('d-none');
+        const input = box.querySelector('input[name="content"], textarea[name="content"]');
+        if (input) setTimeout(() => input.focus(), 60);
+    } else {
+        box.classList.add('d-none');
     }
 }
 </script>

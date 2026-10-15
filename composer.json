@@ -1,0 +1,33 @@
+{
+    "name": "smcc/social-network-web-app",
+    "description": "Mini Social Networking Web Application - SMCC Connect",
+    "type": "project",
+    "require": {
+        "php": "^8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6"
+    },
+    "autoload": {
+        "classmap": [
+            "config/",
+            "app/helpers/",
+            "app/models/",
+            "app/controllers/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "lint": "php bin/lint.php"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true,
+        "allow-plugins": {}
+    }
+}

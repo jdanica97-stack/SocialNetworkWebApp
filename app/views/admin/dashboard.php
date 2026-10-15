@@ -24,7 +24,10 @@ if (session_status() === PHP_SESSION_NONE) {
                 Manage platform users, moderate posts and comments, inspect platform activity, and enforce server-side security.
             </p>
         </div>
-        <div class="text-md-end">
+        <div class="text-md-end d-flex flex-wrap gap-2 justify-content-md-end align-items-center">
+            <a href="<?= BASE_URL ?>/index.php?action=insights&generate_report=1" class="btn btn-warning btn-sm rounded-pill px-3 fw-semibold shadow-sm">
+                <i class="bi bi-bar-chart-line-fill me-1"></i> Community Reports
+            </a>
             <a href="<?= BASE_URL ?>/" class="btn btn-outline-light btn-sm rounded-pill px-3">
                 <i class="bi bi-arrow-left me-1"></i> Back to Newsfeed
             </a>
@@ -267,9 +270,14 @@ if (session_status() === PHP_SESSION_NONE) {
                     Manage member accounts, review user roles, and adjust permissions securely. Sensitive security credentials (password hashes) are excluded.
                 </p>
             </div>
-            <span class="badge bg-primary rounded-pill px-3 py-2 align-self-start align-self-md-auto">
-                Total Matches: <?= (int)$pagination['total_items']; ?>
-            </span>
+            <div class="d-flex align-items-center gap-2">
+                <a href="<?= BASE_URL ?>/index.php?action=admin_reorder_users" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="return confirm('Resequence all user IDs starting from 1 with no gaps?');" title="Renumber user IDs consecutively (1, 2, 3...) and reset AUTO_INCREMENT">
+                    <i class="bi bi-arrow-repeat me-1"></i> Resequence IDs (1..N)
+                </a>
+                <span class="badge bg-primary rounded-pill px-3 py-2 align-self-start align-self-md-auto">
+                    Total Matches: <?= (int)$pagination['total_items']; ?>
+                </span>
+            </div>
         </div>
 
         <!-- SEARCH AND ROLE FILTER TOOLBAR -->
@@ -486,9 +494,14 @@ if (session_status() === PHP_SESSION_NONE) {
                                     </div>
                                 </td>
                                 <td class="text-center">
-                                    <?php if (!empty($p['image'])): ?>
+                                    <?php
+                                    $pImages = PostModel::parseImages($p['image'] ?? null);
+                                    $pImgCount = count($pImages);
+                                    ?>
+                                    <?php if ($pImgCount > 0): ?>
                                         <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
-                                            <i class="bi bi-image me-1"></i> Image
+                                            <i class="bi <?= $pImgCount > 1 ? 'bi-images' : 'bi-image' ?> me-1"></i>
+                                            <?= $pImgCount === 1 ? '1 Image' : $pImgCount . ' Images' ?>
                                         </span>
                                     <?php else: ?>
                                         <span class="text-muted micro-text">None</span>
@@ -734,6 +747,27 @@ if (session_status() === PHP_SESSION_NONE) {
             </div>
         </div>
     </div>
+
+    <!-- Community Reports Generator Card for Admin -->
+    <div class="card-modern p-4 mb-4 shadow-sm border-0" style="background: linear-gradient(135deg, rgba(25, 47, 93, 0.05) 0%, rgba(241, 189, 39, 0.08) 100%);">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-primary rounded-pill px-2.5 py-1 micro-text fw-bold">Admin Analytics</span>
+                    <h5 class="fw-bold text-dark mb-0">Full Community Database Reports</h5>
+                </div>
+                <p class="text-secondary small mb-0">
+                    Generate comprehensive SQL analytics including author activity rankings, interaction summaries, and timeline metrics.
+                </p>
+            </div>
+            <div>
+                <a href="<?= BASE_URL ?>/index.php?action=insights&generate_report=1" class="btn btn-warning rounded-pill px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-bar-chart-line-fill"></i>
+                    <span>Generate Full Community Report</span>
+                </a>
+            </div>
+        </div>
+    </div>
 <?php endif; ?>
 
 <!-- TAB CONTENT 6: CAMPUS EVENTS MANAGEMENT -->
@@ -810,6 +844,14 @@ if (session_status() === PHP_SESSION_NONE) {
                                 </td>
                                 <td class="text-end">
                                     <div class="btn-group btn-group-sm">
+                                        <!-- View Full Details Preview Button -->
+                                        <button type="button" 
+                                                class="btn btn-outline-secondary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#modalAdminViewEvent<?= (int)$ev['id']; ?>"
+                                                title="View Full Details Preview">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
                                         <!-- Edit Event Button -->
                                         <button type="button" 
                                                 class="btn btn-outline-primary" 
@@ -820,7 +862,7 @@ if (session_status() === PHP_SESSION_NONE) {
                                         </button>
                                         <!-- Delete Event Button -->
                                         <form action="<?= BASE_URL ?>/index.php?action=admin_delete_event" method="POST" class="d-inline" onsubmit="return confirm('Delete this campus event? Students will no longer see it on their feed.');">
-                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
+                                            <?= csrf_field(); ?>
                                             <input type="hidden" name="event_id" value="<?= (int)$ev['id']; ?>">
                                             <button type="submit" class="btn btn-outline-danger" title="Delete Event">
                                                 <i class="bi bi-trash"></i>
@@ -829,56 +871,135 @@ if (session_status() === PHP_SESSION_NONE) {
                                     </div>
                                 </td>
                             </tr>
-
-                            <!-- EDIT EVENT MODAL -->
-                            <div class="modal fade" id="modalEditEvent<?= (int)$ev['id']; ?>" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content border-0 shadow">
-                                        <form action="<?= BASE_URL ?>/index.php?action=admin_save_event" method="POST">
-                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
-                                            <input type="hidden" name="event_id" value="<?= (int)$ev['id']; ?>">
-                                            <div class="modal-header border-bottom">
-                                                <h5 class="modal-title fw-bold text-dark">
-                                                    <i class="bi bi-pencil-square text-primary me-2"></i>Edit Campus Event
-                                                </h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body p-4">
-                                                <div class="mb-3">
-                                                    <label class="form-label small fw-bold">Event Title <span class="text-danger">*</span></label>
-                                                    <input type="text" name="title" class="form-control" value="<?= htmlspecialchars($ev['title']); ?>" required>
-                                                </div>
-                                                <div class="row g-2 mb-3">
-                                                    <div class="col-6">
-                                                        <label class="form-label small fw-bold">Event Date <span class="text-danger">*</span></label>
-                                                        <input type="date" name="event_date" class="form-control" value="<?= htmlspecialchars($ev['event_date']); ?>" required>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <label class="form-label small fw-bold">Event Time</label>
-                                                        <input type="text" name="event_time" class="form-control" placeholder="e.g. 8:00 AM" value="<?= htmlspecialchars($ev['event_time'] ?? ''); ?>">
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label small fw-bold">Location <span class="text-danger">*</span></label>
-                                                    <input type="text" name="location" class="form-control" placeholder="e.g. SMCC Gymnasium" value="<?= htmlspecialchars($ev['location']); ?>" required>
-                                                </div>
-                                                <div class="mb-0">
-                                                    <label class="form-label small fw-bold">Description</label>
-                                                    <textarea name="description" rows="3" class="form-control" placeholder="Optional details for students..."><?= htmlspecialchars($ev['description'] ?? ''); ?></textarea>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer border-top bg-light">
-                                                <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
-                                                <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4">Update Event</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
+
+            <!-- MODALS FOR VIEWING & EDITING EVENTS (Cleanly positioned outside table) -->
+            <?php foreach ($eventsData as $ev): ?>
+                <?php 
+                    $evDateObj = !empty($ev['event_date']) ? strtotime($ev['event_date']) : time();
+                    $isPast = ($evDateObj < strtotime('today'));
+                ?>
+                <!-- 1. PREVIEW DETAILS MODAL -->
+                <div class="modal fade" id="modalAdminViewEvent<?= (int)$ev['id']; ?>" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                            <div class="modal-header border-0 bg-primary bg-opacity-10 py-3 px-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-calendar-event-fill fs-5"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="modal-title fw-bold text-dark mb-0"><?= htmlspecialchars($ev['title']); ?></h5>
+                                        <span class="micro-text text-muted">Student View Preview &bull; Campus Event</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <div class="mb-3 d-flex flex-wrap align-items-center gap-2">
+                                    <?php if ($isPast): ?>
+                                        <span class="badge bg-secondary rounded-pill px-3 py-1.5"><i class="bi bi-clock-history me-1"></i>Past Event</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-success rounded-pill px-3 py-1.5"><i class="bi bi-calendar-check me-1"></i>Upcoming Campus Event</span>
+                                    <?php endif; ?>
+                                    <span class="badge bg-light text-secondary border rounded-pill px-3 py-1.5"><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= htmlspecialchars($ev['location']); ?></span>
+                                </div>
+
+                                <div class="row g-3 mb-4">
+                                    <div class="col-sm-6">
+                                        <div class="p-3 rounded-3 bg-light border">
+                                            <div class="text-muted small fw-semibold mb-1"><i class="bi bi-calendar3 text-primary me-1"></i> Date</div>
+                                            <div class="fw-bold text-dark"><?= date('l, F j, Y', $evDateObj); ?></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="p-3 rounded-3 bg-light border">
+                                            <div class="text-muted small fw-semibold mb-1"><i class="bi bi-clock text-warning me-1"></i> Time</div>
+                                            <div class="fw-bold text-dark"><?= !empty($ev['event_time']) ? htmlspecialchars($ev['event_time']) : 'Time not specified'; ?></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 rounded-3 bg-white border shadow-sm mb-3">
+                                    <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+                                        <i class="bi bi-file-text-fill text-primary"></i>
+                                        <span>Full Description & Information</span>
+                                    </h6>
+                                    <div class="text-secondary" style="line-height: 1.7; font-size: 0.95rem;">
+                                        <?= !empty($ev['description']) ? nl2br(htmlspecialchars($ev['description'])) : '<em class="text-muted">No description provided.</em>'; ?>
+                                    </div>
+                                </div>
+
+                                <div class="small text-muted d-flex justify-content-between align-items-center">
+                                    <span>Posted by: <strong><?= htmlspecialchars($ev['organizer_name'] ?? 'Administrator'); ?></strong></span>
+                                    <span>Last Updated: <?= htmlspecialchars($ev['updated_at'] ?? $ev['created_at'] ?? 'N/A'); ?></span>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-top bg-light py-2 px-4 d-flex justify-content-between">
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#modalEditEvent<?= (int)$ev['id']; ?>">
+                                    <i class="bi bi-pencil-square me-1"></i>Edit Information
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. EDIT EVENT MODAL -->
+                <div class="modal fade" id="modalEditEvent<?= (int)$ev['id']; ?>" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                            <form action="<?= BASE_URL ?>/index.php?action=admin_save_event" method="POST">
+                                <?= csrf_field(); ?>
+                                <input type="hidden" name="event_id" value="<?= (int)$ev['id']; ?>">
+                                <div class="modal-header border-bottom bg-light py-3 px-4">
+                                    <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                                        <i class="bi bi-pencil-square text-primary"></i>
+                                        <span>Edit Campus Event Information</span>
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body p-4">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Event Title <span class="text-danger">*</span></label>
+                                        <input type="text" name="title" class="form-control" value="<?= htmlspecialchars($ev['title']); ?>" required placeholder="e.g. CCIS Days Celebration">
+                                    </div>
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">Event Date <span class="text-danger">*</span></label>
+                                            <input type="date" name="event_date" class="form-control" value="<?= htmlspecialchars($ev['event_date']); ?>" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">Event Time</label>
+                                            <input type="text" name="event_time" class="form-control" placeholder="e.g. 8:00 AM - 12:00 PM" value="<?= htmlspecialchars($ev['event_time'] ?? ''); ?>">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Venue / Location <span class="text-danger">*</span></label>
+                                        <input type="text" name="location" class="form-control" placeholder="e.g. SMCC Gymnasium or Quadrangle" value="<?= htmlspecialchars($ev['location']); ?>" required>
+                                    </div>
+                                    <div class="mb-0">
+                                        <label class="form-label small fw-bold">Full Event Description & Details</label>
+                                        <textarea name="description" rows="5" class="form-control" placeholder="Enter complete guidelines, schedule, dress code, and details for students..."><?= htmlspecialchars($ev['description'] ?? ''); ?></textarea>
+                                        <div class="form-text small text-muted">
+                                            This complete text will be shown when students click on the event to view full details.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-top bg-light py-3 px-4 d-flex justify-content-between align-items-center">
+                                    <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4">
+                                        <i class="bi bi-check2-circle me-1"></i> Update Event Information
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
         <?php else: ?>
             <div class="text-center py-5 text-muted">
                 <i class="bi bi-calendar-x fs-1 d-block mb-2 text-secondary opacity-50"></i>
@@ -896,7 +1017,7 @@ if (session_status() === PHP_SESSION_NONE) {
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <form action="<?= BASE_URL ?>/index.php?action=admin_save_event" method="POST">
-                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
+                    <?= csrf_field(); ?>
                     <input type="hidden" name="event_id" value="0">
                     <div class="modal-header border-bottom">
                         <h5 class="modal-title fw-bold text-dark">
