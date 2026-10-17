@@ -555,7 +555,7 @@ class PostController {
             $this->deleteMultipleImageFiles($filesToDelete);
 
             $_SESSION['success_message'] = 'Post updated successfully!';
-            header('Location: ' . BASE_URL . '/index.php#post-' . $postId);
+            header('Location: ' . BASE_URL . '/index.php');
             exit;
         } else {
             $this->deleteMultipleImageFiles($newUploadedImages);
@@ -666,12 +666,72 @@ class PostController {
     }
 
     /**
+     * AJAX endpoint to get list of users who reacted to a specific post.
+     */
+    public function getLikers() {
+        $this->requireAuth();
+        $currentUserId = (int)$_SESSION['user_id'];
+        $postId = (int)($_GET['post_id'] ?? $_POST['post_id'] ?? 0);
+
+        header('Content-Type: application/json');
+
+        if ($postId <= 0) {
+            echo json_encode(['success' => false, 'error' => 'Invalid post ID.']);
+            exit;
+        }
+
+        $post = $this->postModel->getPostById($postId);
+        if (!$post) {
+            echo json_encode(['success' => false, 'error' => 'The post could not be found or has been deleted.']);
+            exit;
+        }
+
+        $likers = $this->postModel->getPostLikers($postId, $currentUserId);
+
+        $formatted = [];
+        foreach ($likers as $u) {
+            $uParts = explode(' ', trim($u['full_name']));
+            $uInitials = count($uParts) >= 2
+                ? strtoupper(mb_substr($uParts[0], 0, 1) . mb_substr($uParts[count($uParts)-1], 0, 1))
+                : strtoupper(mb_substr($u['full_name'], 0, 2));
+
+            $formatted[] = [
+                'id' => (int)$u['id'],
+                'username' => $u['username'],
+                'full_name' => $u['full_name'],
+                'profile_image' => $u['profile_image'],
+                'initials' => $uInitials,
+                'is_following' => (bool)$u['is_following'],
+                'is_followed_by' => (bool)$u['is_followed_by'],
+                'is_self' => ($currentUserId === (int)$u['id'])
+            ];
+        }
+
+        echo json_encode([
+            'success' => true,
+            'post_id' => $postId,
+            'count' => count($formatted),
+            'users' => $formatted
+        ]);
+        exit;
+    }
+
+    /**
      * Delete post.
      */
     public function delete() {
         $this->requireAuth();
 
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || isset($_POST['ajax']) || isset($_GET['ajax'])
+            || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Invalid request method for deleting a post.']);
+                exit;
+            }
             $_SESSION['error_message'] = 'Invalid request method for deleting a post.';
             header('Location: ' . BASE_URL . '/index.php');
             exit;
@@ -679,6 +739,11 @@ class PostController {
 
         // CSRF Token Validation
         if (!validate_csrf_token()) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Security Error: Invalid or expired CSRF token.']);
+                exit;
+            }
             $_SESSION['error_message'] = 'Security Error: Invalid or expired CSRF token.';
             header('Location: ' . BASE_URL . '/index.php');
             exit;
@@ -688,6 +753,11 @@ class PostController {
         $userId = (int)$_SESSION['user_id'];
 
         if ($postId <= 0) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Invalid post ID.']);
+                exit;
+            }
             $_SESSION['error_message'] = 'Invalid post ID.';
             header('Location: ' . BASE_URL . '/index.php');
             exit;
@@ -695,6 +765,11 @@ class PostController {
 
         $post = $this->postModel->getPostById($postId);
         if (!$post) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Post not found.']);
+                exit;
+            }
             $_SESSION['error_message'] = 'Post not found.';
             header('Location: ' . BASE_URL . '/index.php');
             exit;
@@ -702,6 +777,11 @@ class PostController {
 
         // Strict Server-Side Ownership Check
         if ((int)$post['user_id'] !== $userId) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Unauthorized: You can only delete your own posts.']);
+                exit;
+            }
             $_SESSION['error_message'] = 'Unauthorized: You can only delete your own posts.';
             header('Location: ' . BASE_URL . '/index.php');
             exit;
@@ -714,8 +794,18 @@ class PostController {
 
         $deleted = $this->postModel->deletePost($postId, $userId);
         if ($deleted) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'message' => 'Post deleted successfully.', 'post_id' => $postId]);
+                exit;
+            }
             $_SESSION['success_message'] = 'Post deleted successfully.';
         } else {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Failed to delete post.']);
+                exit;
+            }
             $_SESSION['error_message'] = 'Failed to delete post.';
         }
 

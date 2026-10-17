@@ -218,6 +218,50 @@ class PostModel {
     }
 
     /**
+     * Get list of users who liked/reacted to a specific post.
+     *
+     * @param int $postId
+     * @param int|null $currentUserId
+     * @return array
+     */
+    public function getPostLikers($postId, $currentUserId = null) {
+        $postId = (int)$postId;
+        $currentUserId = $currentUserId ? (int)$currentUserId : 0;
+
+        if ($postId <= 0) {
+            return [];
+        }
+
+        if ($currentUserId > 0) {
+            $sql = "SELECT u.id, u.username, u.full_name, u.profile_image, u.bio,
+                           (SELECT COUNT(*) FROM follows WHERE follower_id = :current_user_id1 AND following_id = u.id) AS is_following,
+                           (SELECT COUNT(*) FROM follows WHERE follower_id = u.id AND following_id = :current_user_id2) AS is_followed_by
+                    FROM likes l
+                    JOIN users u ON l.user_id = u.id
+                    WHERE l.post_id = :post_id
+                    ORDER BY l.id DESC";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':post_id' => $postId,
+                ':current_user_id1' => $currentUserId,
+                ':current_user_id2' => $currentUserId
+            ]);
+        } else {
+            $sql = "SELECT u.id, u.username, u.full_name, u.profile_image, u.bio,
+                           0 AS is_following,
+                           0 AS is_followed_by
+                    FROM likes l
+                    JOIN users u ON l.user_id = u.id
+                    WHERE l.post_id = :post_id
+                    ORDER BY l.id DESC";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':post_id' => $postId]);
+        }
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * Delete a post (only allowed if post belongs to user).
      *
      * @param int $postId

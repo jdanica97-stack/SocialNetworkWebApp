@@ -232,11 +232,13 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                             $singleImg = $postImages[0];
                             $postImgFile = __DIR__ . '/../../../public/uploads/posts/' . basename($singleImg);
                             $hasRealImage = file_exists($postImgFile);
+                            $imgSize = $hasRealImage ? @getimagesize($postImgFile) : false;
+                            $imgOrientationClass = ($imgSize && $imgSize[1] > $imgSize[0]) ? 'is-portrait' : 'is-landscape';
                             ?>
                             <?php if ($hasRealImage): ?>
-                                <div class="post-image-container">
+                                <div class="post-image-container <?= $imgOrientationClass ?>">
                                     <a href="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($singleImg)) ?>" class="post-lightbox-trigger" data-gallery="post-<?= (int)$post['id'] ?>" title="View full image">
-                                        <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($singleImg)) ?>" alt="Post attachment" loading="lazy">
+                                        <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($singleImg)) ?>" alt="Post attachment" loading="lazy" onload="this.naturalHeight > this.naturalWidth ? (this.closest('.post-image-container')?.classList.add('is-portrait'), this.closest('.post-image-container')?.classList.remove('is-landscape')) : (this.closest('.post-image-container')?.classList.add('is-landscape'), this.closest('.post-image-container')?.classList.remove('is-portrait'));">
                                     </a>
                                 </div>
                             <?php else: ?>
@@ -278,7 +280,7 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                                     <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
                                     <button type="submit" class="post-action-btn <?= !empty($post['is_liked']) ? 'liked' : '' ?>" title="Like">
                                         <i class="bi <?= !empty($post['is_liked']) ? 'bi-heart-fill' : 'bi-heart' ?>"></i>
-                                        <span><?= (int)$post['likes_count']; ?></span>
+                                        <span class="post-likes-count" data-post-id="<?= (int)$post['id']; ?>" title="View reactions"><?= (int)$post['likes_count']; ?></span>
                                     </button>
                                 </form>
 
@@ -644,22 +646,211 @@ function toggleComments(postId) {
     }
 }
 
-// Multi-Image Preview Handler using DataTransfer
+// Multi-Image Preview Handler with Crop/Adjust using Cropper.js
 let postFilesDataTransfer = new DataTransfer();
+let cropQueue = [];
+let currentCropper = null;
+let cropModalInstance = null;
 
 function previewImages(input) {
     if (!input.files || input.files.length === 0) return;
 
+    // Build the queue of new files to crop
+    cropQueue = [];
     for (let i = 0; i < input.files.length; i++) {
-        if (postFilesDataTransfer.items.length >= 10) {
+        if (postFilesDataTransfer.items.length + cropQueue.length >= 10) {
             alert('You can upload a maximum of 10 photos per post.');
             break;
         }
-        postFilesDataTransfer.items.add(input.files[i]);
+        cropQueue.push(input.files[i]);
     }
 
-    input.files = postFilesDataTransfer.files;
-    renderSelectedPreviews();
+    // Reset the raw input (we'll manage files via DataTransfer)
+    input.value = '';
+
+    // Start processing the queue
+    processNextCropItem();
+}
+
+function processNextCropItem() {
+    if (cropQueue.length === 0) {
+        // All done - update the file input and render previews
+        const input = document.getElementById('postImageInput');
+        if (input) input.files = postFilesDataTransfer.files;
+        renderSelectedPreviews();
+        return;
+    }
+
+    const file = cropQueue.shift();
+    openCropModal(file);
+}
+
+function openCropModal(file) {
+    const modalEl = document.getElementById('imageCropModal');
+    const cropperImg = document.getElementById('cropperImage');
+    if (!modalEl || !cropperImg) {
+        // Fallback: no modal available, add file as-is
+        postFilesDataTransfer.items.add(file);
+        processNextCropItem();
+        return;
+    }
+
+    if (!cropModalInstance) {
+        cropModalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
+    }
+
+    // Update modal title with queue info
+    const label = document.getElementById('imageCropModalLabel');
+    const remaining = cropQueue.length;
+    if (label) {
+        label.textContent = remaining > 0 ? `Adjust Photo (${remaining + 1} remaining)` : 'Adjust Photo';
+    }
+
+    // Load image into cropper
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        cropperImg.src = e.target.result;
+        cropModalInstance.show();
+
+        // Wait for modal fully shown to init cropper
+        modalEl.addEventListener('shown.bs.modal', function onShown() {
+            modalEl.removeEventListener('shown.bs.modal', onShown);
+
+            if (currentCropper) {
+                currentCropper.destroy();
+                currentCropper = null;
+            }
+
+            currentCropper = new Cropper(cropperImg, {
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 1,
+                responsive: true,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: false,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false,
+                background: true,
+            });
+        }, { once: true });
+    };
+    reader.readAsDataURL(file);
+
+    // Store file reference for skip
+    modalEl._currentFile = file;
+
+    // Wire up buttons (remove old listeners by cloning)
+    wireUpCropButtons(file);
+}
+
+function wireUpCropButtons(originalFile) {
+    const applyBtn = document.getElementById('cropApplyBtn');
+    const skipBtn = document.getElementById('cropSkipBtn');
+    const cancelBtn = document.getElementById('cropCancelBtn');
+    const rotateLeftBtn = document.getElementById('cropRotateLeft');
+    const rotateRightBtn = document.getElementById('cropRotateRight');
+    const flipHBtn = document.getElementById('cropFlipH');
+    const resetBtn = document.getElementById('cropReset');
+
+    // Clone buttons to remove old event listeners
+    function replaceBtn(btn) {
+        if (!btn) return btn;
+        const clone = btn.cloneNode(true);
+        btn.parentNode.replaceChild(clone, btn);
+        return clone;
+    }
+
+    const newApply = replaceBtn(applyBtn);
+    const newSkip = replaceBtn(skipBtn);
+    const newCancel = replaceBtn(cancelBtn);
+    const newRotateLeft = replaceBtn(rotateLeftBtn);
+    const newRotateRight = replaceBtn(rotateRightBtn);
+    const newFlipH = replaceBtn(flipHBtn);
+    const newReset = replaceBtn(resetBtn);
+
+    // Rotate/Flip/Reset
+    if (newRotateLeft) newRotateLeft.addEventListener('click', () => { if (currentCropper) currentCropper.rotate(-90); });
+    if (newRotateRight) newRotateRight.addEventListener('click', () => { if (currentCropper) currentCropper.rotate(90); });
+    if (newFlipH) {
+        let flipped = false;
+        newFlipH.addEventListener('click', () => {
+            if (currentCropper) {
+                flipped = !flipped;
+                currentCropper.scaleX(flipped ? -1 : 1);
+            }
+        });
+    }
+    if (newReset) newReset.addEventListener('click', () => { if (currentCropper) currentCropper.reset(); });
+
+    // Apply: crop the image and add as new file
+    if (newApply) {
+        newApply.addEventListener('click', () => {
+            if (!currentCropper) return;
+
+            const canvas = currentCropper.getCroppedCanvas({
+                maxWidth: 2048,
+                maxHeight: 2048,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+
+            if (!canvas) {
+                postFilesDataTransfer.items.add(originalFile);
+                closeCropAndNext();
+                return;
+            }
+
+            canvas.toBlob(function(blob) {
+                if (!blob) {
+                    postFilesDataTransfer.items.add(originalFile);
+                } else {
+                    // Create a new file from the cropped blob
+                    const ext = originalFile.name.split('.').pop() || 'jpg';
+                    const croppedFile = new File([blob], originalFile.name, {
+                        type: blob.type || originalFile.type || 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+                    postFilesDataTransfer.items.add(croppedFile);
+                }
+                closeCropAndNext();
+            }, originalFile.type || 'image/jpeg', 0.92);
+        });
+    }
+
+    // Skip: add original file without cropping
+    if (newSkip) {
+        newSkip.addEventListener('click', () => {
+            postFilesDataTransfer.items.add(originalFile);
+            closeCropAndNext();
+        });
+    }
+
+    // Cancel: discard this image entirely
+    if (newCancel) {
+        newCancel.addEventListener('click', () => {
+            // Don't add the file, also clear the rest of the queue
+            cropQueue = [];
+            closeCropAndNext();
+        });
+    }
+}
+
+function closeCropAndNext() {
+    if (currentCropper) {
+        currentCropper.destroy();
+        currentCropper = null;
+    }
+    if (cropModalInstance) {
+        cropModalInstance.hide();
+    }
+
+    // Small delay to let modal close animation finish
+    setTimeout(() => {
+        processNextCropItem();
+    }, 300);
 }
 
 function removeSelectedImage(index) {

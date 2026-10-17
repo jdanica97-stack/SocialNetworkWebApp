@@ -91,6 +91,9 @@ if ($isLoggedIn) {
         })();
     </script>
 
+    <!-- Cropper.js CSS (Image Crop/Adjust) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
+
     <!-- Custom Modern Stylesheet -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/public/assets/css/style.css?v=<?= filemtime(__DIR__ . '/../../../public/assets/css/style.css') ?>">
 </head>

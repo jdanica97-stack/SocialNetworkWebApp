@@ -142,4 +142,58 @@ class PostModelTest extends TestCase {
         $this->assertSame(['a.jpg', 'b.png'], PostModel::parseImages(json_encode(['a.jpg', 'b.png'])));
         $this->assertSame(['x.jpg', 'y.png'], PostModel::parseImages(['x.jpg', 'y.png']));
     }
+
+    public function testGetPostLikers(): void {
+        require_once __DIR__ . '/../../app/models/FollowModel.php';
+        $followModel = new \FollowModel();
+
+        $author = $this->createTestUser('likerauthor');
+        $fan1 = $this->createTestUser('likerfan1');
+        $fan2 = $this->createTestUser('likerfan2');
+        $viewer = $this->createTestUser('likerviewer');
+
+        $postId = $this->postModel->createPost($author['id'], 'Testing likers list');
+
+        // Initially no likers
+        $this->assertEmpty($this->postModel->getPostLikers($postId, $viewer['id']));
+
+        // Fan1 and Fan2 like the post
+        $this->postModel->toggleLike($postId, $fan1['id']);
+        $this->postModel->toggleLike($postId, $fan2['id']);
+
+        // Viewer follows Fan1, Fan2 follows Viewer
+        $followModel->follow($viewer['id'], $fan1['id']);
+        $followModel->follow($fan2['id'], $viewer['id']);
+
+        $likers = $this->postModel->getPostLikers($postId, $viewer['id']);
+        $this->assertCount(2, $likers);
+
+        // Find liker records
+        $fan1Liker = null;
+        $fan2Liker = null;
+        foreach ($likers as $l) {
+            if ((int)$l['id'] === (int)$fan1['id']) {
+                $fan1Liker = $l;
+            } elseif ((int)$l['id'] === (int)$fan2['id']) {
+                $fan2Liker = $l;
+            }
+        }
+
+        $this->assertNotNull($fan1Liker);
+        $this->assertNotNull($fan2Liker);
+
+        // Verify Fan1 follow metadata relative to viewer
+        $this->assertEquals(1, (int)$fan1Liker['is_following']);
+        $this->assertEquals(0, (int)$fan1Liker['is_followed_by']);
+
+        // Verify Fan2 follow metadata relative to viewer
+        $this->assertEquals(0, (int)$fan2Liker['is_following']);
+        $this->assertEquals(1, (int)$fan2Liker['is_followed_by']);
+
+        // Fan1 unlikes
+        $this->postModel->toggleLike($postId, $fan1['id']);
+        $likersAfter = $this->postModel->getPostLikers($postId, $viewer['id']);
+        $this->assertCount(1, $likersAfter);
+        $this->assertEquals($fan2['id'], $likersAfter[0]['id']);
+    }
 }

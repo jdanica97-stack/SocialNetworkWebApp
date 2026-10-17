@@ -615,64 +615,126 @@ a:hover .comment-avatar {
     white-space: pre-line;
 }
 
+/* Base Post Image Container - Facebook Feed Format */
 .post-image-container {
-    border-radius: 12px;
+    width: calc(100% + 2.5rem);
+    margin-left: -1.25rem;
+    margin-right: -1.25rem;
+    margin-bottom: 0.85rem;
+    background-color: #000000;
     overflow: hidden;
-    margin-bottom: 1rem;
-    background-color: #f1f5f9;
-    width: 100%;
-    aspect-ratio: 1 / 1;
     position: relative;
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none !important;
+    border-radius: 0 !important;
 }
 
 .post-image-container a {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     height: 100%;
+    background-color: #000000;
     text-decoration: none;
 }
 
-.post-image-container img {
+/* 1. Landscape & standard images: full-bleed across card width, proportional natural height */
+.post-image-container.is-landscape,
+.post-image-container:not(.is-portrait) {
+    width: calc(100% + 2.5rem);
+    max-height: 580px;
+}
+
+.post-image-container.is-landscape a,
+.post-image-container:not(.is-portrait) a {
+    display: block;
+    width: 100%;
+}
+
+.post-image-container.is-landscape img,
+.post-image-container:not(.is-portrait) img {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 580px !important;
+    object-fit: cover !important;
+    display: block;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transition: opacity 0.15s ease;
+}
+
+/* 2. Portrait images: clean square crop, edge-to-edge */
+.post-image-container.is-portrait {
+    width: calc(100% + 2.5rem);
+    margin-left: -1.25rem;
+    margin-right: -1.25rem;
+    margin-bottom: 0.85rem;
+    aspect-ratio: 4 / 5;
+    max-height: 600px;
+    background-color: #f0f2f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.post-image-container.is-portrait a {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.post-image-container.is-portrait img {
     width: 100% !important;
     height: 100% !important;
     object-fit: cover !important;
     display: block;
-    transition: transform 0.25s ease;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transition: opacity 0.15s ease;
 }
 
 .post-image-container:hover img {
-    transform: scale(1.02);
+    opacity: 0.96;
 }
 
 .post-image-placeholder {
     width: 100%;
-    aspect-ratio: 1 / 1;
+    max-height: 180px;
+    height: 150px;
     background-color: #d8eedf;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 10px;
-    margin-bottom: 1rem;
+    margin-bottom: 0.85rem;
     color: #2b6b55;
-    font-size: 2.8rem;
+    font-size: 2.2rem;
 }
 
-/* Multi-Image Post Gallery Styles */
+/* Multi-Image Post Gallery Styles - Facebook Feed Grid Format */
 .post-gallery {
     display: grid;
-    gap: 6px;
-    border-radius: 12px;
+    gap: 2px;
+    width: calc(100% + 2.5rem);
+    margin-left: -1.25rem;
+    margin-right: -1.25rem;
+    margin-bottom: 0.85rem;
     overflow: hidden;
-    margin-bottom: 1rem;
-    width: 100%;
+    border-radius: 0;
+    background-color: #000000;
 }
 
 .post-gallery-item {
     position: relative;
     overflow: hidden;
-    background-color: #f1f5f9;
-    border-radius: 6px;
+    background-color: #111827;
+    border-radius: 0;
     width: 100%;
     height: 100%;
 }
@@ -690,61 +752,69 @@ a:hover .comment-avatar {
     height: 100% !important;
     object-fit: cover !important;
     display: block;
-    transition: transform 0.25s ease;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    transition: opacity 0.15s ease;
 }
 
 .post-gallery-item:hover img {
-    transform: scale(1.02);
+    opacity: 0.95;
 }
 
-/* 2 Images: 2 equal square columns */
+/* 2 Images: 2 equal columns */
 .post-gallery.post-gallery-2 {
     grid-template-columns: 1fr 1fr;
-    aspect-ratio: 2 / 1;
+    max-height: 380px;
+    aspect-ratio: 16 / 9;
 }
 
 .post-gallery.post-gallery-2 .post-gallery-item {
-    aspect-ratio: 1 / 1;
+    aspect-ratio: auto;
+    height: 100%;
 }
 
-/* 3 Images: 1 large left, 2 stacked right within square layout */
+/* 3 Images: 1 large left, 2 stacked right */
 .post-gallery.post-gallery-3 {
     grid-template-columns: 2fr 1fr;
     grid-template-rows: 1fr 1fr;
-    aspect-ratio: 1 / 1;
+    max-height: 420px;
+    aspect-ratio: 16 / 10;
 }
 .post-gallery.post-gallery-3 .post-gallery-item:nth-child(1) {
     grid-row: 1 / span 2;
 }
 
-/* 4 or more Images: 2x2 square grid */
+/* 4 or more Images: 2x2 grid */
 .post-gallery.post-gallery-4 {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
-    aspect-ratio: 1 / 1;
+    max-height: 420px;
+    aspect-ratio: 16 / 10;
 }
 
 .post-gallery.post-gallery-4 .post-gallery-item {
-    aspect-ratio: 1 / 1;
+    aspect-ratio: auto;
+    height: 100%;
 }
 
 /* Overlay for 4th image when 5+ images */
 .post-gallery-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(7, 18, 42, 0.65);
+    background: rgba(0, 0, 0, 0.55);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #ffffff;
-    font-size: 1.6rem;
+    font-size: 1.8rem;
     font-weight: 700;
     backdrop-filter: blur(2px);
     transition: background-color 0.2s ease;
 }
 
 .post-gallery-overlay:hover {
-    background: rgba(7, 18, 42, 0.78);
+    background: rgba(0, 0, 0, 0.72);
 }
 
 .post-footer-actions {
@@ -781,6 +851,20 @@ a:hover .comment-avatar {
 }
 
 .post-action-btn.liked i {
+    color: #ef4444;
+}
+
+.post-likes-count {
+    cursor: pointer;
+    display: inline-block;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.post-likes-count:hover {
+    text-decoration: underline;
+    background-color: rgba(239, 68, 68, 0.12);
     color: #ef4444;
 }
 
@@ -1182,6 +1266,21 @@ a:hover .comment-avatar {
     .post-footer-actions {
         gap: 0.75rem;
     }
+
+    .post-image-container.is-portrait {
+        max-width: 100%;
+        max-height: 480px;
+        aspect-ratio: 4 / 5;
+    }
+
+    .post-image-container.is-landscape img,
+    .post-image-container:not(.is-portrait) img {
+        max-height: 360px !important;
+    }
+
+    .post-gallery {
+        max-height: 300px;
+    }
 }
 
 /* ========================================================
@@ -1360,20 +1459,44 @@ body.dark-theme {
     background-color: #16326e;
 }
 
+[data-bs-theme="dark"] .post-likes-count:hover {
+    background-color: rgba(239, 68, 68, 0.25);
+    color: #fca5a5;
+}
+
 [data-bs-theme="dark"] .post-image-container {
-    background-color: #050e20;
+    background-color: #000000;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+[data-bs-theme="dark"] .post-image-container.is-portrait {
+    background-color: #18191a;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+[data-bs-theme="dark"] .post-image-container.is-landscape img,
+[data-bs-theme="dark"] .post-image-container:not(.is-portrait) img,
+[data-bs-theme="dark"] .post-image-container.is-portrait img {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+[data-bs-theme="dark"] .post-gallery {
+    background-color: #000000;
 }
 
 [data-bs-theme="dark"] .post-gallery-item {
-    background-color: #07122a;
+    background-color: #000000;
 }
 
 [data-bs-theme="dark"] .post-gallery-overlay {
-    background: rgba(5, 14, 32, 0.72);
+    background: rgba(0, 0, 0, 0.65);
 }
 
 [data-bs-theme="dark"] .post-gallery-overlay:hover {
-    background: rgba(5, 14, 32, 0.85);
+    background: rgba(0, 0, 0, 0.8);
 }
 
 /* Comments Section */
@@ -2466,18 +2589,16 @@ textarea::placeholder,
     color: #ffffff;
 }
 
-/* Highlight styling for post and comment notifications (Navy/Blue highlight in dark mode) */
+/* Post highlight styling removed to prevent highlight boxes around posts */
 .post-highlight {
-    border: 2px solid #64748b !important;
-    box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.2), 0 4px 12px rgba(100, 116, 139, 0.1) !important;
-    border-radius: 12px;
-    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 [data-bs-theme="dark"] .post-highlight,
 .dark-theme .post-highlight {
-    border: 2px solid #3b82f6 !important;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3), 0 4px 14px rgba(0, 0, 0, 0.4) !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 .comment-bubble.comment-highlight {

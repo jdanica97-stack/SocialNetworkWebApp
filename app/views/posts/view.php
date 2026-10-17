@@ -122,11 +122,13 @@ $highlightCommentId = (int)($highlightCommentId ?? ($_GET['comment_id'] ?? 0));
                     $singleImg = $postImages[0];
                     $postImgFile = __DIR__ . '/../../../public/uploads/posts/' . basename($singleImg);
                     $hasRealImage = file_exists($postImgFile);
+                    $imgSize = $hasRealImage ? @getimagesize($postImgFile) : false;
+                    $imgOrientationClass = ($imgSize && $imgSize[1] > $imgSize[0]) ? 'is-portrait' : 'is-landscape';
                     ?>
                     <?php if ($hasRealImage): ?>
-                        <div class="post-image-container mb-3">
+                        <div class="post-image-container <?= $imgOrientationClass ?> mb-3">
                             <a href="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($singleImg)) ?>" class="post-lightbox-trigger" data-gallery="post-<?= (int)$post['id'] ?>" title="View full image">
-                                <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($singleImg)) ?>" alt="Post attachment" loading="lazy">
+                                <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($singleImg)) ?>" alt="Post attachment" loading="lazy" onload="this.naturalHeight > this.naturalWidth ? (this.closest('.post-image-container')?.classList.add('is-portrait'), this.closest('.post-image-container')?.classList.remove('is-landscape')) : (this.closest('.post-image-container')?.classList.add('is-landscape'), this.closest('.post-image-container')?.classList.remove('is-portrait'));">
                             </a>
                         </div>
                     <?php else: ?>
@@ -168,7 +170,7 @@ $highlightCommentId = (int)($highlightCommentId ?? ($_GET['comment_id'] ?? 0));
                             <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
                             <button type="submit" class="post-action-btn <?= !empty($post['is_liked']) ? 'liked' : '' ?>" title="Like">
                                 <i class="bi <?= !empty($post['is_liked']) ? 'bi-heart-fill' : 'bi-heart' ?>"></i>
-                                <span><?= (int)$post['likes_count']; ?></span>
+                                <span class="post-likes-count" data-post-id="<?= (int)$post['id']; ?>" title="View reactions"><?= (int)$post['likes_count']; ?></span>
                             </button>
                         </form>
 

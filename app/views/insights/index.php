@@ -278,20 +278,52 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                                         <?= nl2br(htmlspecialchars($post['content'])); ?>
                                     </div>
 
-                                    <!-- Image Attachment -->
-                                    <?php if (!empty($post['image'])): ?>
+                                    <!-- Image Attachment(s) -->
+                                    <?php
+                                    $postImages = !empty($post['images']) ? $post['images'] : PostModel::parseImages($post['image'] ?? null);
+                                    $totalPostImages = count($postImages);
+                                    ?>
+                                    <?php if ($totalPostImages === 1): ?>
                                         <?php
-                                        $postImgFile = __DIR__ . '/../../../public/uploads/posts/' . basename($post['image']);
+                                        $singleImg = $postImages[0];
+                                        $postImgFile = __DIR__ . '/../../../public/uploads/posts/' . basename($singleImg);
                                         $hasRealImage = file_exists($postImgFile);
+                                        $imgSize = $hasRealImage ? @getimagesize($postImgFile) : false;
+                                        $imgOrientationClass = ($imgSize && $imgSize[1] > $imgSize[0]) ? 'is-portrait' : 'is-landscape';
                                         ?>
-                                        <div class="rounded-3 overflow-hidden mb-2.5 border bg-body" style="max-height: 380px;">
-                                            <?php if ($hasRealImage): ?>
-                                                <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($post['image'])) ?>" alt="Post attachment" class="w-100 h-100 object-fit-contain d-block rounded-3" style="max-height: 380px;">
-                                            <?php else: ?>
-                                                <div class="p-3 text-center text-muted bg-light rounded-3">
-                                                    <i class="bi bi-image fs-3 d-block mb-1"></i>
-                                                    <span class="micro-text">Attachment: <?= htmlspecialchars(basename($post['image'])); ?></span>
+                                        <?php if ($hasRealImage): ?>
+                                            <div class="post-image-container <?= $imgOrientationClass ?> mb-2.5">
+                                                <a href="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($singleImg)) ?>" class="post-lightbox-trigger" data-gallery="post-<?= (int)$post['id'] ?>" title="View full image">
+                                                    <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($singleImg)) ?>" alt="Post attachment" loading="lazy" onload="this.naturalHeight > this.naturalWidth ? (this.closest('.post-image-container')?.classList.add('is-portrait'), this.closest('.post-image-container')?.classList.remove('is-landscape')) : (this.closest('.post-image-container')?.classList.add('is-landscape'), this.closest('.post-image-container')?.classList.remove('is-portrait'));">
+                                                </a>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="post-image-placeholder mb-2.5">
+                                                <i class="bi bi-image"></i>
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php elseif ($totalPostImages > 1): ?>
+                                        <div class="post-gallery post-gallery-<?= min($totalPostImages, 4) ?> mb-2.5" data-post-id="<?= (int)$post['id'] ?>">
+                                            <?php foreach (array_slice($postImages, 0, 4) as $idx => $imgFile): ?>
+                                                <?php
+                                                $isLastQuadrant = ($idx === 3 && $totalPostImages > 4);
+                                                $remainingCount = $totalPostImages - 4;
+                                                ?>
+                                                <div class="post-gallery-item">
+                                                    <a href="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($imgFile)) ?>" class="post-lightbox-trigger" data-gallery="post-<?= (int)$post['id'] ?>" title="View image <?= $idx + 1 ?>">
+                                                        <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($imgFile)) ?>" alt="Post image <?= $idx + 1 ?>" loading="lazy">
+                                                        <?php if ($isLastQuadrant): ?>
+                                                            <div class="post-gallery-overlay">
+                                                                <span>+<?= $remainingCount ?></span>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                    </a>
                                                 </div>
+                                            <?php endforeach; ?>
+                                            <?php if ($totalPostImages > 4): ?>
+                                                <?php foreach (array_slice($postImages, 4) as $extraIdx => $extraImg): ?>
+                                                    <a href="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($extraImg)) ?>" class="post-lightbox-trigger d-none" data-gallery="post-<?= (int)$post['id'] ?>" title="View image <?= 5 + $extraIdx ?>"></a>
+                                                <?php endforeach; ?>
                                             <?php endif; ?>
                                         </div>
                                     <?php endif; ?>
@@ -301,8 +333,8 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                                         <div class="d-flex align-items-center gap-2">
                                             <form action="<?= BASE_URL ?>/index.php?action=like_post" method="POST" class="d-inline">
                                                 <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                                <button type="submit" class="btn btn-sm <?= !empty($post['is_liked']) ? 'btn-danger' : 'btn-outline-danger' ?> rounded-pill px-2.5 py-0.5 micro-text fw-medium">
-                                                    <i class="bi <?= !empty($post['is_liked']) ? 'bi-heart-fill' : 'bi-heart' ?> me-1"></i> <?= (int)$post['likes_count']; ?>
+                                                <button type="submit" class="btn btn-sm <?= !empty($post['is_liked']) ? 'btn-danger' : 'btn-outline-danger' ?> rounded-pill px-2.5 py-0.5 micro-text fw-medium" title="Like">
+                                                    <i class="bi <?= !empty($post['is_liked']) ? 'bi-heart-fill' : 'bi-heart' ?> me-1"></i><span class="post-likes-count" data-post-id="<?= (int)$post['id']; ?>" title="View reactions"><?= (int)$post['likes_count']; ?></span>
                                                 </button>
                                             </form>
 

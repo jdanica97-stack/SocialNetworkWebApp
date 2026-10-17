@@ -1,0 +1,28 @@
+# Vendor dependencies
+/vendor/
+
+# Test cache
+.phpunit.result.cache
+
+# Environment & local configuration
+.env
+.env.local
+.env.*.local
+
+# Storage and logs
+storage/logs/*.log
+!storage/logs/.gitignore
+
+# Standalone archive binaries
+*.phar
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editor folders
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace

@@ -6,15 +6,8 @@
         </main>
 
         <!-- Modern Footer -->
-        <footer class="bg-white border-top py-3 px-4 text-muted small d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
-            <div>
-                &copy; <?= date('Y'); ?> <strong>SMCC Connect</strong>. All rights reserved.
-            </div>
-            <div class="d-flex gap-3">
-                <a href="#" class="text-muted text-decoration-none">Privacy Policy</a>
-                <a href="#" class="text-muted text-decoration-none">Terms of Service</a>
-                <a href="#" class="text-muted text-decoration-none">Help & Support</a>
-            </div>
+        <footer class="bg-white border-top py-3 px-4 text-muted small text-start">
+            &copy; <?= date('Y'); ?> <strong>SMCC Connect</strong>. All rights reserved.
         </footer>
 
     <!-- Closing Main Content Area Wrapper -->
@@ -22,6 +15,9 @@
 
 <!-- Closing App Layout Wrapper -->
 </div>
+
+<!-- Cropper.js Script (Image Crop/Adjust) -->
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
 
 <!-- Bootstrap 5.3 Bundle with Popper JS CDN -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
@@ -65,6 +61,93 @@ document.addEventListener('keydown', function(e) {
     }
 });
 </script>
+
+<!-- Image Crop/Adjust Modal -->
+<div class="modal fade" id="imageCropModal" tabindex="-1" aria-labelledby="imageCropModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+        <div class="modal-content border-0 shadow rounded-4 overflow-hidden">
+            <div class="modal-header border-bottom py-2 px-3">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-crop text-primary fs-5"></i>
+                    <h6 class="modal-title fw-bold mb-0" id="imageCropModalLabel">Adjust Photo</h6>
+                </div>
+                <button type="button" class="btn-close" id="cropCancelBtn" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0" style="background: #1a1a2e;">
+                <div style="width: 100%; max-height: 420px; overflow: hidden;">
+                    <img id="cropperImage" src="" alt="Crop preview" style="display: block; max-width: 100%;">
+                </div>
+            </div>
+            <div class="modal-footer border-top py-2 px-3 d-flex justify-content-between">
+                <div class="d-flex gap-1">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="cropRotateLeft" title="Rotate left">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="cropRotateRight" title="Rotate right">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="cropFlipH" title="Flip horizontal">
+                        <i class="bi bi-symmetry-vertical"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="cropReset" title="Reset">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </button>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="cropSkipBtn">
+                        Skip
+                    </button>
+                    <button type="button" class="btn btn-sm btn-primary rounded-pill px-4 fw-semibold" id="cropApplyBtn">
+                        <i class="bi bi-check-lg me-1"></i>Apply
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Cropper modal overrides */
+#imageCropModal .cropper-view-box,
+#imageCropModal .cropper-face {
+    border-radius: 0;
+}
+#imageCropModal .cropper-line,
+#imageCropModal .cropper-point {
+    background-color: #2563eb;
+}
+#imageCropModal .modal-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 280px;
+}
+</style>
+
+<!-- Universal Post Likers / Who Reacted Modal -->
+<div class="modal fade" id="postLikersModal" tabindex="-1" aria-labelledby="postLikersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 460px;">
+        <div class="modal-content border-0 shadow rounded-4 overflow-hidden">
+            <div class="modal-header border-bottom py-3 px-3 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="rounded-circle d-inline-flex align-items-center justify-content-center bg-danger-subtle text-danger" style="width: 32px; height: 32px;">
+                        <i class="bi bi-heart-fill fs-6"></i>
+                    </span>
+                    <h6 class="modal-title fw-bold mb-0" id="postLikersModalLabel">People who reacted</h6>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0" id="postLikersModalBody" style="min-height: 180px; max-height: 420px; overflow-y: auto;">
+                <div class="text-center py-5">
+                    <div class="spinner-border spinner-border-sm text-danger" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">Loading reactions...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Universal Image Lightbox Modal -->
 <div class="modal fade" id="postImageLightboxModal" tabindex="-1" aria-hidden="true">

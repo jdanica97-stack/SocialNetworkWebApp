@@ -137,6 +137,12 @@ switch ($action) {
         $commentController->delete();
         break;
 
+    case 'get_post_likers':
+        require_once __DIR__ . '/../app/controllers/PostController.php';
+        $postController = new PostController();
+        $postController->getLikers();
+        break;
+
     case 'like_post':
         require_once __DIR__ . '/../app/controllers/PostController.php';
         $postController = new PostController();

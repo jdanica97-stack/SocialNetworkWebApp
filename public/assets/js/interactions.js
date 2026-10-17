@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!btn) return;
 
             const heartIcon = btn.querySelector('i');
-            const countSpan = btn.querySelector('span');
+            let countSpan = btn.querySelector('.post-likes-count') || btn.querySelector('span');
 
             // Handle feed style button (.post-action-btn)
             if (btn.classList.contains('post-action-btn')) {
@@ -90,7 +90,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     btn.classList.remove('liked');
                     if (heartIcon) heartIcon.className = 'bi bi-heart';
                 }
-                if (countSpan) countSpan.textContent = likesCount;
             } 
             // Handle insights / search style button (.btn-danger / .btn-outline-danger)
             else {
@@ -103,14 +102,179 @@ document.addEventListener('DOMContentLoaded', function() {
                     btn.classList.add('btn-outline-danger');
                     if (heartIcon) heartIcon.className = 'bi bi-heart me-1';
                 }
-                btn.childNodes.forEach(node => {
-                    if (node.nodeType === Node.TEXT_NODE) {
-                        node.textContent = ' ' + likesCount;
-                    }
-                });
             }
+
+            // Remove any raw text nodes from the button to permanently eliminate duplicate numbers
+            const textNodes = [];
+            btn.childNodes.forEach(node => {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    textNodes.push(node);
+                }
+            });
+            textNodes.forEach(node => node.remove());
+
+            // Ensure countSpan exists with .post-likes-count and set clean exact count
+            if (!countSpan) {
+                countSpan = document.createElement('span');
+                countSpan.className = 'post-likes-count';
+                btn.appendChild(countSpan);
+            } else {
+                countSpan.classList.add('post-likes-count');
+            }
+            countSpan.setAttribute('data-post-id', postId);
+            countSpan.setAttribute('title', 'View reactions');
+            countSpan.textContent = likesCount;
         });
     }
+
+    // =========================================================================
+    // POST LIKERS MODAL (VIEW WHO REACTED)
+    // =========================================================================
+    window.openPostLikersModal = function(postId) {
+        if (!postId) return;
+        const modalEl = document.getElementById('postLikersModal');
+        if (!modalEl) return;
+
+        const modalTitle = document.getElementById('postLikersModalLabel');
+        const modalBody = document.getElementById('postLikersModalBody');
+
+        if (modalTitle) {
+            modalTitle.textContent = 'People who reacted';
+        }
+
+        if (modalBody) {
+            modalBody.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border spinner-border-sm text-danger" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">Loading reactions...</p>
+                </div>
+            `;
+        }
+
+        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modalInstance.show();
+
+        const fetchUrl = `${baseUrl}/index.php?action=get_post_likers&post_id=${encodeURIComponent(postId)}`;
+
+        fetch(fetchUrl, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Network response was not ok');
+            return res.json();
+        })
+        .then(data => {
+            if (!modalBody) return;
+
+            if (!data.success) {
+                modalBody.innerHTML = `
+                    <div class="alert alert-danger m-3 text-center small rounded-3">
+                        ${escapeHtml(data.error || 'Failed to load reactions.')}
+                    </div>
+                `;
+                return;
+            }
+
+            if (modalTitle) {
+                modalTitle.textContent = `People who reacted (${data.count})`;
+            }
+
+            if (!data.users || data.users.length === 0) {
+                modalBody.innerHTML = `
+                    <div class="text-center py-5 px-3 text-muted">
+                        <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center p-3 mb-2 border shadow-sm" style="width: 56px; height: 56px;">
+                            <i class="bi bi-heart text-danger fs-3"></i>
+                        </div>
+                        <h6 class="fw-semibold text-dark mb-1">No reactions yet</h6>
+                        <p class="small text-muted mb-0">Be the first to react to this post!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+            let html = '<div class="list-group list-group-flush">';
+            data.users.forEach(u => {
+                const profileUrl = `${baseUrl}/index.php?action=profile&user_id=${u.id}`;
+                let avatarHtml = '';
+                if (u.profile_image) {
+                    const imgUrl = `${baseUrl}/public/uploads/avatars/${encodeURIComponent(u.profile_image)}`;
+                    avatarHtml = `<img src="${imgUrl}" alt="${escapeHtml(u.full_name)}" class="rounded-circle object-fit-cover shadow-sm flex-shrink-0" style="width: 44px; height: 44px;" onerror="this.onerror=null; this.outerHTML='<div class=\\'rounded-circle text-white fw-bold d-flex align-items-center justify-content-center shadow-sm flex-shrink-0\\' style=\\'width: 44px; height: 44px; background-color: #07193d; font-size: 0.85rem;\\'>${escapeHtml(u.initials)}</div>';">`;
+                } else {
+                    avatarHtml = `<div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 44px; height: 44px; background-color: #07193d; font-size: 0.85rem;">${escapeHtml(u.initials)}</div>`;
+                }
+
+                html += `
+                    <div class="list-group-item d-flex align-items-center justify-content-between px-3 py-3 border-0 border-bottom">
+                        <div class="d-flex align-items-center gap-3 text-truncate">
+                            <a href="${profileUrl}" class="text-decoration-none">
+                                ${avatarHtml}
+                            </a>
+                            <div class="text-truncate">
+                                <a href="${profileUrl}" class="text-dark fw-bold text-decoration-none d-block small text-truncate">
+                                    ${escapeHtml(u.full_name)}
+                                    ${u.is_self ? '<span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.65rem;">You</span>' : ''}
+                                    ${(!u.is_self && u.is_followed_by) ? '<span class="badge bg-secondary-subtle text-secondary border ms-1" style="font-size: 0.65rem;">Follows you</span>' : ''}
+                                </a>
+                                <a href="${profileUrl}" class="text-muted text-decoration-none d-block small text-truncate">@${escapeHtml(u.username)}</a>
+                            </div>
+                        </div>
+                        <div class="ms-2 flex-shrink-0 d-flex align-items-center gap-2">
+                            ${!u.is_self ? `
+                                <form action="${baseUrl}/index.php?action=follow_user" method="POST" class="m-0 d-inline">
+                                    <input type="hidden" name="csrf_token" value="${escapeHtml(csrfToken)}">
+                                    <input type="hidden" name="user_id" value="${u.id}">
+                                    <button type="submit" class="btn btn-sm ${u.is_following ? 'btn-outline-secondary' : (u.is_followed_by ? 'btn-primary' : 'btn-navy')} rounded-pill px-3 fw-semibold" style="font-size: 0.78rem;" data-is-followed-by="${u.is_followed_by ? '1' : '0'}">
+                                        <i class="bi ${u.is_following ? 'bi-person-check-fill' : (u.is_followed_by ? 'bi-arrow-repeat' : 'bi-person-plus-fill')} me-1"></i>
+                                        <span>${u.is_following ? 'Following' : (u.is_followed_by ? 'Follow Back' : 'Follow')}</span>
+                                    </button>
+                                </form>
+                            ` : ''}
+                            <a href="${profileUrl}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold" style="font-size: 0.78rem;">
+                                View
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            modalBody.innerHTML = html;
+        })
+        .catch(err => {
+            console.error('Error fetching post likers:', err);
+            if (modalBody) {
+                modalBody.innerHTML = `
+                    <div class="alert alert-danger m-3 text-center small rounded-3">
+                        Failed to load reactions. Please try again.
+                    </div>
+                `;
+            }
+        });
+    };
+
+    // Capture-phase click listener on document for .post-likes-count
+    document.addEventListener('click', function(e) {
+        const countTrigger = e.target.closest('.post-likes-count');
+        if (!countTrigger) return;
+
+        // Prevent button click from toggling like and submitting form
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
+        const postId = countTrigger.getAttribute('data-post-id');
+        if (postId) {
+            window.openPostLikersModal(postId);
+        }
+    }, true);
 
     // =========================================================================
     // 2. AJAX COMMENTING
@@ -338,7 +502,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return `
                 <div class="post-image-container mb-3">
                     <a href="${baseUrl}/public/uploads/posts/${escapeHtml(images[0])}" class="post-lightbox-trigger" data-gallery="post-${post.id}" title="View full image">
-                        <img src="${baseUrl}/public/uploads/posts/${escapeHtml(images[0])}" alt="Post attachment" loading="lazy">
+                        <img src="${baseUrl}/public/uploads/posts/${escapeHtml(images[0])}" alt="Post attachment" loading="lazy" onload="this.naturalHeight > this.naturalWidth ? (this.closest('.post-image-container')?.classList.add('is-portrait'), this.closest('.post-image-container')?.classList.remove('is-landscape')) : (this.closest('.post-image-container')?.classList.add('is-landscape'), this.closest('.post-image-container')?.classList.remove('is-portrait'));">
                     </a>
                 </div>
             `;
@@ -450,7 +614,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <input type="hidden" name="post_id" value="${post.id}">
                             <button type="submit" class="post-action-btn" title="Like">
                                 <i class="bi bi-heart"></i>
-                                <span>0</span>
+                                <span class="post-likes-count" data-post-id="${post.id}" title="View reactions">0</span>
                             </button>
                         </form>
                         <button type="button" class="post-action-btn" onclick="toggleComments(${post.id})" title="Comments">
@@ -480,6 +644,82 @@ document.addEventListener('DOMContentLoaded', function() {
             feedParent.insertAdjacentHTML('beforeend', postCardHtml);
         }
     }
+
+    // =========================================================================
+    // 3.5. AJAX POST DELETION (NO FULL PAGE RELOAD / REFRESH)
+    // =========================================================================
+    document.addEventListener('submit', function(e) {
+        const form = e.target;
+        if (!form || !form.action || !form.action.includes('action=delete_post')) {
+            return;
+        }
+
+        e.preventDefault();
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+
+        const formData = new FormData(form);
+        formData.append('ajax', '1');
+
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+        if (csrfToken && !formData.has('csrf_token')) {
+            formData.append('csrf_token', csrfToken);
+        }
+
+        const postIdInput = form.querySelector('input[name="post_id"]');
+        const postId = postIdInput ? postIdInput.value : '';
+
+        // If on the single post view page, redirect to feed upon deletion
+        const isSinglePostView = window.location.search.includes('action=view_post') || window.location.search.includes('action=post');
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-Token': csrfToken,
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.success) {
+                if (isSinglePostView) {
+                    window.location.href = baseUrl + '/index.php';
+                    return;
+                }
+
+                // Locate the post element on page
+                const postEl = document.getElementById('post-' + postId) || form.closest('.post-card');
+                if (postEl) {
+                    postEl.style.transition = 'opacity 0.25s ease, transform 0.25s ease, max-height 0.3s ease, margin 0.3s ease, padding 0.3s ease';
+                    postEl.style.opacity = '0';
+                    postEl.style.transform = 'scale(0.96)';
+                    setTimeout(() => {
+                        postEl.style.maxHeight = '0px';
+                        postEl.style.overflow = 'hidden';
+                        postEl.style.marginTop = '0px';
+                        postEl.style.marginBottom = '0px';
+                        postEl.style.paddingTop = '0px';
+                        postEl.style.paddingBottom = '0px';
+                        postEl.style.border = 'none';
+                        setTimeout(() => {
+                            postEl.remove();
+                        }, 300);
+                    }, 250);
+                }
+            } else {
+                if (submitBtn) submitBtn.disabled = false;
+                alert(data && data.error ? data.error : 'Failed to delete post. Please try again.');
+            }
+        })
+        .catch(err => {
+            console.error('Delete post error:', err);
+            if (submitBtn) submitBtn.disabled = false;
+            form.submit();
+        });
+    });
 
     // =========================================================================
     // 4. AJAX FOLLOW & UNFOLLOW
@@ -727,17 +967,12 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(err => console.debug('Mark single read error:', err));
     }
 
-    // Post highlight helper (steady highlight)
+    // Post highlight helper (no-op to prevent highlight boxes)
     function highlightPostElement(postEl) {
         if (!postEl) return;
-        // Clear all highlighted posts and comments so only the target post is highlighted
         document.querySelectorAll('.post-card.post-highlight').forEach(el => {
             el.classList.remove('post-highlight');
         });
-        document.querySelectorAll('.comment-bubble.comment-highlight').forEach(el => {
-            el.classList.remove('comment-highlight');
-        });
-        postEl.classList.add('post-highlight');
     }
 
     // Comment highlight helper (steady highlight)
@@ -753,7 +988,7 @@ document.addEventListener('DOMContentLoaded', function() {
         commentEl.classList.add('comment-highlight');
     }
 
-    // Highlight post or comment on page load if arriving directly via link hash, then clear hash so refreshing removes highlight
+    // Handle scroll to comment or post on page load if arriving directly via link hash, then clear hash immediately
     if (window.location.hash) {
         const hash = window.location.hash;
         if (hash.startsWith('#comment-')) {
@@ -779,7 +1014,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (targetPost) {
                 setTimeout(() => {
                     targetPost.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    highlightPostElement(targetPost);
                     
                     // If comments box is collapsed, optionally open it
                     const postId = hash.replace('#post-', '');
@@ -789,7 +1023,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }, 300);
             }
-            // Clear hash from URL so that refreshing the page leaves no highlight
+            // Clear hash from URL immediately so that refreshing the page leaves no hash or box
             if (window.history && window.history.replaceState) {
                 window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
             }
