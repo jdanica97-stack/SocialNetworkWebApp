@@ -41,8 +41,9 @@ if (!empty($user['full_name'])) {
 }
 ?>
 
-<div class="row justify-content-center">
-    <div class="col-lg-9 col-xl-8">
+<div class="feed-layout-container mx-auto">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-xl-8">
 
         <!-- Flash Success Message -->
         <?php if (!empty($_SESSION['success_message'])): ?>
@@ -436,6 +437,7 @@ if (!empty($user['full_name'])) {
             <?php endif; ?>
         </div>
 
+        </div>
     </div>
 </div>
 

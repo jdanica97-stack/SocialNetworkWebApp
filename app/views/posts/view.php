@@ -17,9 +17,9 @@ $timeBadge = format_time_ago($post['created_at']);
 $highlightCommentId = (int)($highlightCommentId ?? ($_GET['comment_id'] ?? 0));
 ?>
 
-<div class="container py-3">
+<div class="feed-layout-container mx-auto">
     <div class="row justify-content-center">
-        <div class="col-lg-8 col-xl-7">
+        <div class="col-lg-7 col-xl-8">
 
             <!-- Flash Notifications -->
             <?php if (!empty($_SESSION['success_message'])): ?>
