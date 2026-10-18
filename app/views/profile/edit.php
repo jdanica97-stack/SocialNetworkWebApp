@@ -213,21 +213,25 @@ if (!empty($user['full_name'])) {
                     </div>
                 </div>
 
-                <!-- Username (Readonly) -->
+                <!-- Username -->
                 <div class="mb-3">
                     <label for="username" class="form-label fw-semibold small text-secondary">Username</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-at"></i></span>
                         <input 
                             type="text" 
-                            class="form-control bg-light border-start-0 ps-0" 
+                            class="form-control border-start-0 ps-0" 
                             id="username" 
-                            value="<?= htmlspecialchars($user['username']); ?>" 
-                            readonly 
-                            disabled
+                            name="username"
+                            value="<?= htmlspecialchars($formData['username'] ?? $user['username']); ?>" 
+                            required
+                            minlength="3"
+                            maxlength="50"
+                            pattern="[a-zA-Z0-9_]+"
+                            placeholder="Enter your username"
                         >
                     </div>
-                    <div class="form-text small text-muted">Unique campus handle (cannot be altered).</div>
+                    <div class="form-text small text-muted">Letters, numbers, and underscores only. 3–50 characters.</div>
                 </div>
 
                 <!-- Bio -->

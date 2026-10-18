@@ -60,11 +60,23 @@ class UserModel {
 
     /**
      * Check whether a username already exists.
+     * Optionally excludes a given user ID (useful when a user keeps or edits their own username).
      *
      * @param string $username
+     * @param int|null $excludeUserId
      * @return bool True if username exists, false otherwise.
      */
-    public function usernameExists($username) {
+    public function usernameExists($username, $excludeUserId = null) {
+        if ($excludeUserId !== null) {
+            $sql = "SELECT id FROM users WHERE username = :username AND id != :exclude_id LIMIT 1";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':username'   => $username,
+                ':exclude_id' => (int)$excludeUserId
+            ]);
+            return (bool)$stmt->fetch();
+        }
+
         $sql = "SELECT id FROM users WHERE username = :username LIMIT 1";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':username' => $username]);
@@ -125,20 +137,48 @@ class UserModel {
     }
 
     /**
-     * Update user's profile details (full_name and bio).
+     * Update user's profile details (full_name, bio, and optionally username).
      *
      * @param int $id
      * @param string $fullName
      * @param string|null $bio
+     * @param string|null $username
      * @return bool
      */
-    public function updateProfile($id, $fullName, $bio) {
+    public function updateProfile($id, $fullName, $bio, $username = null) {
+        if ($username !== null) {
+            $sql = "UPDATE users SET full_name = :full_name, bio = :bio, username = :username WHERE id = :id";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([
+                ':full_name' => $fullName,
+                ':bio'       => $bio,
+                ':username'  => $username,
+                ':id'        => (int)$id
+            ]);
+        }
+
         $sql = "UPDATE users SET full_name = :full_name, bio = :bio WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             ':full_name' => $fullName,
             ':bio'       => $bio,
-            ':id'        => $id
+            ':id'        => (int)$id
+        ]);
+    }
+
+    /**
+     * Update user's username.
+     *
+     * @param int $id
+     * @param string $username
+     * @return bool
+     */
+    public function updateUsername($id, $username) {
+        $sql = "UPDATE users SET username = :username WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':username' => $username,
+            ':id'       => (int)$id
         ]);
     }
 

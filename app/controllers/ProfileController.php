@@ -90,6 +90,7 @@ class ProfileController {
         $errors = [];
         $formData = [
             'full_name' => $user['full_name'],
+            'username'  => $user['username'],
             'bio'       => $user['bio'] ?? ''
         ];
 
@@ -100,9 +101,11 @@ class ProfileController {
             }
 
             $fullName = trim($_POST['full_name'] ?? '');
+            $username = trim($_POST['username'] ?? '');
             $bio      = trim($_POST['bio'] ?? '');
 
             $formData['full_name'] = $fullName;
+            $formData['username']  = $username;
             $formData['bio']       = $bio;
 
             // 1. Validate Full Name
@@ -112,7 +115,18 @@ class ProfileController {
                 $errors[] = 'Full Name must be between 2 and 100 characters.';
             }
 
-            // 2. Validate Bio
+            // 2. Validate Username
+            if ($username === '') {
+                $errors[] = 'Username is required.';
+            } elseif (mb_strlen($username) < 3 || mb_strlen($username) > 50) {
+                $errors[] = 'Username must be between 3 and 50 characters.';
+            } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+                $errors[] = 'Username may only contain letters, numbers, and underscores.';
+            } elseif ($this->userModel->usernameExists($username, $userId)) {
+                $errors[] = 'Username is already taken. Please choose another.';
+            }
+
+            // 3. Validate Bio
             if (mb_strlen($bio) > 500) {
                 $errors[] = 'Bio must not exceed 500 characters.';
             }
@@ -356,7 +370,7 @@ class ProfileController {
             // 4. If all validations pass, save changes to DB
             if (empty($errors)) {
                 try {
-                    $updated = $this->userModel->updateProfile($userId, $fullName, $cleanBio);
+                    $updated = $this->userModel->updateProfile($userId, $fullName, $cleanBio, $username);
 
                     if ($newProfileImage !== null) {
                         $imageToSave = ($newProfileImage === '') ? null : $newProfileImage;
@@ -370,13 +384,21 @@ class ProfileController {
                     }
 
                     if ($updated !== false) {
-                        // Update session display name if it changed
+                        // Update session display name and username if changed
                         $_SESSION['full_name'] = $fullName;
+                        $_SESSION['username']  = $username;
                         $_SESSION['success_message'] = 'Your profile has been updated successfully!';
                         header('Location: ' . BASE_URL . '/index.php?action=profile');
                         exit;
                     } else {
                         $errors[] = 'Failed to update profile. Please try again.';
+                    }
+                } catch (PDOException $e) {
+                    error_log("Profile update DB error: " . $e->getMessage());
+                    if ($e->getCode() == 23000 || strpos($e->getMessage(), 'Duplicate') !== false) {
+                        $errors[] = 'Username is already taken. Please choose another.';
+                    } else {
+                        $errors[] = 'A database error occurred while updating your profile. Please try again.';
                     }
                 } catch (Throwable $e) {
                     error_log("Profile update DB error: " . $e->getMessage());

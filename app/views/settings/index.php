@@ -1,10 +1,14 @@
 <?php
 // app/views/settings/index.php
-// Dedicated Application Settings View (Account Security, Theme, Notifications & Preferences)
+// Dedicated Application Settings View (Account Security, Notifications & Preferences)
 
 require_once __DIR__ . '/../layouts/header.php';
 
-$activeTab = $_GET['tab'] ?? 'security';
+$allowedTabs  = ['security', 'notifications', 'privacy', 'account'];
+$activeTab    = $_GET['tab'] ?? 'security';
+if (!in_array($activeTab, $allowedTabs)) {
+    $activeTab = 'security';
+}
 $prefLikes    = $_SESSION['pref_notif_likes'] ?? 1;
 $prefComments = $_SESSION['pref_notif_comments'] ?? 1;
 $prefFollows  = $_SESSION['pref_notif_follows'] ?? 1;
@@ -42,15 +46,6 @@ $prefSound    = $_SESSION['pref_sound'] ?? 0;
                                 <div>
                                     <div class="fw-semibold small">Password & Security</div>
                                     <div class="<?= ($activeTab === 'security') ? 'text-white-50' : 'text-muted' ?>" style="font-size: 0.73rem;">Change login password</div>
-                                </div>
-                            </a>
-
-                            <a href="<?= BASE_URL ?>/index.php?action=settings&tab=appearance" 
-                               class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 border-0 rounded-3 mb-1 <?= ($activeTab === 'appearance') ? 'active bg-primary text-white' : 'text-dark' ?>">
-                                <i class="bi bi-palette-fill fs-5"></i>
-                                <div>
-                                    <div class="fw-semibold small">Appearance & Theme</div>
-                                    <div class="<?= ($activeTab === 'appearance') ? 'text-white-50' : 'text-muted' ?>" style="font-size: 0.73rem;">Light & Dark mode</div>
                                 </div>
                             </a>
 
@@ -129,45 +124,7 @@ $prefSound    = $_SESSION['pref_sound'] ?? 0;
                             </form>
                         </div>
 
-                    <!-- TAB 2: APPEARANCE & THEME -->
-                    <?php elseif ($activeTab === 'appearance'): ?>
-                        <div class="card-modern p-4">
-                            <h5 class="fw-bold mb-1 text-dark">Appearance & Theme</h5>
-                            <p class="text-muted small mb-4">Customize how SMCC Connect looks on your browser.</p>
-
-                            <div class="row g-3 mb-4">
-                                <div class="col-sm-6">
-                                    <div class="p-3 border rounded-3 text-center cursor-pointer theme-select-box" onclick="setThemeDirect('light')" style="cursor: pointer;">
-                                        <div class="p-3 bg-white border rounded mb-2 shadow-sm d-flex align-items-center justify-content-center">
-                                            <i class="bi bi-sun-fill text-warning fs-1"></i>
-                                        </div>
-                                        <h6 class="fw-bold mb-1 text-dark">Light Theme</h6>
-                                        <small class="text-muted">Standard clean collegiate interface</small>
-                                    </div>
-                                </div>
-                                <div class="col-sm-6">
-                                    <div class="p-3 border rounded-3 text-center cursor-pointer theme-select-box" onclick="setThemeDirect('dark')" style="cursor: pointer;">
-                                        <div class="p-3 bg-dark border rounded mb-2 shadow-sm d-flex align-items-center justify-content-center">
-                                            <i class="bi bi-moon-stars-fill text-info fs-1"></i>
-                                        </div>
-                                        <h6 class="fw-bold mb-1 text-dark">Dark Theme</h6>
-                                        <small class="text-muted">High-contrast, easy on the eyes</small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between border">
-                                <div>
-                                    <div class="fw-semibold text-dark small">Instant Theme Switcher</div>
-                                    <div class="text-muted small">Toggle theme anytime using the top navigation bar moon icon.</div>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="toggleTheme()">
-                                    Toggle Now
-                                </button>
-                            </div>
-                        </div>
-
-                    <!-- TAB 3: NOTIFICATIONS -->
+                    <!-- TAB 2: NOTIFICATIONS -->
                     <?php elseif ($activeTab === 'notifications'): ?>
                         <div class="card-modern p-4">
                             <h5 class="fw-bold mb-1 text-dark">Notification Preferences</h5>
@@ -322,18 +279,6 @@ $prefSound    = $_SESSION['pref_sound'] ?? 0;
     </div>
 </div>
 
-<script>
-function setThemeDirect(themeName) {
-    localStorage.setItem('smcc_theme', themeName);
-    if (themeName === 'dark') {
-        document.documentElement.setAttribute('data-bs-theme', 'dark');
-        document.documentElement.classList.add('dark-theme');
-    } else {
-        document.documentElement.setAttribute('data-bs-theme', 'light');
-        document.documentElement.classList.remove('dark-theme');
-    }
-}
-</script>
 
 <?php
 require_once __DIR__ . '/../layouts/footer.php';
