@@ -71,4 +71,76 @@ class AuthSecurityTest extends TestCase {
         $_SESSION = [];
         $this->assertEmpty($_SESSION);
     }
+
+    public function testPasswordShorterThan8CharsIsRejected(): void {
+        require_once __DIR__ . '/../../app/controllers/AuthController.php';
+        $errors = \AuthController::validatePasswordComplexity('Short1!');
+        $this->assertNotEmpty($errors);
+        $this->assertContains('Password must be at least 8 characters long.', $errors);
+    }
+
+    public function testPasswordWithoutUppercaseIsRejected(): void {
+        require_once __DIR__ . '/../../app/controllers/AuthController.php';
+        $errors = \AuthController::validatePasswordComplexity('lowercase123!');
+        $this->assertNotEmpty($errors);
+        $this->assertContains('Password must contain at least one uppercase letter (A–Z).', $errors);
+    }
+
+    public function testPasswordWithoutLowercaseIsRejected(): void {
+        require_once __DIR__ . '/../../app/controllers/AuthController.php';
+        $errors = \AuthController::validatePasswordComplexity('UPPERCASE123!');
+        $this->assertNotEmpty($errors);
+        $this->assertContains('Password must contain at least one lowercase letter (a–z).', $errors);
+    }
+
+    public function testPasswordWithoutNumberIsRejected(): void {
+        require_once __DIR__ . '/../../app/controllers/AuthController.php';
+        $errors = \AuthController::validatePasswordComplexity('NoNumberHere!');
+        $this->assertNotEmpty($errors);
+        $this->assertContains('Password must contain at least one number (0–9).', $errors);
+    }
+
+    public function testPasswordWithoutSpecialCharacterIsRejected(): void {
+        require_once __DIR__ . '/../../app/controllers/AuthController.php';
+        $errors = \AuthController::validatePasswordComplexity('NoSpecialChar123');
+        $this->assertNotEmpty($errors);
+        $this->assertContains('Password must contain at least one special character (e.g., @, #, $, %, !).', $errors);
+    }
+
+    public function testMismatchedPasswordConfirmationIsRejected(): void {
+        require_once __DIR__ . '/../../app/controllers/AuthController.php';
+        $errors = \AuthController::validatePasswordComplexity('ValidPass123!', 'DifferentPass123!');
+        $this->assertNotEmpty($errors);
+        $this->assertContains('Passwords do not match.', $errors);
+    }
+
+    public function testValidPasswordComplexityAccepted(): void {
+        require_once __DIR__ . '/../../app/controllers/AuthController.php';
+        $errors = \AuthController::validatePasswordComplexity('ValidPass123!', 'ValidPass123!');
+        $this->assertEmpty($errors);
+    }
+
+    public function testFullAccountRegistrationAndLoginFlowWithComplexity(): void {
+        require_once __DIR__ . '/../../app/controllers/AuthController.php';
+        $username = 'complexuser';
+        $plainPassword = 'SuperSecret2026!';
+        $fullName = 'Complex Test User';
+
+        // 1. Verify complexity passes
+        $errors = \AuthController::validatePasswordComplexity($plainPassword, $plainPassword);
+        $this->assertEmpty($errors);
+
+        // 2. Create user with hashed password
+        $hash = password_hash($plainPassword, PASSWORD_DEFAULT);
+        $created = $this->userModel->create($username, $hash, $fullName);
+        $this->assertTrue($created);
+
+        // 3. Retrieve user and verify credentials
+        $user = $this->userModel->findByUsername($username);
+        $this->assertNotEmpty($user);
+        $this->assertTrue(password_verify($plainPassword, $user['password']));
+
+        // 4. Test duplicate account prevention
+        $this->assertTrue($this->userModel->usernameExists($username));
+    }
 }

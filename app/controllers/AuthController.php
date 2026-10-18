@@ -62,14 +62,10 @@ class AuthController {
                 $errors[] = 'Username is already taken. Please choose another.';
             }
 
-            if (empty($password)) {
-                $errors[] = 'Password is required.';
-            } elseif (strlen($password) < 6) {
-                $errors[] = 'Password must be at least 6 characters long.';
-            }
-
-            if ($password !== $confirmPassword) {
-                $errors[] = 'Passwords do not match.';
+            // Server-side password complexity validation
+            $pwdErrors = self::validatePasswordComplexity($password, $confirmPassword);
+            if (!empty($pwdErrors)) {
+                $errors = array_merge($errors, $pwdErrors);
             }
 
             // If validation passes, create user
@@ -185,5 +181,54 @@ class AuthController {
         $_SESSION['success_message'] = 'You have been logged out successfully.';
         header('Location: ' . BASE_URL . '/index.php?action=login');
         exit;
+    }
+
+    /**
+     * Validate password complexity requirements.
+     * Enforces:
+     * - Minimum of 8 characters
+     * - At least one uppercase letter (A-Z)
+     * - At least one lowercase letter (a-z)
+     * - At least one number (0-9)
+     * - At least one special character (e.g. @, #, $, %, !)
+     * - Password confirmation match
+     *
+     * @param string $password
+     * @param string|null $confirmPassword
+     * @return array Array of error messages, empty if all requirements are satisfied
+     */
+    public static function validatePasswordComplexity(string $password, ?string $confirmPassword = null): array {
+        $errors = [];
+
+        if ($password === '') {
+            $errors[] = 'Password is required.';
+            return $errors;
+        }
+
+        if (strlen($password) < 8) {
+            $errors[] = 'Password must be at least 8 characters long.';
+        }
+        if (!preg_match('/[A-Z]/', $password)) {
+            $errors[] = 'Password must contain at least one uppercase letter (A–Z).';
+        }
+        if (!preg_match('/[a-z]/', $password)) {
+            $errors[] = 'Password must contain at least one lowercase letter (a–z).';
+        }
+        if (!preg_match('/[0-9]/', $password)) {
+            $errors[] = 'Password must contain at least one number (0–9).';
+        }
+        if (!preg_match('/[^a-zA-Z0-9]/', $password)) {
+            $errors[] = 'Password must contain at least one special character (e.g., @, #, $, %, !).';
+        }
+
+        if ($confirmPassword !== null) {
+            if ($confirmPassword === '') {
+                $errors[] = 'Please confirm your password.';
+            } elseif ($password !== $confirmPassword) {
+                $errors[] = 'Passwords do not match.';
+            }
+        }
+
+        return $errors;
     }
 }
