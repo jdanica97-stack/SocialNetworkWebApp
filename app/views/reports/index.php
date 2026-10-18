@@ -15,7 +15,7 @@ if (session_status() === PHP_SESSION_NONE) {
                 <span class="badge bg-warning text-dark fw-bold px-3 py-1 rounded-pill">
                     <i class="bi bi-cpu-fill me-1"></i> SQL Analytics Module
                 </span>
-                <span class="badge bg-white bg-opacity-20 text-white px-3 py-1 rounded-pill">
+                <span class="badge hero-pill-badge rounded-pill px-3 py-1 fw-medium" style="background-color: rgba(255, 255, 255, 0.18); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.25);">
                     Step 12 Requirements
                 </span>
             </div>

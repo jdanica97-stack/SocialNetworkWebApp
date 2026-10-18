@@ -2850,3 +2850,249 @@ form[action*="delete_comment"] button.dropdown-item:hover {
 }
 
 
+
+/* ========================================================
+   ADMIN DASHBOARD - COMPREHENSIVE LIGHT & DARK MODE FIXES
+   Ensures all text, tables, tabs, badges, modals, forms,
+   and pagination remain readable in both themes.
+======================================================== */
+
+/* --- Admin Tab Buttons (Light Mode) --- */
+.admin-tab-btn {
+    transition: all 0.2s ease !important;
+}
+
+.admin-tab-btn.active {
+    color: #192f5d !important;
+    background-color: #ffffff !important;
+    font-weight: 700 !important;
+    border-color: var(--card-border, #e2e8f0) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+}
+
+.admin-tab-btn:not(.active) {
+    color: #475569 !important;
+    background-color: #f1f5f9 !important;
+    border-color: transparent !important;
+}
+
+.admin-tab-btn:not(.active):hover {
+    color: #1e293b !important;
+    background-color: #e2e8f0 !important;
+}
+
+/* --- Admin Tab Buttons (Dark Mode) --- */
+[data-bs-theme="dark"] .admin-tab-btn.active {
+    background-color: var(--card-bg, #0d1e44) !important;
+    color: #ffffff !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
+}
+
+[data-bs-theme="dark"] .admin-tab-btn:not(.active) {
+    background-color: var(--input-bg, #0b1a3a) !important;
+    color: #93c5fd !important;
+    border-color: var(--card-border, #1b356d) !important;
+}
+
+[data-bs-theme="dark"] .admin-tab-btn:not(.active):hover {
+    background-color: #16326e !important;
+    color: #ffffff !important;
+}
+
+/* --- Table Styling (Dark Mode) --- */
+[data-bs-theme="dark"] .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--text-primary, #f0f6ff);
+    --bs-table-border-color: var(--card-border, #1b356d);
+    color: var(--text-primary, #f0f6ff);
+}
+
+[data-bs-theme="dark"] .table > :not(caption) > * > * {
+    color: var(--text-primary, #f0f6ff);
+    border-bottom-color: var(--card-border, #1b356d);
+}
+
+[data-bs-theme="dark"] thead.table-light,
+[data-bs-theme="dark"] thead.table-light > tr,
+[data-bs-theme="dark"] thead.table-light > tr > th {
+    --bs-table-bg: #0b1a3a !important;
+    --bs-table-color: #bfdbfe !important;
+    background-color: #0b1a3a !important;
+    color: #bfdbfe !important;
+    border-color: #1b356d !important;
+}
+
+[data-bs-theme="dark"] .table-hover > tbody > tr:hover > * {
+    background-color: rgba(59, 130, 246, 0.08) !important;
+    color: #f0f6ff !important;
+    --bs-table-bg-state: rgba(59, 130, 246, 0.08);
+}
+
+/* --- Badge Fixes: Keep text-dark readable on bright backgrounds --- */
+[data-bs-theme="dark"] .badge.bg-warning.text-dark,
+[data-bs-theme="dark"] .badge.bg-warning {
+    color: #192f5d !important;
+}
+
+/* --- List Group Items (Dark Mode) --- */
+[data-bs-theme="dark"] .list-group-item {
+    background-color: transparent !important;
+    border-color: var(--card-border, #1b356d) !important;
+    color: var(--text-primary, #f0f6ff) !important;
+}
+
+/* --- Search Input Groups (Dark Mode) --- */
+[data-bs-theme="dark"] .input-group-text.bg-white {
+    background-color: var(--input-bg, #0b1a3a) !important;
+    border-color: var(--input-border, #1e3a78) !important;
+    color: #93c5fd !important;
+}
+
+[data-bs-theme="dark"] .input-group .form-control.border-start-0 {
+    border-color: var(--input-border, #1e3a78) !important;
+}
+
+/* --- Form Controls (Dark Mode) --- */
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+    background-color: var(--input-bg, #0b1a3a) !important;
+    border-color: var(--input-border, #1e3a78) !important;
+    color: var(--text-primary, #f0f6ff) !important;
+}
+
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus {
+    background-color: var(--input-focus-bg, #102450) !important;
+    border-color: var(--input-focus-border, #3b82f6) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25) !important;
+}
+
+[data-bs-theme="dark"] .form-control::placeholder {
+    color: #64748b !important;
+}
+
+[data-bs-theme="dark"] .form-label {
+    color: var(--text-secondary, #bfdbfe) !important;
+}
+
+[data-bs-theme="dark"] .form-text {
+    color: var(--text-muted, #93c5fd) !important;
+}
+
+/* --- Pagination (Dark Mode) --- */
+[data-bs-theme="dark"] .page-link {
+    background-color: var(--card-bg, #0d1e44) !important;
+    border-color: var(--card-border, #1b356d) !important;
+    color: #93c5fd !important;
+}
+
+[data-bs-theme="dark"] .page-item.active .page-link {
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .page-item.disabled .page-link {
+    background-color: #0b1a3a !important;
+    border-color: var(--card-border, #1b356d) !important;
+    color: #475569 !important;
+}
+
+[data-bs-theme="dark"] .page-link:hover {
+    background-color: #16326e !important;
+    border-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
+/* --- Modal Content (Dark Mode) --- */
+[data-bs-theme="dark"] .modal-header.bg-light,
+[data-bs-theme="dark"] .modal-footer.bg-light,
+[data-bs-theme="dark"] .modal-header.border-bottom.bg-light,
+[data-bs-theme="dark"] .modal-footer.border-top.bg-light {
+    background-color: #0b1a3a !important;
+    border-color: var(--card-border, #1b356d) !important;
+    color: var(--text-primary, #f0f6ff) !important;
+}
+
+[data-bs-theme="dark"] .modal-header .bg-primary.bg-opacity-10 {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+}
+
+[data-bs-theme="dark"] .modal-body .bg-light.border,
+[data-bs-theme="dark"] .modal-body .p-3.rounded-3.bg-light.border {
+    background-color: #0b1a3a !important;
+    border-color: var(--card-border, #1b356d) !important;
+}
+
+[data-bs-theme="dark"] .modal-body .bg-white.border,
+[data-bs-theme="dark"] .modal-body .p-4.rounded-3.bg-white.border {
+    background-color: var(--card-bg, #0d1e44) !important;
+    border-color: var(--card-border, #1b356d) !important;
+}
+
+/* --- Section Borders (Dark Mode) --- */
+[data-bs-theme="dark"] .border-bottom {
+    border-bottom-color: var(--card-border, #1b356d) !important;
+}
+
+[data-bs-theme="dark"] .border {
+    border-color: var(--card-border, #1b356d) !important;
+}
+
+/* --- Alert Overrides (Dark Mode) --- */
+[data-bs-theme="dark"] .alert-success {
+    background-color: rgba(16, 185, 129, 0.12) !important;
+    color: #6ee7b7 !important;
+    border-color: rgba(16, 185, 129, 0.25) !important;
+}
+
+[data-bs-theme="dark"] .alert-danger {
+    background-color: rgba(239, 68, 68, 0.12) !important;
+    color: #fca5a5 !important;
+    border-color: rgba(239, 68, 68, 0.25) !important;
+}
+
+/* --- KPI Summary Cards text fix (Light Mode explicit) --- */
+.card-modern h3.fw-bold.text-dark,
+.card-modern h5.fw-bold.text-dark,
+.card-modern .fw-bold.text-dark {
+    color: #1e293b;
+}
+
+[data-bs-theme="dark"] .card-modern h3.fw-bold,
+[data-bs-theme="dark"] .card-modern h5.fw-bold,
+[data-bs-theme="dark"] .card-modern .fw-bold {
+    color: #f0f6ff !important;
+}
+
+/* --- Admin hero header: keep gradient readable in both modes --- */
+[data-bs-theme="dark"] .card-modern[style*="linear-gradient"] {
+    border-color: #1b356d !important;
+}
+
+/* --- Community Reports gradient card (Dark Mode) --- */
+[data-bs-theme="dark"] .card-modern[style*="rgba(25, 47, 93"] {
+    background: linear-gradient(135deg, rgba(13, 30, 68, 0.7) 0%, rgba(241, 189, 39, 0.1) 100%) !important;
+    border-color: var(--card-border, #1b356d) !important;
+}
+
+/* --- btn-close visible in dark mode --- */
+[data-bs-theme="dark"] .btn-close {
+    filter: invert(1) brightness(1.5) !important;
+}
+
+
+/* --- Hero translucent pill badge (visible in both light & dark mode) --- */
+.hero-pill-badge {
+    background-color: rgba(255, 255, 255, 0.18) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    font-weight: 500;
+}
+[data-bs-theme="dark"] .hero-pill-badge {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}

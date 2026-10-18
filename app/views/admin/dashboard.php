@@ -15,8 +15,8 @@ if (session_status() === PHP_SESSION_NONE) {
                 <span class="badge bg-warning text-dark fw-bold px-3 py-1 rounded-pill">
                     <i class="bi bi-shield-lock-fill me-1"></i> Administrator Access
                 </span>
-                <span class="badge bg-white bg-opacity-20 text-white px-3 py-1 rounded-pill">
-                    <i class="bi bi-database me-1"></i> Database: social_app
+                <span class="badge hero-pill-badge rounded-pill px-3 py-1 fw-medium" style="background-color: rgba(255, 255, 255, 0.18); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.25);">
+                    <i class="bi bi-database me-1 text-warning"></i> Database: social_app
                 </span>
             </div>
             <h2 class="fw-bold mb-1 text-white">Admin Control Center</h2>
@@ -126,42 +126,42 @@ if (session_status() === PHP_SESSION_NONE) {
     <!-- NAVIGATION TABS -->
     <ul class="nav nav-tabs nav-fill mb-4 border-bottom-0 gap-1" id="adminTabs">
         <li class="nav-item">
-            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'overview') ? 'active bg-white shadow-sm border' : 'bg-light text-secondary'; ?>" 
+            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'overview') ? 'active' : ''; ?>" 
                href="<?= BASE_URL ?>/index.php?action=admin&tab=overview" 
                data-tab="overview">
                 <i class="bi bi-speedometer2 me-1 text-primary"></i> Overview
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'users') ? 'active bg-white shadow-sm border' : 'bg-light text-secondary'; ?>" 
+            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'users') ? 'active' : ''; ?>" 
                href="<?= BASE_URL ?>/index.php?action=admin&tab=users" 
                data-tab="users">
                 <i class="bi bi-people-fill me-1 text-success"></i> User Management
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'posts') ? 'active bg-white shadow-sm border' : 'bg-light text-secondary'; ?>" 
+            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'posts') ? 'active' : ''; ?>" 
                href="<?= BASE_URL ?>/index.php?action=admin&tab=posts" 
                data-tab="posts">
                 <i class="bi bi-file-earmark-post me-1 text-info"></i> Post Management
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'comments') ? 'active bg-white shadow-sm border' : 'bg-light text-secondary'; ?>" 
+            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'comments') ? 'active' : ''; ?>" 
                href="<?= BASE_URL ?>/index.php?action=admin&tab=comments" 
                data-tab="comments">
                 <i class="bi bi-chat-left-dots-fill me-1 text-warning"></i> Comment Moderation
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'events') ? 'active bg-white shadow-sm border' : 'bg-light text-secondary'; ?>" 
+            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'events') ? 'active' : ''; ?>" 
                href="<?= BASE_URL ?>/index.php?action=admin&tab=events" 
                data-tab="events">
                 <i class="bi bi-calendar-event-fill me-1 text-primary"></i> Campus Events
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'stats') ? 'active bg-white shadow-sm border' : 'bg-light text-secondary'; ?>" 
+            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'stats') ? 'active' : ''; ?>" 
                href="<?= BASE_URL ?>/index.php?action=admin&tab=stats" 
                data-tab="stats">
                 <i class="bi bi-graph-up-arrow me-1 text-danger"></i> Platform Activity Stats
@@ -1078,12 +1078,11 @@ document.addEventListener('DOMContentLoaded', function() {
         var targetUrl = link.getAttribute('href');
 
         // Update active class on tab buttons immediately
+        // Only toggle .active — CSS handles all styling via .admin-tab-btn.active / :not(.active)
         tabsNav.querySelectorAll('.admin-tab-btn').forEach(function(btn) {
-            btn.classList.remove('active', 'bg-white', 'shadow-sm', 'border');
-            btn.classList.add('bg-light', 'text-secondary');
+            btn.classList.remove('active', 'bg-white', 'shadow-sm', 'border', 'bg-light', 'text-secondary');
         });
-        link.classList.remove('bg-light', 'text-secondary');
-        link.classList.add('active', 'bg-white', 'shadow-sm', 'border');
+        link.classList.add('active');
 
         // Smooth subtle fade on container while loading
         panelsContainer.style.opacity = '0.5';
