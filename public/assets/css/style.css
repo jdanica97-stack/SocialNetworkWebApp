@@ -1,4 +1,4 @@
-/* Custom Modern Dashboard Stylesheet for SMCC Connect */
+﻿/* Custom Modern Dashboard Stylesheet for SMCC Connect */
 :root {
     --sidebar-bg: #192f5d;
     --sidebar-hover: rgba(255, 255, 255, 0.08);
@@ -375,19 +375,6 @@ body {
     border: 4px solid #ffffff;
     box-shadow: 0 0 0 4px #ffffff;
 }
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    object-fit: cover;
-    background-color: #192f5d;
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.82rem;
-    font-weight: 700;
-    flex-shrink: 0;
-}
 
 /* Post avatar styling */
 .post-avatar {
@@ -414,18 +401,21 @@ body {
     border-radius: 50%;
 }
 
-    width: 34px;
-    height: 34px;
+/* Composer avatar: circular, fixed 40x40, centered with object-fit */
+.user-avatar-sm {
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     object-fit: cover;
+    flex-shrink: 0;
     background-color: #192f5d;
     color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     font-weight: 700;
-    flex-shrink: 0;
+    overflow: hidden;
 }
 
 .header-user-name {
