@@ -27,31 +27,10 @@
 <!-- AJAX Interactions Script (Likes, Comments, Post Creation) -->
 <script src="<?= BASE_URL ?>/public/assets/js/interactions.js?v=<?= filemtime(__DIR__ . '/../../../public/assets/js/interactions.js') ?>"></script>
 
-<!-- Sidebar Toggle & Keyboard Event Handlers -->
+<!-- Keyboard Event Handlers: Quick Search Shortcut (Cmd+K / Ctrl+K) -->
 <script>
-function toggleSidebar(e) {
-    if (e && e.preventDefault) {
-        e.preventDefault();
-        if (e.stopPropagation) e.stopPropagation();
-    }
-    const sidebar = document.getElementById('appSidebar');
-    const backdrop = document.getElementById('sidebarBackdrop');
-    if (sidebar && backdrop) {
-        sidebar.classList.toggle('show');
-        backdrop.classList.toggle('show');
-    }
-}
-
-// Keyboard Listeners: Close side panel on Escape, focus search on Cmd+K / Ctrl+K
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        const sidebar = document.getElementById('appSidebar');
-        const backdrop = document.getElementById('sidebarBackdrop');
-        if (sidebar && sidebar.classList.contains('show')) {
-            sidebar.classList.remove('show');
-            if (backdrop) backdrop.classList.remove('show');
-        }
-    } else if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
         const searchInput = document.querySelector('.header-search input[name="q"]');
         if (searchInput) {
             e.preventDefault();

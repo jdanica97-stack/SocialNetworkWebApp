@@ -468,7 +468,7 @@ class AdminModel {
     /**
      * Resequence user IDs consecutively starting from 1 (1, 2, 3...)
      * and reset AUTO_INCREMENT to MAX(id) + 1 (or 1 if table is empty).
-     * All child tables (posts, comments, likes, follows, messages, notifications, events)
+     * All child tables (posts, comments, likes, follows, events)
      * automatically update via ON UPDATE CASCADE.
      *
      * @param int|null $currentAdminId If provided and current admin's ID changes, updates session.

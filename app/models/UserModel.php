@@ -183,6 +183,40 @@ class UserModel {
     }
 
     /**
+     * Update user's full name.
+     *
+     * @param int $id
+     * @param string $fullName
+     * @return bool
+     */
+    public function updateFullName($id, $fullName) {
+        $sql = "UPDATE users SET full_name = :full_name WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':full_name' => $fullName,
+            ':id'        => (int)$id
+        ]);
+    }
+
+    /**
+     * Update user's account info (full name and username together).
+     *
+     * @param int $id
+     * @param string $fullName
+     * @param string $username
+     * @return bool
+     */
+    public function updateAccountInfo($id, $fullName, $username) {
+        $sql = "UPDATE users SET full_name = :full_name, username = :username WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':full_name' => $fullName,
+            ':username'  => $username,
+            ':id'        => (int)$id
+        ]);
+    }
+
+    /**
      * Update user's profile image.
      *
      * @param int $id

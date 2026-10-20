@@ -4,12 +4,10 @@
 
 require_once __DIR__ . '/../models/PostModel.php';
 require_once __DIR__ . '/../models/UserModel.php';
-require_once __DIR__ . '/../models/NotificationModel.php';
 
 class PostController {
     private $postModel;
     private $userModel;
-    private $notificationModel;
 
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
@@ -17,7 +15,6 @@ class PostController {
         }
         $this->postModel = new PostModel();
         $this->userModel = new UserModel();
-        $this->notificationModel = new NotificationModel();
     }
 
     /**
@@ -626,17 +623,6 @@ class PostController {
         try {
             $isLiked = $this->postModel->toggleLike($postId, $userId);
             $likesCount = $this->postModel->getLikesCount($postId);
-
-            if ($isLiked && (int)$post['user_id'] !== $userId) {
-                $actorName = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'Someone';
-                $this->notificationModel->createNotification(
-                    (int)$post['user_id'],
-                    $userId,
-                    'like',
-                    $postId,
-                    $actorName . ' liked your post.'
-                );
-            }
         } catch (Throwable $e) {
             error_log("Error toggling like on post {$postId}: " . $e->getMessage());
             $errMsg = 'Could not update like status at this time. Please try again.';

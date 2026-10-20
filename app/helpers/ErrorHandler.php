@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 class ErrorHandler {
-    private static $logFile = __DIR__ . '/../../storage/logs/app.log';
+    private static $logFile = __DIR__ . '/../../logs/app.log';
 
     /**
      * Sanitize message to prevent passwords, tokens, and hashes from appearing in logs.
@@ -35,10 +35,7 @@ class ErrorHandler {
         error_log("[SMCC Connect {$level}] {$sanitizedMessage}");
 
         // Also write to dedicated app log file if directory exists
-        $dir = dirname(self::$logFile);
-        if (is_dir($dir) && is_writable($dir)) {
-            @file_put_contents(self::$logFile, $entry, FILE_APPEND | LOCK_EX);
-        }
+        // File logging disabled (logs folder removed)
     }
 
     /**

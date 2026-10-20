@@ -89,9 +89,7 @@ class ProfileController {
 
         $errors = [];
         $formData = [
-            'full_name' => $user['full_name'],
-            'username'  => $user['username'],
-            'bio'       => $user['bio'] ?? ''
+            'bio' => $user['bio'] ?? ''
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -100,33 +98,10 @@ class ProfileController {
                 $errors[] = 'Security Error: Invalid or expired CSRF token. Please try submitting again.';
             }
 
-            $fullName = trim($_POST['full_name'] ?? '');
-            $username = trim($_POST['username'] ?? '');
-            $bio      = trim($_POST['bio'] ?? '');
+            $bio = trim($_POST['bio'] ?? '');
+            $formData['bio'] = $bio;
 
-            $formData['full_name'] = $fullName;
-            $formData['username']  = $username;
-            $formData['bio']       = $bio;
-
-            // 1. Validate Full Name
-            if ($fullName === '') {
-                $errors[] = 'Full Name is required.';
-            } elseif (mb_strlen($fullName) < 2 || mb_strlen($fullName) > 100) {
-                $errors[] = 'Full Name must be between 2 and 100 characters.';
-            }
-
-            // 2. Validate Username
-            if ($username === '') {
-                $errors[] = 'Username is required.';
-            } elseif (mb_strlen($username) < 3 || mb_strlen($username) > 50) {
-                $errors[] = 'Username must be between 3 and 50 characters.';
-            } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
-                $errors[] = 'Username may only contain letters, numbers, and underscores.';
-            } elseif ($this->userModel->usernameExists($username, $userId)) {
-                $errors[] = 'Username is already taken. Please choose another.';
-            }
-
-            // 3. Validate Bio
+            // 1. Validate Bio
             if (mb_strlen($bio) > 500) {
                 $errors[] = 'Bio must not exceed 500 characters.';
             }
@@ -370,7 +345,7 @@ class ProfileController {
             // 4. If all validations pass, save changes to DB
             if (empty($errors)) {
                 try {
-                    $updated = $this->userModel->updateProfile($userId, $fullName, $cleanBio, $username);
+                    $updated = $this->userModel->updateProfile($userId, $user['full_name'], $cleanBio, $user['username']);
 
                     if ($newProfileImage !== null) {
                         $imageToSave = ($newProfileImage === '') ? null : $newProfileImage;
@@ -384,9 +359,7 @@ class ProfileController {
                     }
 
                     if ($updated !== false) {
-                        // Update session display name and username if changed
-                        $_SESSION['full_name'] = $fullName;
-                        $_SESSION['username']  = $username;
+                        $_SESSION['profile_image_synced'] = time();
                         $_SESSION['success_message'] = 'Your profile has been updated successfully!';
                         header('Location: ' . BASE_URL . '/index.php?action=profile');
                         exit;

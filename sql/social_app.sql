@@ -6,8 +6,6 @@ USE `social_app`;
 -- Drop existing tables in reverse dependency order
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS `events`;
-DROP TABLE IF EXISTS `notifications`;
-DROP TABLE IF EXISTS `messages`;
 DROP TABLE IF EXISTS `follows`;
 DROP TABLE IF EXISTS `likes`;
 DROP TABLE IF EXISTS `comments`;
@@ -71,35 +69,7 @@ CREATE TABLE `follows` (
     CONSTRAINT `fk_follows_following` FOREIGN KEY (`following_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 6. messages table
-CREATE TABLE `messages` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `sender_id` INT NOT NULL,
-    `receiver_id` INT NOT NULL,
-    `message` TEXT NOT NULL,
-    `is_read` TINYINT(1) DEFAULT 0,
-    `is_edited` TINYINT(1) DEFAULT 0,
-    `is_unsent` TINYINT(1) DEFAULT 0,
-    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT `fk_messages_sender` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT `fk_messages_receiver` FOREIGN KEY (`receiver_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- 7. notifications table
-CREATE TABLE `notifications` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `user_id` INT NOT NULL,
-    `actor_id` INT NOT NULL,
-    `type` VARCHAR(50) NOT NULL,
-    `entity_id` INT DEFAULT NULL,
-    `message` VARCHAR(255) NOT NULL,
-    `is_read` TINYINT(1) DEFAULT 0,
-    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT `fk_notifications_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT `fk_notifications_actor` FOREIGN KEY (`actor_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- 8. events table
+-- 6. events table
 CREATE TABLE `events` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `title` VARCHAR(255) NOT NULL,

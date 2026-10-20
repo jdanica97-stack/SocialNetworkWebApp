@@ -101,90 +101,20 @@ if ($isLoggedIn) {
 
 <div class="app-layout">
 
-    <?php if ($isLoggedIn): ?>
-        <!-- Mobile Backdrop -->
-        <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
-
-        <!-- LEFT SIDEBAR (Only for Logged-In Users) -->
-        <aside class="app-sidebar" id="appSidebar">
-            <!-- Sidebar Brand / Logo -->
-            <div class="sidebar-header d-flex align-items-center justify-content-between">
-                <a href="<?= BASE_URL ?>/" class="brand-link" onclick="toggleSidebar(event)" title="SMCC Connect">
-                    <div class="brand-icon-box">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
-                    <span>SMCC Connect</span>
-                </a>
-            </div>
-
-            <!-- Sidebar Navigation Menu -->
-            <div class="sidebar-nav">
-                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                    <!-- ADMIN DASHBOARD LINK FOR AUTHORIZED ADMINS ONLY -->
-                    <a href="<?= BASE_URL ?>/index.php?action=admin" class="nav-link <?= (strpos($currentAction, 'admin') === 0 || $currentAction === 'admin') ? 'active' : '' ?>">
-                        <i class="bi bi-shield-lock-fill text-warning"></i>
-                        <span>Admin Dashboard</span>
-                    </a>
-                <?php endif; ?>
-
-                <a href="<?= BASE_URL ?>/" class="nav-link <?= ($currentAction === 'home') ? 'active' : '' ?>">
-                    <i class="bi bi-house-door-fill"></i>
-                    <span>Home</span>
-                </a>
-                <a href="<?= BASE_URL ?>/index.php?action=profile" class="nav-link <?= ($currentAction === 'profile') ? 'active' : '' ?>">
-                    <i class="bi bi-person-fill"></i>
-                    <span>Profile</span>
-                </a>
-                <a href="<?= BASE_URL ?>/index.php?action=messages" class="nav-link <?= ($currentAction === 'messages') ? 'active' : '' ?>">
-                    <i class="bi bi-chat-dots"></i>
-                    <span>Messages</span>
-                </a>
-                <a href="<?= BASE_URL ?>/index.php?action=settings" class="nav-link <?= (strpos($currentAction, 'settings') === 0) ? 'active' : '' ?>">
-                    <i class="bi bi-gear-fill"></i>
-                    <span>Settings</span>
-                </a>
-            </div>
-
-            <!-- Sidebar Footer (Sign Out) -->
-            <div class="sidebar-footer">
-                <a href="<?= BASE_URL ?>/index.php?action=logout" class="nav-link">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span>Sign Out</span>
-                </a>
-            </div>
-        </aside>
-    <?php endif; ?>
-
     <!-- MAIN CONTENT AREA WRAPPER -->
-    <div class="app-main <?= $isLoggedIn ? '' : 'no-sidebar' ?>">
+    <div class="app-main">
 
         <!-- TOP HEADER -->
         <header class="app-header">
             <div class="header-container">
                 <?php if ($isLoggedIn): ?>
-                    <!-- Header Left: Menu Toggle Icon -> Yellow Logo -> SMCC Connect Brand Name -->
-                    <div class="header-brand-group d-flex align-items-center me-3 gap-2">
-                        <!-- Navigation Menu Toggle Button -->
-                        <button class="header-menu-toggle-btn btn border-0 shadow-none bg-transparent d-flex align-items-center justify-content-center p-1" 
-                                type="button" 
-                                id="headerNavToggleBtn" 
-                                onclick="toggleSidebar(event)" 
-                                title="Toggle sidebar"
-                                aria-label="Toggle sidebar"
-                                style="border: none !important; background: transparent !important; outline: none !important; box-shadow: none !important;">
-                            <svg class="minimalist-menu-icon" width="22" height="18" viewBox="0 0 22 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                <line x1="2" y1="3" x2="20" y2="3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-                                <line x1="5" y1="9" x2="17" y2="9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-                                <line x1="8" y1="15" x2="14" y2="15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-                            </svg>
-                        </button>
-
-                        <!-- Brand: Yellow Logo Container and Brand Name -->
-                        <a href="<?= BASE_URL ?>/" class="brand-link text-dark align-items-center gap-2" id="headerLogoBtn" title="SMCC Connect Home">
+                    <!-- Header Left: SMCC Connect Brand Logo and Name -->
+                    <div class="header-brand-group d-flex align-items-center me-3">
+                        <a href="<?= BASE_URL ?>/" class="brand-link align-items-center gap-2" id="headerLogoBtn" title="SMCC Connect Home">
                             <div class="brand-icon-box flex-shrink-0">
                                 <i class="bi bi-people-fill"></i>
                             </div>
-                            <span class="fs-5 font-navy fw-bold d-none d-sm-inline">SMCC Connect</span>
+                            <span class="fs-5 brand-title fw-bold d-none d-sm-inline">SMCC Connect</span>
                         </a>
                     </div>
 
@@ -203,99 +133,98 @@ if ($isLoggedIn) {
                             <i class="theme-toggle-icon bi bi-moon-fill"></i>
                         </button>
 
-                        <!-- Notifications Dropdown -->
-                        <div class="dropdown">
-                            <button class="header-icon-btn position-relative dropdown-toggle" id="notificationsDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications" aria-label="Notifications">
-                                <i class="bi bi-bell"></i>
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notifBadge" style="font-size: 0.65rem;">
-                                    0
-                                </span>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-0" aria-labelledby="notificationsDropdownBtn" style="width: 320px; max-width: 90vw;">
-                                <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-body">
-                                    <h6 class="mb-0 fw-bold text-dark">Notifications</h6>
-                                    <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none small" id="btnMarkAllNotifsRead">
-                                        Mark all read
-                                    </button>
-                                </div>
-                                <div class="overflow-y-auto" id="notificationsDropdownList" style="max-height: 350px;">
-                                    <div class="p-4 text-center text-muted small" id="notifEmptyState">
-                                        <i class="bi bi-bell-slash fs-3 d-block mb-1 opacity-50"></i>
-                                        No new notifications
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Messages Button with Live Unread Counter -->
-                        <a href="<?= BASE_URL ?>/index.php?action=messages" class="header-icon-btn position-relative" title="Messages" aria-label="Messages">
-                            <i class="bi bi-chat-text"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary d-none" id="messagesBadge" style="font-size: 0.65rem;">
-                                0
-                            </span>
-                        </a>
-
-                        <!-- User Profile Dropdown -->
-                        <div class="dropdown">
-                            <a href="#" class="header-user-btn dropdown-toggle" id="headerUserDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <!-- Facebook-Style Profile Dropdown (Only for Authenticated Users) -->
+                        <div class="dropdown fb-profile-dropdown">
+                            <button class="fb-profile-trigger" 
+                                    type="button" 
+                                    id="headerUserDropdown" 
+                                    data-bs-toggle="dropdown" 
+                                    data-bs-auto-close="true"
+                                    aria-expanded="false" 
+                                    title="Account Menu" 
+                                    aria-label="Account Menu">
                                 <?php if (!empty($userAvatarPath)): ?>
-                                    <img src="<?= $userAvatarPath ?>" alt="<?= htmlspecialchars($_SESSION['full_name'] ?? 'User'); ?>" class="user-avatar-sm" onerror="this.onerror=null; this.outerHTML='<div class=\'user-avatar-sm\'><?= htmlspecialchars($userInitials) ?></div>';">
+                                    <img src="<?= $userAvatarPath ?>" alt="<?= htmlspecialchars($_SESSION['full_name'] ?? 'User'); ?>" class="fb-avatar-trigger" onerror="this.onerror=null; this.outerHTML='<div class=\'fb-avatar-trigger\'><?= htmlspecialchars($userInitials) ?></div>';">
                                 <?php else: ?>
-                                    <div class="user-avatar-sm">
+                                    <div class="fb-avatar-trigger">
                                         <?= htmlspecialchars($userInitials); ?>
                                     </div>
                                 <?php endif; ?>
-                                <span class="header-user-name d-none d-sm-inline"><?= htmlspecialchars($_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User'); ?></span>
-                                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                                    <span class="badge bg-warning text-dark ms-1">Admin</span>
-                                <?php endif; ?>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="headerUserDropdown">
-                                <li>
-                                    <div class="px-3 py-2 border-bottom">
-                                        <div class="d-flex align-items-center justify-content-between">
-                                            <p class="mb-0 fw-bold small text-dark"><?= htmlspecialchars($_SESSION['full_name'] ?? ''); ?></p>
+                                <span class="header-user-name d-none d-md-inline text-truncate"><?= htmlspecialchars($_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User'); ?></span>
+                                <i class="bi bi-chevron-down fb-chevron ms-1 d-none d-sm-inline"></i>
+                            </button>
+
+                            <div class="dropdown-menu dropdown-menu-end fb-dropdown-menu shadow border-0" aria-labelledby="headerUserDropdown">
+                                <!-- Top Profile Card / Header -->
+                                <a href="<?= BASE_URL ?>/index.php?action=profile" class="fb-user-card text-decoration-none">
+                                    <?php if (!empty($userAvatarPath)): ?>
+                                        <img src="<?= $userAvatarPath ?>" alt="<?= htmlspecialchars($_SESSION['full_name'] ?? 'User'); ?>" class="fb-avatar-card" onerror="this.onerror=null; this.outerHTML='<div class=\'fb-avatar-card\'><?= htmlspecialchars($userInitials) ?></div>';">
+                                    <?php else: ?>
+                                        <div class="fb-avatar-card">
+                                            <?= htmlspecialchars($userInitials); ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div class="d-flex flex-column min-w-0 flex-grow-1">
+                                        <div class="d-flex align-items-center justify-content-between gap-1">
+                                            <span class="fb-user-fullname text-truncate"><?= htmlspecialchars($_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User'); ?></span>
                                             <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                                                <span class="badge bg-warning text-dark micro-text">Admin</span>
+                                                <span class="badge bg-warning text-dark micro-text flex-shrink-0">Admin</span>
                                             <?php endif; ?>
                                         </div>
-                                        <p class="mb-0 text-muted small">@<?= htmlspecialchars($_SESSION['username'] ?? ''); ?></p>
+                                        <span class="fb-user-subtext text-truncate">@<?= htmlspecialchars($_SESSION['username'] ?? 'user'); ?></span>
                                     </div>
-                                </li>
+                                </a>
+
+                                <div class="fb-menu-divider"></div>
+
+                                <!-- Option 1: View Profile -->
+                                <a class="dropdown-item fb-menu-item" href="<?= BASE_URL ?>/index.php?action=profile">
+                                    <div class="fb-menu-item-left">
+                                        <div class="fb-icon-circle">
+                                            <i class="bi bi-person-fill"></i>
+                                        </div>
+                                        <span class="fb-item-label">View Profile</span>
+                                    </div>
+                                    <i class="bi bi-chevron-right fb-arrow-right"></i>
+                                </a>
+
                                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                                    <li>
-                                        <a class="dropdown-item d-flex align-items-center gap-2 py-2 fw-semibold text-warning" href="<?= BASE_URL ?>/index.php?action=admin">
-                                            <i class="bi bi-shield-lock-fill"></i>
-                                            <span>Admin Dashboard</span>
-                                        </a>
-                                    </li>
+                                    <!-- Admin Dashboard (Only for Admins) -->
+                                    <a class="dropdown-item fb-menu-item" href="<?= BASE_URL ?>/index.php?action=admin">
+                                        <div class="fb-menu-item-left">
+                                            <div class="fb-icon-circle fb-icon-admin">
+                                                <i class="bi bi-shield-lock-fill"></i>
+                                            </div>
+                                            <span class="fb-item-label fw-semibold text-warning">Admin Dashboard</span>
+                                        </div>
+                                        <i class="bi bi-chevron-right fb-arrow-right"></i>
+                                    </a>
                                 <?php endif; ?>
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= BASE_URL ?>/index.php?action=profile">
-                                        <i class="bi bi-person text-muted"></i>
-                                        <span>My Profile</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= BASE_URL ?>/index.php?action=edit_profile">
-                                        <i class="bi bi-pencil-square text-muted"></i>
-                                        <span>Edit Profile</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= BASE_URL ?>/index.php?action=settings">
-                                        <i class="bi bi-gear text-muted"></i>
-                                        <span>Settings</span>
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider my-1"></li>
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger" href="<?= BASE_URL ?>/index.php?action=logout">
-                                        <i class="bi bi-box-arrow-right"></i>
-                                        <span>Sign Out</span>
-                                    </a>
-                                </li>
-                            </ul>
+
+                                <!-- Option 2: Account Settings -->
+                                <a class="dropdown-item fb-menu-item" href="<?= BASE_URL ?>/index.php?action=settings" title="Account Settings">
+                                    <div class="fb-menu-item-left">
+                                        <div class="fb-icon-circle">
+                                            <i class="bi bi-gear-fill"></i>
+                                        </div>
+                                        <span class="fb-item-label">Account Settings</span>
+                                    </div>
+                                    <i class="bi bi-chevron-right fb-arrow-right"></i>
+                                </a>
+
+                                <div class="fb-menu-divider"></div>
+
+                                <!-- Option 3: Sign Out -->
+                                <a class="dropdown-item fb-menu-item fb-menu-signout" href="<?= BASE_URL ?>/index.php?action=logout">
+                                    <div class="fb-menu-item-left">
+                                        <div class="fb-icon-circle fb-icon-signout">
+                                            <i class="bi bi-box-arrow-right"></i>
+                                        </div>
+                                        <span class="fb-item-label text-danger">Sign Out</span>
+                                    </div>
+                                    <i class="bi bi-chevron-right fb-arrow-right"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 <?php else: ?>

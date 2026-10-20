@@ -4,20 +4,17 @@
 
 require_once __DIR__ . '/../models/FollowModel.php';
 require_once __DIR__ . '/../models/UserModel.php';
-require_once __DIR__ . '/../models/NotificationModel.php';
 
 class FollowController {
     private $followModel;
     private $userModel;
-    private $notificationModel;
 
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         $this->followModel = new FollowModel();
-        $this->userModel = new UserModel();
-        $this->notificationModel = new NotificationModel();
+        $this->userModel   = new UserModel();
     }
 
     private function requireAuth() {
@@ -100,16 +97,6 @@ class FollowController {
         } else {
             $this->followModel->follow($followerId, $followingId);
             $newStatus = true;
-
-            // Trigger notification
-            $actorName = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'Someone';
-            $this->notificationModel->createNotification(
-                $followingId,
-                $followerId,
-                'follow',
-                $followerId,
-                $actorName . ' started following you.'
-            );
         }
 
         $followersCount = $this->followModel->getFollowersCount($followingId);

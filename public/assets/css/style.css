@@ -45,53 +45,39 @@ body {
 }
 
 /* ========================================================
-   LEFT SIDEBAR
+   BRAND & NAVIGATION ELEMENTS
 ======================================================== */
-.app-sidebar {
-    width: var(--sidebar-width);
-    background-color: var(--sidebar-bg);
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 1040;
-    transition: transform 0.3s ease;
-    transform: translateX(-100%);
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
-}
-
-.app-sidebar.show {
-    transform: translateX(0);
-}
-
-.sidebar-header {
-    height: var(--header-height);
-    display: flex;
-    align-items: center;
-    padding: 0 1.25rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
 .brand-link {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 0.75rem;
-    color: #fff;
+    color: #192f5d;
     text-decoration: none;
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     letter-spacing: -0.3px;
     cursor: pointer;
     user-select: none;
+    transition: color 0.15s ease;
+}
+
+.brand-link:hover {
+    color: #192f5d;
+}
+
+[data-bs-theme="dark"] .brand-link,
+.dark-theme .brand-link {
+    color: #ffffff;
+}
+
+[data-bs-theme="dark"] .brand-link:hover,
+.dark-theme .brand-link:hover {
+    color: #ffffff;
 }
 
 .brand-icon-box {
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
     border-radius: 8px;
     background-color: var(--accent-yellow);
     color: #192f5d;
@@ -107,84 +93,6 @@ body {
 .brand-link:hover .brand-icon-box {
     transform: scale(1.05);
     box-shadow: 0 3px 8px rgba(245, 158, 11, 0.6);
-}
-
-.sidebar-nav {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1rem 0.75rem;
-}
-
-.nav-section-title {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: rgba(255, 255, 255, 0.4);
-    padding: 0.75rem 0.75rem 0.35rem;
-    font-weight: 600;
-}
-
-.sidebar-nav .nav-link {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    color: rgba(255, 255, 255, 0.75);
-    padding: 0.7rem 0.9rem;
-    border-radius: 8px;
-    font-weight: 500;
-    font-size: 0.92rem;
-    transition: all 0.18s ease-in-out;
-    position: relative;
-    margin-bottom: 0.3rem;
-    text-decoration: none;
-}
-
-.sidebar-nav .nav-link i {
-    font-size: 1.15rem;
-    width: 20px;
-    text-align: center;
-    opacity: 0.85;
-}
-
-.sidebar-nav .nav-link:hover {
-    color: #ffffff;
-    background-color: var(--sidebar-hover);
-}
-
-.sidebar-nav .nav-link.active {
-    color: #ffffff;
-    background-color: var(--sidebar-active-bg);
-    font-weight: 600;
-}
-
-.sidebar-nav .nav-link.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 6px;
-    bottom: 6px;
-    width: 4px;
-    border-radius: 0 4px 4px 0;
-    background-color: var(--accent-yellow);
-}
-
-.sidebar-nav .nav-link.active i {
-    color: var(--accent-yellow);
-    opacity: 1;
-}
-
-.sidebar-footer {
-    padding: 1rem 0.75rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.sidebar-footer .nav-link {
-    color: rgba(255, 255, 255, 0.65);
-}
-
-.sidebar-footer .nav-link:hover {
-    color: #f87171;
-    background-color: rgba(239, 68, 68, 0.1);
 }
 
 /* ========================================================
@@ -206,10 +114,6 @@ body {
     max-width: 1180px;
     margin-left: auto;
     margin-right: auto;
-}
-
-.app-main.no-sidebar {
-    margin-left: 0 !important;
 }
 
 .auth-main {
@@ -401,27 +305,47 @@ body {
     transform: scale(1.15) rotate(12deg);
 }
 
-.header-user-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 0.25rem 0.5rem 0.25rem 0.25rem;
-    border-radius: 24px;
-    border: 1px solid transparent;
-    text-decoration: none;
-    color: var(--text-primary);
-    transition: background-color 0.15s ease;
+/* ========================================================
+   FACEBOOK-STYLE PROFILE DROPDOWN
+======================================================== */
+.fb-profile-dropdown {
+    position: relative;
 }
 
-.header-user-btn:hover,
-.header-user-btn:focus {
+.fb-profile-trigger {
+    border: none;
+    background: transparent;
+    border-radius: 50px;
+    padding: 3px 8px 3px 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.fb-profile-trigger:hover,
+.fb-profile-trigger:focus,
+.fb-profile-trigger[aria-expanded="true"] {
     background-color: #f1f5f9;
     color: var(--text-primary);
+    outline: none;
 }
 
-.user-avatar-sm {
-    width: 32px;
-    height: 32px;
+[data-bs-theme="dark"] .fb-profile-trigger:hover,
+.dark-theme .fb-profile-trigger:hover,
+[data-bs-theme="dark"] .fb-profile-trigger:focus,
+.dark-theme .fb-profile-trigger:focus,
+[data-bs-theme="dark"] .fb-profile-trigger[aria-expanded="true"],
+.dark-theme .fb-profile-trigger[aria-expanded="true"] {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.fb-avatar-trigger {
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     object-fit: cover;
     background-color: #192f5d;
@@ -429,13 +353,290 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* Profile avatar styling – copy of fb avatar layout but larger */
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #192f5d;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    border: 4px solid #ffffff;
+    box-shadow: 0 0 0 4px #ffffff;
+}
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #192f5d;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* Post avatar styling */
+.post-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--avatar-bg, #ddd);
+    color: var(--avatar-fg, #555);
+    font-weight: 600;
+    font-size: 1rem;
+    text-align: center;
+    line-height: 40px;
+    overflow: hidden;
+}
+
+.post-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #192f5d;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    font-weight: 700;
+    flex-shrink: 0;
 }
 
 .header-user-name {
     font-size: 0.88rem;
     font-weight: 600;
+    max-width: 140px;
+}
+
+.fb-chevron {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+}
+
+.fb-profile-trigger[aria-expanded="true"] .fb-chevron {
+    transform: rotate(180deg);
+}
+
+/* Dropdown Menu Container */
+.fb-dropdown-menu {
+    min-width: 290px;
+    width: 320px;
+    max-width: calc(100vw - 24px);
+    border-radius: 14px !important;
+    background-color: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 12px 28px 0 rgba(0, 0, 0, 0.16), 0 2px 4px 0 rgba(0, 0, 0, 0.08) !important;
+    padding: 0.5rem !important;
+    margin-top: 0.5rem !important;
+    z-index: 1060 !important;
+}
+
+[data-bs-theme="dark"] .fb-dropdown-menu,
+.dark-theme .fb-dropdown-menu {
+    background-color: #122247 !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 12px 28px 0 rgba(0, 0, 0, 0.55), 0 2px 6px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+/* User Card inside Dropdown */
+.fb-user-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--text-primary);
+    background-color: #f8fafc;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.fb-user-card:hover {
+    background-color: #f1f5f9;
+    border-color: rgba(0, 0, 0, 0.08);
+    color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] .fb-user-card,
+.dark-theme .fb-user-card {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-bs-theme="dark"] .fb-user-card:hover,
+.dark-theme .fb-user-card:hover {
+    background-color: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.fb-avatar-card {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #192f5d;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.fb-user-fullname {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.25;
+}
+
+.fb-user-subtext {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.fb-menu-divider {
+    height: 1px;
+    margin: 0.4rem 0.25rem;
+    background-color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .fb-menu-divider,
+.dark-theme .fb-menu-divider {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Menu Items */
+.fb-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.55rem 0.7rem;
+    border-radius: 10px;
+    color: var(--text-primary) !important;
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+    margin-bottom: 2px;
+}
+
+.fb-menu-item:hover,
+.fb-menu-item:focus {
+    background-color: #f1f5f9;
+    color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] .fb-menu-item:hover,
+.dark-theme .fb-menu-item:hover,
+[data-bs-theme="dark"] .fb-menu-item:focus,
+.dark-theme .fb-menu-item:focus {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.fb-menu-item-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.fb-icon-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #e4e6eb;
+    color: #1c1e21;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+    transition: background-color 0.15s ease;
+}
+
+[data-bs-theme="dark"] .fb-icon-circle,
+.dark-theme .fb-icon-circle {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #e4e6eb;
+}
+
+.fb-icon-admin {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+[data-bs-theme="dark"] .fb-icon-admin,
+.dark-theme .fb-icon-admin {
+    background-color: rgba(245, 158, 11, 0.18);
+    color: #fbbf24;
+}
+
+.fb-icon-signout {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+[data-bs-theme="dark"] .fb-icon-signout,
+.dark-theme .fb-icon-signout {
+    background-color: rgba(239, 68, 68, 0.18);
+    color: #f87171;
+}
+
+.fb-item-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.fb-arrow-right {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    opacity: 0.6;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.fb-menu-item:hover .fb-arrow-right {
+    opacity: 1;
+    transform: translateX(2px);
+}
+
+.fb-menu-signout:hover {
+    background-color: rgba(239, 68, 68, 0.08);
+}
+
+.fb-menu-signout:hover .fb-item-label {
+    color: #dc2626 !important;
+}
+
+[data-bs-theme="dark"] .fb-menu-signout:hover .fb-item-label {
+    color: #f87171 !important;
 }
 
 /* ========================================================
@@ -1207,39 +1408,7 @@ a:hover .comment-avatar {
     border-color: #192f5d;
 }
 
-/* Mobile Sidebar Backdrop */
-.sidebar-backdrop {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1035;
-}
-
-.sidebar-backdrop.show {
-    display: block;
-}
-
 /* Responsive Rules */
-@media (max-width: 991.98px) {
-    .app-sidebar {
-        transform: translateX(-100%);
-    }
-
-    .app-sidebar.show {
-        transform: translateX(0);
-    }
-
-    .sidebar-backdrop.show {
-        display: block;
-    }
-
-    .app-main {
-        margin-left: 0;
-    }
 
     .header-search {
         max-width: 260px;
@@ -1884,7 +2053,7 @@ textarea::placeholder,
     color: #93c5fd !important;
 }
 
-/* Ensure Bootstrap bg-body and bg-card in Messages & Hubs adapt */
+/* Ensure Bootstrap bg-body and bg-card adapt */
 [data-bs-theme="dark"] .bg-body,
 .dark-theme .bg-body {
     background-color: var(--body-bg) !important;
@@ -2483,22 +2652,8 @@ textarea::placeholder,
 }
 
 /* ========================================================
-   NOTIFICATION CLICK & POST HIGHLIGHT ANIMATION
+   POST HIGHLIGHT ANIMATION
 ======================================================== */
-.notification-item {
-    cursor: pointer;
-    text-decoration: none !important;
-    transition: background-color 0.15s ease;
-}
-
-.notification-item:hover {
-    background-color: rgba(7, 25, 61, 0.05) !important;
-}
-
-[data-bs-theme="dark"] .notification-item:hover,
-.dark-theme .notification-item:hover {
-    background-color: rgba(255, 255, 255, 0.06) !important;
-}
 
 @keyframes postHighlightPulse {
     0% {
@@ -2619,82 +2774,17 @@ textarea::placeholder,
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
 }
 
-/* Direct Messaging - Edit and Unsend Action Styling */
-.message-bubble-wrapper {
-    position: relative;
-    max-width: 80%;
-}
-
-.message-actions-dropdown {
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.18s ease, visibility 0.18s ease;
-}
-
-.message-row:hover .message-actions-dropdown,
-.message-row:focus-within .message-actions-dropdown,
-.message-actions-dropdown.show {
-    opacity: 1;
-    visibility: visible;
-}
-
-@media (hover: none) {
-    .message-actions-dropdown {
-        opacity: 0.75;
-        visibility: visible;
-    }
-}
-
-.message-action-toggle {
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    color: var(--text-muted, #64748b);
-    background: transparent;
-    border: none;
-    transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.message-action-toggle:hover,
-.message-action-toggle:focus {
-    background-color: rgba(0, 0, 0, 0.06);
-    color: var(--bs-primary, #0d6efd);
-}
-
-[data-bs-theme="dark"] .message-action-toggle:hover,
-.dark-theme .message-action-toggle:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #93c5fd;
-}
-
-.message-fade-out {
-    opacity: 0;
-    transform: scale(0.92);
-    transition: opacity 0.22s ease, transform 0.22s ease;
-}
-
 /* ==========================================================================
    EDIT AND DELETE / UNSEND THEME ADAPTIVE COLORS (LIGHT = BLACK, DARK = WHITE)
    ========================================================================== */
 
 /* Three-dots menu toggle buttons */
-.message-action-toggle,
-.message-action-toggle i,
 .dropdown > button.btn-link[data-bs-toggle="dropdown"],
 .dropdown > button.btn-link[data-bs-toggle="dropdown"] i {
     color: #000000 !important;
 }
-
-[data-bs-theme="dark"] .message-action-toggle,
-[data-bs-theme="dark"] .message-action-toggle i,
 [data-bs-theme="dark"] .dropdown > button.btn-link[data-bs-toggle="dropdown"],
 [data-bs-theme="dark"] .dropdown > button.btn-link[data-bs-toggle="dropdown"] i,
-.dark-theme .message-action-toggle,
-.dark-theme .message-action-toggle i,
 .dark-theme .dropdown > button.btn-link[data-bs-toggle="dropdown"],
 .dark-theme .dropdown > button.btn-link[data-bs-toggle="dropdown"] i {
     color: #ffffff !important;
@@ -2703,8 +2793,6 @@ textarea::placeholder,
 /* Edit action items (text, icons, spans) */
 .action-item-edit,
 .action-item-edit *,
-.btn-edit-msg,
-.btn-edit-msg *,
 .dropdown-item[href*="edit_post"],
 .dropdown-item[href*="edit_post"] *,
 .dropdown-item[href*="edit_comment"],
@@ -2714,16 +2802,12 @@ textarea::placeholder,
 
 [data-bs-theme="dark"] .action-item-edit,
 [data-bs-theme="dark"] .action-item-edit *,
-[data-bs-theme="dark"] .btn-edit-msg,
-[data-bs-theme="dark"] .btn-edit-msg *,
 [data-bs-theme="dark"] .dropdown-item[href*="edit_post"],
 [data-bs-theme="dark"] .dropdown-item[href*="edit_post"] *,
 [data-bs-theme="dark"] .dropdown-item[href*="edit_comment"],
 [data-bs-theme="dark"] .dropdown-item[href*="edit_comment"] *,
 .dark-theme .action-item-edit,
 .dark-theme .action-item-edit *,
-.dark-theme .btn-edit-msg,
-.dark-theme .btn-edit-msg *,
 .dark-theme .dropdown-item[href*="edit_post"],
 .dark-theme .dropdown-item[href*="edit_post"] *,
 .dark-theme .dropdown-item[href*="edit_comment"],
@@ -2734,8 +2818,6 @@ textarea::placeholder,
 /* Delete and Unsend action items (text, icons, spans) */
 .action-item-delete,
 .action-item-delete *,
-.btn-unsend-msg,
-.btn-unsend-msg *,
 form[action*="delete_post"] button.dropdown-item,
 form[action*="delete_post"] button.dropdown-item *,
 form[action*="delete_comment"] button.dropdown-item,
@@ -2745,16 +2827,12 @@ form[action*="delete_comment"] button.dropdown-item * {
 
 [data-bs-theme="dark"] .action-item-delete,
 [data-bs-theme="dark"] .action-item-delete *,
-[data-bs-theme="dark"] .btn-unsend-msg,
-[data-bs-theme="dark"] .btn-unsend-msg *,
 [data-bs-theme="dark"] form[action*="delete_post"] button.dropdown-item,
 [data-bs-theme="dark"] form[action*="delete_post"] button.dropdown-item *,
 [data-bs-theme="dark"] form[action*="delete_comment"] button.dropdown-item,
 [data-bs-theme="dark"] form[action*="delete_comment"] button.dropdown-item *,
 .dark-theme .action-item-delete,
 .dark-theme .action-item-delete *,
-.dark-theme .btn-unsend-msg,
-.dark-theme .btn-unsend-msg *,
 .dark-theme form[action*="delete_post"] button.dropdown-item,
 .dark-theme form[action*="delete_post"] button.dropdown-item *,
 .dark-theme form[action*="delete_comment"] button.dropdown-item,
@@ -2765,8 +2843,6 @@ form[action*="delete_comment"] button.dropdown-item * {
 /* Hover background for edit and delete dropdown items */
 .action-item-edit:hover,
 .action-item-delete:hover,
-.btn-edit-msg:hover,
-.btn-unsend-msg:hover,
 .dropdown-item[href*="edit_post"]:hover,
 .dropdown-item[href*="edit_comment"]:hover,
 form[action*="delete_post"] button.dropdown-item:hover,
@@ -2776,16 +2852,12 @@ form[action*="delete_comment"] button.dropdown-item:hover {
 
 [data-bs-theme="dark"] .action-item-edit:hover,
 [data-bs-theme="dark"] .action-item-delete:hover,
-[data-bs-theme="dark"] .btn-edit-msg:hover,
-[data-bs-theme="dark"] .btn-unsend-msg:hover,
 [data-bs-theme="dark"] .dropdown-item[href*="edit_post"]:hover,
 [data-bs-theme="dark"] .dropdown-item[href*="edit_comment"]:hover,
 [data-bs-theme="dark"] form[action*="delete_post"] button.dropdown-item:hover,
 [data-bs-theme="dark"] form[action*="delete_comment"] button.dropdown-item:hover,
 .dark-theme .action-item-edit:hover,
 .dark-theme .action-item-delete:hover,
-.dark-theme .btn-edit-msg:hover,
-.dark-theme .btn-unsend-msg:hover,
 .dark-theme .dropdown-item[href*="edit_post"]:hover,
 .dark-theme .dropdown-item[href*="edit_comment"]:hover,
 .dark-theme form[action*="delete_post"] button.dropdown-item:hover,

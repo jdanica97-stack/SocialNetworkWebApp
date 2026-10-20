@@ -5,22 +5,19 @@
 require_once __DIR__ . '/../models/CommentModel.php';
 require_once __DIR__ . '/../models/PostModel.php';
 require_once __DIR__ . '/../models/UserModel.php';
-require_once __DIR__ . '/../models/NotificationModel.php';
 
 class CommentController {
     private $commentModel;
     private $postModel;
     private $userModel;
-    private $notificationModel;
 
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        $this->commentModel      = new CommentModel();
-        $this->postModel         = new PostModel();
-        $this->userModel         = new UserModel();
-        $this->notificationModel = new NotificationModel();
+        $this->commentModel = new CommentModel();
+        $this->postModel    = new PostModel();
+        $this->userModel    = new UserModel();
     }
 
     /**
@@ -132,19 +129,6 @@ class CommentController {
         }
 
         if ($newCommentId) {
-            // Trigger notification for the post owner if commenter is someone else
-            if ((int)$post['user_id'] !== $userId) {
-                $actorName = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'Someone';
-                $previewSnippet = mb_strlen($content) > 60 ? mb_substr($content, 0, 57) . '...' : $content;
-                $this->notificationModel->createNotification(
-                    (int)$post['user_id'],
-                    $userId,
-                    'comment',
-                    (int)$newCommentId,
-                    $actorName . ' commented: "' . $previewSnippet . '"'
-                );
-            }
-
             $user = $this->userModel->findById($userId);
             $allComments = $this->commentModel->getCommentsByPost($postId);
             $commentsCount = count($allComments);

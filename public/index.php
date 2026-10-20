@@ -55,29 +55,25 @@ switch ($action) {
         $profileController->edit();
         break;
 
-    // Dedicated Settings Routing (Account Security, Theme, Notifications & Preferences)
+    // Dedicated Account Settings Routing (Change Name, Change Username & Update Password)
     case 'settings':
         require_once __DIR__ . '/../app/controllers/SettingsController.php';
         $settingsController = new SettingsController();
         $settingsController->index();
         break;
 
+    case 'settings_account':
+    case 'settings_name':
+    case 'settings_username':
+        require_once __DIR__ . '/../app/controllers/SettingsController.php';
+        $settingsController = new SettingsController();
+        $settingsController->updateAccountInfo();
+        break;
+
     case 'settings_password':
         require_once __DIR__ . '/../app/controllers/SettingsController.php';
         $settingsController = new SettingsController();
         $settingsController->changePassword();
-        break;
-
-    case 'settings_preferences':
-        require_once __DIR__ . '/../app/controllers/SettingsController.php';
-        $settingsController = new SettingsController();
-        $settingsController->updatePreferences();
-        break;
-
-    case 'settings_privacy':
-        require_once __DIR__ . '/../app/controllers/SettingsController.php';
-        $settingsController = new SettingsController();
-        $settingsController->updatePrivacy();
         break;
 
     case 'get_follow_list':
@@ -220,63 +216,6 @@ switch ($action) {
         $followController->toggle();
         break;
 
-    // Real-Time Notifications Actions
-    case 'notifications':
-        require_once __DIR__ . '/../app/controllers/NotificationController.php';
-        $notifController = new NotificationController();
-        $notifController->getNotifications();
-        break;
-
-    case 'unread_notifications':
-        require_once __DIR__ . '/../app/controllers/NotificationController.php';
-        $notifController = new NotificationController();
-        $notifController->getUnreadCount();
-        break;
-
-    case 'mark_notifications_read':
-        require_once __DIR__ . '/../app/controllers/NotificationController.php';
-        $notifController = new NotificationController();
-        $notifController->markRead();
-        break;
-
-    // Direct Messaging Actions
-    case 'messages':
-        require_once __DIR__ . '/../app/controllers/MessageController.php';
-        $msgController = new MessageController();
-        $msgController->index();
-        break;
-
-    case 'send_message':
-        require_once __DIR__ . '/../app/controllers/MessageController.php';
-        $msgController = new MessageController();
-        $msgController->send();
-        break;
-
-    case 'edit_message':
-        require_once __DIR__ . '/../app/controllers/MessageController.php';
-        $msgController = new MessageController();
-        $msgController->edit();
-        break;
-
-    case 'unsend_message':
-        require_once __DIR__ . '/../app/controllers/MessageController.php';
-        $msgController = new MessageController();
-        $msgController->unsend();
-        break;
-
-    case 'poll_messages':
-        require_once __DIR__ . '/../app/controllers/MessageController.php';
-        $msgController = new MessageController();
-        $msgController->poll();
-        break;
-
-    case 'unread_messages':
-        require_once __DIR__ . '/../app/controllers/MessageController.php';
-        $msgController = new MessageController();
-        $msgController->getUnreadCount();
-        break;
-
-
     // Additional Navigation Pages
     case 'people':
     case 'groups':
@@ -297,8 +236,7 @@ switch ($action) {
                     'people' => 'bi-people',
                     'groups' => 'bi-people-gear',
                     'events' => 'bi-calendar-event',
-                    'messages' => 'bi-chat-dots',
-                    'saved' => 'bi-bookmark'
+                    'saved'  => 'bi-bookmark'
                 ];
                 $icon = $iconMap[$action] ?? 'bi-grid';
                 ?>

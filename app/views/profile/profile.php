@@ -172,11 +172,6 @@ if (!empty($user['full_name'])) {
                                 <span><?= !empty($isFollowing) ? 'Following' : (!empty($isFollowedBy) ? 'Follow Back' : 'Follow') ?></span>
                             </button>
                         </form>
-
-                        <!-- Direct Message Button -->
-                        <a href="<?= BASE_URL ?>/index.php?action=messages&user_id=<?= (int)$user['id']; ?>" class="btn btn-outline-primary px-4 fw-semibold rounded-pill">
-                            <i class="bi bi-chat-dots me-1"></i> Message
-                        </a>
                     <?php endif; ?>
                     <a href="<?= BASE_URL ?>/" class="btn btn-outline-secondary px-4 rounded-pill">
                         <i class="bi bi-arrow-left me-1"></i> Back to Feed
