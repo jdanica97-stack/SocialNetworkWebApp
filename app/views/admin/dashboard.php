@@ -19,7 +19,7 @@ require_once __DIR__ . '/../../helpers/Security.php';
                     <i class="bi bi-shield-lock-fill me-1"></i> Administrator Access
                 </span>
                 <span class="badge hero-pill-badge rounded-pill px-3 py-1 fw-medium" style="background-color: rgba(255, 255, 255, 0.18); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.25);">
-                    <i class="bi bi-database me-1 text-warning"></i> Database: social_app
+                    <i class="bi bi-database me-1 text-warning"></i> Database: smcc_connect_db
                 </span>
             </div>
             <h2 class="fw-bold mb-0" style="color:#e8f0fe;">Admin Control Center</h2>
