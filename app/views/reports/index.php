@@ -25,7 +25,7 @@ if (session_status() === PHP_SESSION_NONE) {
             </p>
         </div>
         <div class="text-md-end">
-            <span class="d-block text-white-50 small">Database: <strong>smcc_connect_db</strong></span>
+            <span class="d-block text-white-50 small">Database: <strong>social_app</strong></span>
             <span class="badge bg-success bg-opacity-75 text-white mt-1">
                 <i class="bi bi-shield-check me-1"></i> Read-Only PDO Queries
             </span>

@@ -5,7 +5,7 @@
 class Database {
     private static $host = '127.0.0.1';
     private static $port = '3306';
-    private static $db_name = 'smcc_connect_db';
+    private static $db_name = 'social_app';
     private static $username = 'root';
     private static $password = '';
     private static $charset = 'utf8mb4';
