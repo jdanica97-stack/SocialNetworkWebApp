@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // app/views/admin/dashboard.php
 // Admin Dashboard View - Modern layout matching SMCC Connect theme
 
@@ -9,6 +9,9 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../../models/PostModel.php';
 require_once __DIR__ . '/../../helpers/Security.php';
 ?>
+
+<script>document.body.classList.add('admin-page-active');</script>
+<div class="admin-dashboard-wrap" data-bs-theme="dark">
 
 <!-- ADMIN DASHBOARD HERO HEADER (Redesigned: compact, polished) -->
 <div class="card-modern py-3 px-4 mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #0d1b3e 0%, #0f2147 100%); color: #e8f0fe;">
@@ -205,6 +208,13 @@ require_once __DIR__ . '/../../helpers/Security.php';
                         <?php foreach ($mostActiveUsers as $idx => $u): ?>
                             <?php
                             $initials = strtoupper(mb_substr($u['full_name'] ?: $u['username'], 0, 2));
+                            $uAvatar = null;
+                            if (!empty($u['profile_image'])) {
+                                $uPath = __DIR__ . '/../../../public/uploads/avatars/' . basename($u['profile_image']);
+                                if (file_exists($uPath)) {
+                                    $uAvatar = BASE_URL . '/public/uploads/avatars/' . htmlspecialchars(basename($u['profile_image']));
+                                }
+                            }
                             ?>
                             <div class="admin-contributor-row d-flex align-items-center justify-content-between py-2 px-2 rounded-3">
                                 <div class="d-flex align-items-center gap-3">
@@ -304,7 +314,7 @@ require_once __DIR__ . '/../../helpers/Security.php';
 
             <div class="col-12 col-md-5">
                 <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <span class="input-group-text border-end-0"><i class="bi bi-search text-muted"></i></span>
                     <input type="text" name="q" class="form-control border-start-0" placeholder="Search by username or full name..." value="<?= htmlspecialchars($search); ?>">
                 </div>
             </div>
@@ -331,7 +341,7 @@ require_once __DIR__ . '/../../helpers/Security.php';
         <?php if (!empty($usersData)): ?>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                    <thead class="table-dark">
                         <tr>
                             <th>User Details</th>
                             <th>Username</th>
@@ -345,14 +355,27 @@ require_once __DIR__ . '/../../helpers/Security.php';
                         <?php foreach ($usersData as $u): ?>
                             <?php
                             $initials = strtoupper(mb_substr($u['full_name'] ?: $u['username'], 0, 2));
+                            $uAvatar = null;
+                            if (!empty($u['profile_image'])) {
+                                $uPath = __DIR__ . '/../../../public/uploads/avatars/' . basename($u['profile_image']);
+                                if (file_exists($uPath)) {
+                                    $uAvatar = BASE_URL . '/public/uploads/avatars/' . htmlspecialchars(basename($u['profile_image']));
+                                }
+                            }
                             $isSelf = ((int)$u['id'] === (int)$_SESSION['user_id']);
                             ?>
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
-                                        <div class="user-avatar-sm" style="width:36px; height:36px; font-size:0.85rem;">
-                                            <?= htmlspecialchars($initials); ?>
-                                        </div>
+                                        <?php if (!empty($uAvatar)): ?>
+                                            <img src="<?= $uAvatar ?>" alt="<?= htmlspecialchars($u['full_name']); ?>" class="user-avatar-sm" style="width:36px; height:36px; object-fit:cover; flex-shrink:0;" onerror="this.outerHTML='<div class=&quot;user-avatar-sm&quot; style=&quot;width:36px; height:36px; font-size:0.85rem; flex-shrink:0;&quot;><?= htmlspecialchars($initials); ?></div>';">
+                                        <?php else: ?>
+                                            <div class="user-avatar-sm" style="width:36px; height:36px; font-size:0.85rem; flex-shrink:0;">
+                                                <?= htmlspecialchars($initials); ?>
+                                            </div>
+                                        <?php endif; ?>
+
+
                                         <div>
                                             <a href="<?= BASE_URL ?>/index.php?action=profile&id=<?= (int)$u['id']; ?>" class="fw-bold text-dark text-decoration-none">
                                                 <?= htmlspecialchars($u['full_name']); ?>
@@ -463,7 +486,7 @@ require_once __DIR__ . '/../../helpers/Security.php';
 
             <div class="col-12 col-md-8">
                 <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <span class="input-group-text border-end-0"><i class="bi bi-search text-muted"></i></span>
                     <input type="text" name="q" class="form-control border-start-0" placeholder="Search post content or author name..." value="<?= htmlspecialchars($search); ?>">
                 </div>
             </div>
@@ -482,7 +505,7 @@ require_once __DIR__ . '/../../helpers/Security.php';
         <?php if (!empty($postsData)): ?>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                    <thead class="table-dark">
                         <tr>
                             <th style="width: 60px;">ID</th>
                             <th>Author</th>
@@ -596,7 +619,7 @@ require_once __DIR__ . '/../../helpers/Security.php';
 
             <div class="col-12 col-md-8">
                 <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <span class="input-group-text border-end-0"><i class="bi bi-search text-muted"></i></span>
                     <input type="text" name="q" class="form-control border-start-0" placeholder="Search comment content, commenter, or post text..." value="<?= htmlspecialchars($search); ?>">
                 </div>
             </div>
@@ -615,7 +638,7 @@ require_once __DIR__ . '/../../helpers/Security.php';
         <?php if (!empty($commentsData)): ?>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                    <thead class="table-dark">
                         <tr>
                             <th style="width: 50px;">ID</th>
                             <th>Commenter</th>
@@ -702,7 +725,7 @@ require_once __DIR__ . '/../../helpers/Security.php';
                 <?php if (!empty($mostActiveUsers)): ?>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
+                            <thead class="table-dark">
                                 <tr>
                                     <th>#</th>
                                     <th>User</th>
@@ -809,7 +832,7 @@ require_once __DIR__ . '/../../helpers/Security.php';
         <?php if (!empty($eventsData)): ?>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                    <thead class="table-dark">
                         <tr>
                             <th style="width: 130px;">Date &amp; Time</th>
                             <th>Event Title</th>
@@ -1078,6 +1101,8 @@ require_once __DIR__ . '/../../helpers/Security.php';
 
     </div><!-- Close #adminTabPanelsContainer -->
 </div><!-- Close #adminDashboardTabsWrapper -->
+
+</div><!-- Close .admin-dashboard-wrap -->
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

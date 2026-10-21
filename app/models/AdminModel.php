@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // app/models/AdminModel.php
 // Model handling all database queries and administrative operations for the Admin Dashboard
 
@@ -298,12 +298,13 @@ class AdminModel {
                     u.id AS user_id,
                     u.username,
                     u.full_name,
+                    u.profile_image,
                     u.role,
                     COUNT(p.id) AS total_posts,
                     MAX(p.created_at) AS last_post_at
                 FROM users u
                 JOIN posts p ON u.id = p.user_id
-                GROUP BY u.id, u.username, u.full_name, u.role
+                GROUP BY u.id, u.username, u.full_name, u.profile_image, u.role
                 ORDER BY total_posts DESC, u.username ASC
                 LIMIT :limit";
 

@@ -1,4 +1,4 @@
-/* Custom Modern Dashboard Stylesheet for SMCC Connect */
+﻿/* Custom Modern Dashboard Stylesheet for SMCC Connect */
 :root {
     --sidebar-bg: #192f5d;
     --sidebar-hover: rgba(255, 255, 255, 0.08);
@@ -3159,52 +3159,99 @@ form[action*="delete_comment"] button.dropdown-item:hover {
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
+/* ======== ADMIN DASHBOARD REDESIGN (DEDICATED DARK NAVY THEME) ======== */
+/* Palette: Background #050e20, Container #07142e, Cards #0c1a3b, Borders rgba(59,130,246,0.2) */
+/*          Accents: Yellow #f1bd27, Blue #3b82f6, Green #10b981, Red #ef4444 */
+/*          Typography: Primary #ffffff, Subtext #8fa6d3, Links/Pills #93c5fd */
 
-/* ======== ADMIN DASHBOARD REDESIGN ======== */
-/* Dark navy theme additions for SMCC Connect Admin Dashboard */
-/* Palette: card bg #0d1b3e, dark bg #0f2147, border rgba(59,130,246,0.18) */
-/*          accent yellow #f1bd27, text primary #e8f0fe, text muted #7b93c8  */
+/* Page background when admin dashboard is active */
+body.admin-page-active,
+body:has(.admin-dashboard-wrap),
+.app-main:has(.admin-dashboard-wrap),
+.app-layout:has(.admin-dashboard-wrap) {
+    background-color: #050e20 !important;
+}
 
-/* ----- .admin-kpi-card — KPI stat card container ----- */
-.admin-kpi-card {
-    padding: 1.1rem 1rem;
+.admin-dashboard-wrap {
+    background-color: #07142e;
+    color: #e8f0fe;
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .admin-dashboard-wrap {
+        padding: 0.85rem;
+        border-radius: 12px;
+    }
+}
+
+/* All cards inside admin dashboard */
+.admin-dashboard-wrap .card-modern {
+    background-color: #0c1a3b !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+    color: #e8f0fe !important;
+}
+
+/* Headings and text colors */
+.admin-dashboard-wrap h1,
+.admin-dashboard-wrap h2,
+.admin-dashboard-wrap h3,
+.admin-dashboard-wrap h4,
+.admin-dashboard-wrap h5,
+.admin-dashboard-wrap h6,
+.admin-dashboard-wrap .text-dark {
+    color: #ffffff !important;
+}
+
+.admin-dashboard-wrap .text-muted,
+.admin-dashboard-wrap .text-secondary {
+    color: #8fa6d3 !important;
+}
+
+.admin-dashboard-wrap .small.text-muted,
+.admin-dashboard-wrap .micro-text {
+    color: #7b95c6 !important;
+}
+
+/* KPI statistics cards */
+.admin-dashboard-wrap .admin-kpi-card {
+    background-color: #0c1a3b !important;
+    border: 1px solid rgba(59, 130, 246, 0.18) !important;
+    padding: 1.15rem 1rem;
     border-radius: 0.75rem;
     transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
-.admin-kpi-card:hover {
+.admin-dashboard-wrap .admin-kpi-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 6px 24px rgba(59, 130, 246, 0.25) !important;
 }
 
-.admin-kpi-card:hover [style*="border-left: 4px solid"] {
-    border-left-color: inherit;
-    filter: brightness(1.15);
-}
-
-/* ----- .admin-kpi-number — large prominent stat number ----- */
-.admin-kpi-number {
-    font-size: 2rem;
+.admin-dashboard-wrap .admin-kpi-number {
+    font-size: 2.1rem;
     font-weight: 700;
     line-height: 1.1;
-    color: #1e293b;
+    color: #ffffff !important;
     letter-spacing: -0.02em;
 }
 
-/* ----- .admin-kpi-label — small descriptive label below number ----- */
-.admin-kpi-label {
+.admin-dashboard-wrap .admin-kpi-label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #64748b;
+    color: #8fa6d3 !important;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    margin-top: 0.15rem;
+    margin-top: 0.25rem;
 }
 
-/* ----- .admin-kpi-icon — icon circle in upper-right of stat card ----- */
-.admin-kpi-icon {
-    width: 38px;
-    height: 38px;
+.admin-dashboard-wrap .admin-kpi-icon {
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -3212,114 +3259,190 @@ form[action*="delete_comment"] button.dropdown-item:hover {
     flex-shrink: 0;
 }
 
-/* ----- .admin-contributor-row — hover effect for contributor list rows ----- */
-.admin-contributor-row {
-    transition: background-color 0.15s ease;
-    border-radius: 0.5rem;
+/* Navigation tabs */
+.admin-dashboard-wrap .admin-tab-btn {
+    transition: all 0.2s ease !important;
+    padding: 0.65rem 1.15rem !important;
+    font-size: 0.88rem !important;
+    font-weight: 600;
+    border-radius: 0.5rem !important;
 }
 
-.admin-contributor-row:hover {
-    background-color: rgba(59, 130, 246, 0.06);
+.admin-dashboard-wrap .admin-tab-btn:not(.active) {
+    background-color: #091530 !important;
+    color: #93c5fd !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
 }
 
-/* ----- .admin-panel-header — consistent section panel header ----- */
-.admin-panel-header h5 {
-    color: #1e293b;
-    font-size: 1rem;
+.admin-dashboard-wrap .admin-tab-btn:not(.active):hover {
+    background-color: #142857 !important;
+    color: #ffffff !important;
+    border-color: rgba(59, 130, 246, 0.45) !important;
 }
 
-/* ----- .admin-tabs-scroll — horizontally scrollable tab container for mobile ----- */
-.admin-tabs-scroll {
+.admin-dashboard-wrap .admin-tab-btn.active {
+    background-color: #1e3a8a !important;
+    color: #ffffff !important;
+    border: 1px solid #3b82f6 !important;
+    box-shadow: 0 0 14px rgba(59, 130, 246, 0.45) !important;
+    font-weight: 700 !important;
+}
+
+/* Scroll container for tabs */
+.admin-dashboard-wrap .admin-tabs-scroll {
     overflow-x: auto;
     white-space: nowrap;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
-    padding-bottom: 2px;
+    scrollbar-color: rgba(59, 130, 246, 0.5) transparent;
+    padding-bottom: 4px;
 }
 
-.admin-tabs-scroll::-webkit-scrollbar {
-    height: 3px;
+.admin-dashboard-wrap .admin-tabs-scroll::-webkit-scrollbar {
+    height: 4px;
 }
 
-.admin-tabs-scroll::-webkit-scrollbar-track {
-    background: transparent;
+.admin-dashboard-wrap .admin-tabs-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(59, 130, 246, 0.5);
+    border-radius: 4px;
 }
 
-.admin-tabs-scroll::-webkit-scrollbar-thumb {
-    background-color: rgba(59, 130, 246, 0.3);
-    border-radius: 3px;
-}
-
-/* ----- .admin-content-panel — wraps tab panel content ----- */
-.admin-content-panel {
+/* Panels */
+.admin-dashboard-wrap .admin-content-panel {
+    background-color: #0c1a3b !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
     border-radius: 0.75rem;
 }
 
-/* ============================================================
-   DARK MODE VARIANTS — all new admin redesign classes
-   ============================================================ */
-
-[data-bs-theme="dark"] .admin-kpi-card,
-.dark-theme .admin-kpi-card {
-    background-color: #0d1b3e !important;
-    border-color: rgba(59, 130, 246, 0.18) !important;
+.admin-dashboard-wrap .admin-panel-header h5 {
+    color: #ffffff !important;
+    font-size: 1.05rem;
 }
 
-[data-bs-theme="dark"] .admin-kpi-card:hover,
-.dark-theme .admin-kpi-card:hover {
-    box-shadow: 0 6px 24px rgba(59, 130, 246, 0.18) !important;
+.admin-dashboard-wrap .border-bottom {
+    border-bottom-color: rgba(59, 130, 246, 0.2) !important;
 }
 
-[data-bs-theme="dark"] .admin-kpi-number,
-.dark-theme .admin-kpi-number {
+/* Contributor list */
+.admin-dashboard-wrap .admin-contributor-row {
+    transition: background-color 0.15s ease;
+    border-radius: 0.5rem;
+}
+
+.admin-dashboard-wrap .admin-contributor-row:hover {
+    background-color: rgba(59, 130, 246, 0.12) !important;
+}
+
+/* Tables */
+.admin-dashboard-wrap .table {
+    --bs-table-bg: transparent !important;
+    --bs-table-color: #e8f0fe !important;
+    --bs-table-border-color: rgba(59, 130, 246, 0.15) !important;
     color: #e8f0fe !important;
 }
 
-[data-bs-theme="dark"] .admin-kpi-label,
-.dark-theme .admin-kpi-label {
-    color: #7b93c8 !important;
+.admin-dashboard-wrap .table thead,
+.admin-dashboard-wrap .table thead th,
+.admin-dashboard-wrap .table-light,
+.admin-dashboard-wrap .table-light th {
+    background-color: #081329 !important;
+    color: #93c5fd !important;
+    border-bottom: 2px solid rgba(59, 130, 246, 0.3) !important;
+    font-weight: 600;
 }
 
-[data-bs-theme="dark"] .admin-kpi-icon,
-.dark-theme .admin-kpi-icon {
-    opacity: 0.9;
+.admin-dashboard-wrap .table tbody tr {
+    border-color: rgba(59, 130, 246, 0.12) !important;
 }
 
-[data-bs-theme="dark"] .admin-contributor-row:hover,
-.dark-theme .admin-contributor-row:hover {
-    background-color: rgba(59, 130, 246, 0.1) !important;
+.admin-dashboard-wrap .table-hover tbody tr:hover {
+    background-color: rgba(59, 130, 246, 0.08) !important;
+    color: #ffffff !important;
 }
 
-[data-bs-theme="dark"] .admin-panel-header h5,
-.dark-theme .admin-panel-header h5 {
+.admin-dashboard-wrap .table td,
+.admin-dashboard-wrap .table th {
     color: #e8f0fe !important;
 }
 
-[data-bs-theme="dark"] .admin-panel-header .border-bottom,
-.dark-theme .admin-panel-header .border-bottom {
-    border-bottom-color: rgba(59, 130, 246, 0.18) !important;
+.admin-dashboard-wrap .table td a.text-dark {
+    color: #ffffff !important;
 }
 
-[data-bs-theme="dark"] .admin-tabs-scroll,
-.dark-theme .admin-tabs-scroll {
-    scrollbar-color: rgba(59, 130, 246, 0.5) transparent;
+.admin-dashboard-wrap .table td a.text-dark:hover {
+    color: #60a5fa !important;
 }
 
-[data-bs-theme="dark"] .admin-tabs-scroll::-webkit-scrollbar-thumb,
-.dark-theme .admin-tabs-scroll::-webkit-scrollbar-thumb {
-    background-color: rgba(59, 130, 246, 0.5);
+/* Forms & inputs inside admin */
+.admin-dashboard-wrap .form-control,
+.admin-dashboard-wrap .form-select {
+    background-color: #081329 !important;
+    border: 1px solid rgba(59, 130, 246, 0.25) !important;
+    color: #ffffff !important;
 }
 
-[data-bs-theme="dark"] .admin-content-panel,
-.dark-theme .admin-content-panel {
-    background-color: #0f2147 !important;
-    border-color: rgba(59, 130, 246, 0.18) !important;
+.admin-dashboard-wrap .form-control:focus,
+.admin-dashboard-wrap .form-select:focus {
+    background-color: #0b1a38 !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
+    color: #ffffff !important;
 }
 
-[data-bs-theme="dark"] .admin-content-panel .py-3.border-bottom,
-.dark-theme .admin-content-panel .py-3.border-bottom {
-    border-bottom-color: rgba(59, 130, 246, 0.18) !important;
+.admin-dashboard-wrap .input-group-text {
+    background-color: #0a1733 !important;
+    border: 1px solid rgba(59, 130, 246, 0.25) !important;
+    color: #93c5fd !important;
+}
+
+.admin-dashboard-wrap .form-control::placeholder {
+    color: #5c749f !important;
+}
+
+/* Badges */
+.admin-dashboard-wrap .badge.bg-light {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+    color: #93c5fd !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Pagination inside admin */
+.admin-dashboard-wrap .page-link {
+    background-color: #091530 !important;
+    border-color: rgba(59, 130, 246, 0.25) !important;
+    color: #93c5fd !important;
+}
+
+.admin-dashboard-wrap .page-item.active .page-link {
+    background-color: #1e3a8a !important;
+    border-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
+.admin-dashboard-wrap .page-item.disabled .page-link {
+    background-color: #060e20 !important;
+    border-color: rgba(59, 130, 246, 0.1) !important;
+    color: #475569 !important;
+}
+
+/* Modals */
+.modal-content {
+    background-color: #0c1a3b !important;
+    color: #e8f0fe !important;
+    border: 1px solid rgba(59, 130, 246, 0.25) !important;
+}
+
+.modal-header,
+.modal-footer {
+    background-color: #081329 !important;
+    border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+.modal .form-control,
+.modal .form-select {
+    background-color: #081329 !important;
+    border: 1px solid rgba(59, 130, 246, 0.25) !important;
+    color: #ffffff !important;
 }
 
 /* ======== END ADMIN DASHBOARD REDESIGN ======== */
