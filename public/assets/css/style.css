@@ -1,4 +1,4 @@
-﻿/* Custom Modern Dashboard Stylesheet for SMCC Connect */
+/* Custom Modern Dashboard Stylesheet for SMCC Connect */
 :root {
     --sidebar-bg: #192f5d;
     --sidebar-hover: rgba(255, 255, 255, 0.08);
@@ -3158,3 +3158,168 @@ form[action*="delete_comment"] button.dropdown-item:hover {
     color: #ffffff !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
+
+
+/* ======== ADMIN DASHBOARD REDESIGN ======== */
+/* Dark navy theme additions for SMCC Connect Admin Dashboard */
+/* Palette: card bg #0d1b3e, dark bg #0f2147, border rgba(59,130,246,0.18) */
+/*          accent yellow #f1bd27, text primary #e8f0fe, text muted #7b93c8  */
+
+/* ----- .admin-kpi-card — KPI stat card container ----- */
+.admin-kpi-card {
+    padding: 1.1rem 1rem;
+    border-radius: 0.75rem;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.admin-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.admin-kpi-card:hover [style*="border-left: 4px solid"] {
+    border-left-color: inherit;
+    filter: brightness(1.15);
+}
+
+/* ----- .admin-kpi-number — large prominent stat number ----- */
+.admin-kpi-number {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #1e293b;
+    letter-spacing: -0.02em;
+}
+
+/* ----- .admin-kpi-label — small descriptive label below number ----- */
+.admin-kpi-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 0.15rem;
+}
+
+/* ----- .admin-kpi-icon — icon circle in upper-right of stat card ----- */
+.admin-kpi-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* ----- .admin-contributor-row — hover effect for contributor list rows ----- */
+.admin-contributor-row {
+    transition: background-color 0.15s ease;
+    border-radius: 0.5rem;
+}
+
+.admin-contributor-row:hover {
+    background-color: rgba(59, 130, 246, 0.06);
+}
+
+/* ----- .admin-panel-header — consistent section panel header ----- */
+.admin-panel-header h5 {
+    color: #1e293b;
+    font-size: 1rem;
+}
+
+/* ----- .admin-tabs-scroll — horizontally scrollable tab container for mobile ----- */
+.admin-tabs-scroll {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+    padding-bottom: 2px;
+}
+
+.admin-tabs-scroll::-webkit-scrollbar {
+    height: 3px;
+}
+
+.admin-tabs-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.admin-tabs-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(59, 130, 246, 0.3);
+    border-radius: 3px;
+}
+
+/* ----- .admin-content-panel — wraps tab panel content ----- */
+.admin-content-panel {
+    border-radius: 0.75rem;
+}
+
+/* ============================================================
+   DARK MODE VARIANTS — all new admin redesign classes
+   ============================================================ */
+
+[data-bs-theme="dark"] .admin-kpi-card,
+.dark-theme .admin-kpi-card {
+    background-color: #0d1b3e !important;
+    border-color: rgba(59, 130, 246, 0.18) !important;
+}
+
+[data-bs-theme="dark"] .admin-kpi-card:hover,
+.dark-theme .admin-kpi-card:hover {
+    box-shadow: 0 6px 24px rgba(59, 130, 246, 0.18) !important;
+}
+
+[data-bs-theme="dark"] .admin-kpi-number,
+.dark-theme .admin-kpi-number {
+    color: #e8f0fe !important;
+}
+
+[data-bs-theme="dark"] .admin-kpi-label,
+.dark-theme .admin-kpi-label {
+    color: #7b93c8 !important;
+}
+
+[data-bs-theme="dark"] .admin-kpi-icon,
+.dark-theme .admin-kpi-icon {
+    opacity: 0.9;
+}
+
+[data-bs-theme="dark"] .admin-contributor-row:hover,
+.dark-theme .admin-contributor-row:hover {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+[data-bs-theme="dark"] .admin-panel-header h5,
+.dark-theme .admin-panel-header h5 {
+    color: #e8f0fe !important;
+}
+
+[data-bs-theme="dark"] .admin-panel-header .border-bottom,
+.dark-theme .admin-panel-header .border-bottom {
+    border-bottom-color: rgba(59, 130, 246, 0.18) !important;
+}
+
+[data-bs-theme="dark"] .admin-tabs-scroll,
+.dark-theme .admin-tabs-scroll {
+    scrollbar-color: rgba(59, 130, 246, 0.5) transparent;
+}
+
+[data-bs-theme="dark"] .admin-tabs-scroll::-webkit-scrollbar-thumb,
+.dark-theme .admin-tabs-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(59, 130, 246, 0.5);
+}
+
+[data-bs-theme="dark"] .admin-content-panel,
+.dark-theme .admin-content-panel {
+    background-color: #0f2147 !important;
+    border-color: rgba(59, 130, 246, 0.18) !important;
+}
+
+[data-bs-theme="dark"] .admin-content-panel .py-3.border-bottom,
+.dark-theme .admin-content-panel .py-3.border-bottom {
+    border-bottom-color: rgba(59, 130, 246, 0.18) !important;
+}
+
+/* ======== END ADMIN DASHBOARD REDESIGN ======== */

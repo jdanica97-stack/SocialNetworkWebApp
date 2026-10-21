@@ -5,22 +5,25 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+require_once __DIR__ . '/../../models/PostModel.php';
+require_once __DIR__ . '/../../helpers/Security.php';
 ?>
 
-<!-- ADMIN DASHBOARD HERO HEADER -->
-<div class="card-modern p-4 mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff;">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+<!-- ADMIN DASHBOARD HERO HEADER (Redesigned: compact, polished) -->
+<div class="card-modern py-3 px-4 mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #0d1b3e 0%, #0f2147 100%); color: #e8f0fe;">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
         <div>
-            <div class="d-flex align-items-center gap-2 mb-2">
+            <div class="d-flex align-items-center gap-2 mb-1">
                 <span class="badge bg-warning text-dark fw-bold px-3 py-1 rounded-pill">
                     <i class="bi bi-shield-lock-fill me-1"></i> Administrator Access
                 </span>
-                <span class="badge hero-pill-badge rounded-pill px-3 py-1 fw-medium" style="background-color: rgba(255, 255, 255, 0.18); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.25);">
+                <span class="badge hero-pill-badge rounded-pill px-3 py-1 fw-medium" style="background-color: rgba(255,255,255,0.18); color:#e8f0fe; border:1px solid rgba(255,255,255,0.25);">
                     <i class="bi bi-database me-1 text-warning"></i> Database: smcc_connect_db
                 </span>
             </div>
-            <h2 class="fw-bold mb-1 text-white">Admin Control Center</h2>
-            <p class="mb-0 text-white-50 small">
+            <h2 class="fw-bold mb-0" style="color:#e8f0fe;">Admin Control Center</h2>
+            <p class="mb-0 small" style="color:#7b93c8;">
                 Manage platform users, moderate posts and comments, inspect platform activity, and enforce server-side security.
             </p>
         </div>
@@ -58,116 +61,126 @@ if (session_status() === PHP_SESSION_NONE) {
 <div class="row g-3 mb-4">
     <!-- Total Users Card -->
     <div class="col-6 col-md-3">
-        <div class="card-modern p-3 h-100 border-0 shadow-sm" style="border-left: 4px solid #3b82f6 !important;">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted small fw-semibold">Total Users</span>
-                <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style="width:36px; height:36px;">
+        <div class="card-modern admin-kpi-card h-100 border-0 shadow-sm" style="border-left: 4px solid #3b82f6 !important;">
+            <div class="d-flex align-items-start justify-content-between">
+                <div>
+                    <div class="admin-kpi-number"><?= (int)($summaryStats['total_users'] ?? 0); ?></div>
+                    <div class="admin-kpi-label">Total Users</div>
+                    <span class="text-muted micro-text mt-1 d-block">
+                        <i class="bi bi-shield-check text-warning me-1"></i> <?= (int)($summaryStats['admin_users'] ?? 0); ?> Admins &bull; <?= (int)($summaryStats['normal_users'] ?? 0); ?> Users
+                    </span>
+                </div>
+                <div class="admin-kpi-icon" style="background: rgba(59,130,246,0.12); color:#3b82f6;">
                     <i class="bi bi-people-fill fs-5"></i>
                 </div>
             </div>
-            <h3 class="fw-bold text-dark mb-1"><?= (int)($summaryStats['total_users'] ?? 0); ?></h3>
-            <span class="text-muted micro-text">
-                <i class="bi bi-shield-check text-warning me-1"></i> <?= (int)($summaryStats['admin_users'] ?? 0); ?> Admins &bull; <?= (int)($summaryStats['normal_users'] ?? 0); ?> Users
-            </span>
         </div>
     </div>
 
     <!-- Total Posts Card -->
     <div class="col-6 col-md-3">
-        <div class="card-modern p-3 h-100 border-0 shadow-sm" style="border-left: 4px solid #10b981 !important;">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted small fw-semibold">Total Posts</span>
-                <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 d-flex align-items-center justify-content-center" style="width:36px; height:36px;">
+        <div class="card-modern admin-kpi-card h-100 border-0 shadow-sm" style="border-left: 4px solid #10b981 !important;">
+            <div class="d-flex align-items-start justify-content-between">
+                <div>
+                    <div class="admin-kpi-number"><?= (int)($summaryStats['total_posts'] ?? 0); ?></div>
+                    <div class="admin-kpi-label">Total Posts</div>
+                    <span class="text-muted micro-text mt-1 d-block">
+                        <i class="bi bi-bar-chart-line text-success me-1"></i> Avg <?= htmlspecialchars($summaryStats['avg_posts_per_user'] ?? 0); ?> posts/user
+                    </span>
+                </div>
+                <div class="admin-kpi-icon" style="background: rgba(16,185,129,0.12); color:#10b981;">
                     <i class="bi bi-file-earmark-post-fill fs-5"></i>
                 </div>
             </div>
-            <h3 class="fw-bold text-dark mb-1"><?= (int)($summaryStats['total_posts'] ?? 0); ?></h3>
-            <span class="text-muted micro-text">
-                <i class="bi bi-bar-chart-line text-success me-1"></i> Avg <?= htmlspecialchars($summaryStats['avg_posts_per_user'] ?? 0); ?> posts/user
-            </span>
         </div>
     </div>
 
     <!-- Total Comments Card -->
     <div class="col-6 col-md-3">
-        <div class="card-modern p-3 h-100 border-0 shadow-sm" style="border-left: 4px solid #f59e0b !important;">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted small fw-semibold">Total Comments</span>
-                <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-2 d-flex align-items-center justify-content-center" style="width:36px; height:36px;">
+        <div class="card-modern admin-kpi-card h-100 border-0 shadow-sm" style="border-left: 4px solid #f59e0b !important;">
+            <div class="d-flex align-items-start justify-content-between">
+                <div>
+                    <div class="admin-kpi-number"><?= (int)($summaryStats['total_comments'] ?? 0); ?></div>
+                    <div class="admin-kpi-label">Total Comments</div>
+                    <span class="text-muted micro-text mt-1 d-block">
+                        <i class="bi bi-chat-dots text-warning me-1"></i> Avg <?= htmlspecialchars($summaryStats['avg_comments_per_post'] ?? 0); ?> comments/post
+                    </span>
+                </div>
+                <div class="admin-kpi-icon" style="background: rgba(245,158,11,0.12); color:#f59e0b;">
                     <i class="bi bi-chat-left-text-fill fs-5"></i>
                 </div>
             </div>
-            <h3 class="fw-bold text-dark mb-1"><?= (int)($summaryStats['total_comments'] ?? 0); ?></h3>
-            <span class="text-muted micro-text">
-                <i class="bi bi-chat-dots text-warning me-1"></i> Avg <?= htmlspecialchars($summaryStats['avg_comments_per_post'] ?? 0); ?> comments/post
-            </span>
         </div>
     </div>
 
     <!-- Total Likes Card -->
     <div class="col-6 col-md-3">
-        <div class="card-modern p-3 h-100 border-0 shadow-sm" style="border-left: 4px solid #ef4444 !important;">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted small fw-semibold">Total Likes</span>
-                <div class="bg-danger bg-opacity-10 text-danger rounded-circle p-2 d-flex align-items-center justify-content-center" style="width:36px; height:36px;">
+        <div class="card-modern admin-kpi-card h-100 border-0 shadow-sm" style="border-left: 4px solid #ef4444 !important;">
+            <div class="d-flex align-items-start justify-content-between">
+                <div>
+                    <div class="admin-kpi-number"><?= (int)($summaryStats['total_likes'] ?? 0); ?></div>
+                    <div class="admin-kpi-label">Total Likes</div>
+                    <span class="text-muted micro-text mt-1 d-block">
+                        <i class="bi bi-hand-thumbs-up text-danger me-1"></i> Engagements logged
+                    </span>
+                </div>
+                <div class="admin-kpi-icon" style="background: rgba(239,68,68,0.12); color:#ef4444;">
                     <i class="bi bi-heart-fill fs-5"></i>
                 </div>
             </div>
-            <h3 class="fw-bold text-dark mb-1"><?= (int)($summaryStats['total_likes'] ?? 0); ?></h3>
-            <span class="text-muted micro-text">
-                <i class="bi bi-hand-thumbs-up text-danger me-1"></i> Engagements logged
-            </span>
         </div>
     </div>
 </div>
 
 <!-- ADMIN TABS AND CONTENT WRAPPER -->
 <div id="adminDashboardTabsWrapper">
-    <!-- NAVIGATION TABS -->
-    <ul class="nav nav-tabs nav-fill mb-4 border-bottom-0 gap-1" id="adminTabs">
-        <li class="nav-item">
-            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'overview') ? 'active' : ''; ?>" 
-               href="<?= BASE_URL ?>/index.php?action=admin&tab=overview" 
-               data-tab="overview">
-                <i class="bi bi-speedometer2 me-1 text-primary"></i> Overview
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'users') ? 'active' : ''; ?>" 
-               href="<?= BASE_URL ?>/index.php?action=admin&tab=users" 
-               data-tab="users">
-                <i class="bi bi-people-fill me-1 text-success"></i> User Management
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'posts') ? 'active' : ''; ?>" 
-               href="<?= BASE_URL ?>/index.php?action=admin&tab=posts" 
-               data-tab="posts">
-                <i class="bi bi-file-earmark-post me-1 text-info"></i> Post Management
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'comments') ? 'active' : ''; ?>" 
-               href="<?= BASE_URL ?>/index.php?action=admin&tab=comments" 
-               data-tab="comments">
-                <i class="bi bi-chat-left-dots-fill me-1 text-warning"></i> Comment Moderation
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'events') ? 'active' : ''; ?>" 
-               href="<?= BASE_URL ?>/index.php?action=admin&tab=events" 
-               data-tab="events">
-                <i class="bi bi-calendar-event-fill me-1 text-primary"></i> Campus Events
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'stats') ? 'active' : ''; ?>" 
-               href="<?= BASE_URL ?>/index.php?action=admin&tab=stats" 
-               data-tab="stats">
-                <i class="bi bi-graph-up-arrow me-1 text-danger"></i> Platform Activity Stats
-            </a>
-        </li>
-    </ul>
+    <!-- NAVIGATION TABS (horizontally scrollable on mobile) -->
+    <div class="admin-tabs-scroll mb-3">
+        <ul class="nav nav-tabs border-bottom-0 gap-1 flex-nowrap" id="adminTabs" style="min-width: max-content;">
+            <li class="nav-item">
+                <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'overview') ? 'active' : ''; ?>"
+                   href="<?= BASE_URL ?>/index.php?action=admin&tab=overview"
+                   data-tab="overview">
+                    <i class="bi bi-speedometer2 me-1 text-primary"></i> Overview
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'users') ? 'active' : ''; ?>"
+                   href="<?= BASE_URL ?>/index.php?action=admin&tab=users"
+                   data-tab="users">
+                    <i class="bi bi-people-fill me-1 text-success"></i> User Management
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'posts') ? 'active' : ''; ?>"
+                   href="<?= BASE_URL ?>/index.php?action=admin&tab=posts"
+                   data-tab="posts">
+                    <i class="bi bi-file-earmark-post me-1 text-info"></i> Post Management
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'comments') ? 'active' : ''; ?>"
+                   href="<?= BASE_URL ?>/index.php?action=admin&tab=comments"
+                   data-tab="comments">
+                    <i class="bi bi-chat-left-dots-fill me-1 text-warning"></i> Comment Moderation
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'events') ? 'active' : ''; ?>"
+                   href="<?= BASE_URL ?>/index.php?action=admin&tab=events"
+                   data-tab="events">
+                    <i class="bi bi-calendar-event-fill me-1 text-primary"></i> Campus Events
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link rounded-3 fw-semibold admin-tab-btn <?= ($tab === 'stats') ? 'active' : ''; ?>"
+                   href="<?= BASE_URL ?>/index.php?action=admin&tab=stats"
+                   data-tab="stats">
+                    <i class="bi bi-graph-up-arrow me-1 text-danger"></i> Platform Activity Stats
+                </a>
+            </li>
+        </ul>
+    </div>
 
     <!-- DYNAMIC TAB PANELS CONTAINER -->
     <div id="adminTabPanelsContainer">
@@ -178,29 +191,31 @@ if (session_status() === PHP_SESSION_NONE) {
         <!-- Quick Stats & Top Active Users -->
         <div class="col-12 col-lg-7">
             <div class="card-modern p-4 h-100 shadow-sm">
-                <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
-                    <h5 class="fw-bold text-dark mb-0">
-                        <i class="bi bi-trophy-fill text-warning me-2"></i> Top Active Contributors
-                    </h5>
-                    <span class="badge bg-light text-dark border">Ranked by Posts</span>
+                <div class="admin-panel-header border-bottom pb-2 mb-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-trophy-fill text-warning me-2"></i> Top Active Contributors
+                        </h5>
+                        <span class="badge bg-light text-dark border">Ranked by Posts</span>
+                    </div>
                 </div>
 
                 <?php if (!empty($mostActiveUsers)): ?>
-                    <div class="list-group list-group-flush">
+                    <div>
                         <?php foreach ($mostActiveUsers as $idx => $u): ?>
                             <?php
                             $initials = strtoupper(mb_substr($u['full_name'] ?: $u['username'], 0, 2));
                             ?>
-                            <div class="list-group-item d-flex align-items-center justify-content-between px-0 py-3 border-bottom">
+                            <div class="admin-contributor-row d-flex align-items-center justify-content-between py-2 px-2 rounded-3">
                                 <div class="d-flex align-items-center gap-3">
-                                    <span class="badge bg-primary rounded-circle" style="width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:0.75rem;">
+                                    <span class="badge bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width:24px; height:24px; font-size:0.75rem; flex-shrink:0;">
                                         <?= $idx + 1; ?>
                                     </span>
-                                    <div class="user-avatar-sm" style="width:36px; height:36px; font-size:0.85rem;">
+                                    <div class="user-avatar-sm" style="width:36px; height:36px; font-size:0.85rem; flex-shrink:0;">
                                         <?= htmlspecialchars($initials); ?>
                                     </div>
                                     <div>
-                                        <div class="fw-bold text-dark">
+                                        <div class="fw-bold text-dark lh-sm">
                                             <?= htmlspecialchars($u['full_name']); ?>
                                             <?php if ($u['role'] === 'admin'): ?>
                                                 <span class="badge bg-warning text-dark micro-text ms-1">Admin</span>
@@ -209,7 +224,7 @@ if (session_status() === PHP_SESSION_NONE) {
                                         <span class="text-muted small">@<?= htmlspecialchars($u['username']); ?></span>
                                     </div>
                                 </div>
-                                <div class="text-end">
+                                <div class="text-end ms-2">
                                     <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">
                                         <?= (int)$u['total_posts']; ?> <?= $u['total_posts'] == 1 ? 'post' : 'posts'; ?>
                                     </span>
@@ -226,17 +241,19 @@ if (session_status() === PHP_SESSION_NONE) {
         <!-- Most Liked Posts Preview -->
         <div class="col-12 col-lg-5">
             <div class="card-modern p-4 h-100 shadow-sm">
-                <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
-                    <h5 class="fw-bold text-dark mb-0">
-                        <i class="bi bi-heart-fill text-danger me-2"></i> Most Liked Content
-                    </h5>
-                    <span class="badge bg-light text-dark border">Engagements</span>
+                <div class="admin-panel-header border-bottom pb-2 mb-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-heart-fill text-danger me-2"></i> Most Liked Content
+                        </h5>
+                        <span class="badge bg-light text-dark border">Engagements</span>
+                    </div>
                 </div>
 
                 <?php if (!empty($mostLikedPosts)): ?>
-                    <div class="list-group list-group-flush">
+                    <div>
                         <?php foreach ($mostLikedPosts as $lp): ?>
-                            <div class="list-group-item px-0 py-3 border-bottom">
+                            <div class="py-3 border-bottom">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <span class="fw-bold text-dark small">@<?= htmlspecialchars($lp['author_username']); ?></span>
                                     <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1">
@@ -260,7 +277,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 <!-- TAB CONTENT 2: USER MANAGEMENT (REQUIREMENT 4) -->
 <?php if ($tab === 'users'): ?>
-    <div class="card-modern p-4 shadow-sm mb-4">
+    <div class="card-modern admin-content-panel p-4 shadow-sm mb-4">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-3 border-bottom pb-3">
             <div>
                 <h5 class="fw-bold text-dark mb-1">
@@ -424,11 +441,11 @@ if (session_status() === PHP_SESSION_NONE) {
 
 <!-- TAB CONTENT 3: POST MANAGEMENT (REQUIREMENT 5) -->
 <?php if ($tab === 'posts'): ?>
-    <div class="card-modern p-4 shadow-sm mb-4">
+    <div class="card-modern admin-content-panel p-4 shadow-sm mb-4">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-3 border-bottom pb-3">
             <div>
                 <h5 class="fw-bold text-dark mb-1">
-                    <i class="bi bi-file-earmark-post text-info me-2"></i> Platform Posts Overview & Moderation
+                    <i class="bi bi-file-earmark-post text-info me-2"></i> Platform Posts Overview &amp; Moderation
                 </h5>
                 <p class="text-muted small mb-0">
                     Review and moderate user posts across the network. Authorized administrators can remove inappropriate content.
@@ -557,7 +574,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 <!-- TAB CONTENT 4: COMMENT MODERATION (REQUIREMENT 6) -->
 <?php if ($tab === 'comments'): ?>
-    <div class="card-modern p-4 shadow-sm mb-4">
+    <div class="card-modern admin-content-panel p-4 shadow-sm mb-4">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-3 border-bottom pb-3">
             <div>
                 <h5 class="fw-bold text-dark mb-1">
@@ -678,7 +695,7 @@ if (session_status() === PHP_SESSION_NONE) {
     <div class="row g-4 mb-4">
         <!-- Most Active Users -->
         <div class="col-12 col-lg-6">
-            <div class="card-modern p-4 h-100 shadow-sm">
+            <div class="card-modern admin-content-panel p-4 h-100 shadow-sm">
                 <h5 class="fw-bold text-dark mb-3 border-bottom pb-2">
                     <i class="bi bi-graph-up text-primary me-2"></i> Most Active Users (Post Counts)
                 </h5>
@@ -720,7 +737,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
         <!-- Most Liked Posts -->
         <div class="col-12 col-lg-6">
-            <div class="card-modern p-4 h-100 shadow-sm">
+            <div class="card-modern admin-content-panel p-4 h-100 shadow-sm">
                 <h5 class="fw-bold text-dark mb-3 border-bottom pb-2">
                     <i class="bi bi-heart-fill text-danger me-2"></i> Most Liked Posts Ranking
                 </h5>
@@ -749,7 +766,7 @@ if (session_status() === PHP_SESSION_NONE) {
     </div>
 
     <!-- Community Reports Generator Card for Admin -->
-    <div class="card-modern p-4 mb-4 shadow-sm border-0" style="background: linear-gradient(135deg, rgba(25, 47, 93, 0.05) 0%, rgba(241, 189, 39, 0.08) 100%);">
+    <div class="card-modern admin-content-panel p-4 mb-4 shadow-sm border-0" style="background: linear-gradient(135deg, rgba(25, 47, 93, 0.05) 0%, rgba(241, 189, 39, 0.08) 100%);">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
             <div>
                 <div class="d-flex align-items-center gap-2 mb-1">
@@ -772,7 +789,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 <!-- TAB CONTENT 6: CAMPUS EVENTS MANAGEMENT -->
 <?php if ($tab === 'events'): ?>
-    <div class="card-modern p-4 mb-4 shadow-sm">
+    <div class="card-modern admin-content-panel p-4 mb-4 shadow-sm">
         <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 border-bottom pb-3 mb-4">
             <div>
                 <h5 class="fw-bold text-dark mb-1">
@@ -794,7 +811,7 @@ if (session_status() === PHP_SESSION_NONE) {
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th style="width: 130px;">Date & Time</th>
+                            <th style="width: 130px;">Date &amp; Time</th>
                             <th>Event Title</th>
                             <th>Location</th>
                             <th>Description</th>
@@ -926,7 +943,7 @@ if (session_status() === PHP_SESSION_NONE) {
                                 <div class="p-4 rounded-3 bg-white border shadow-sm mb-3">
                                     <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2">
                                         <i class="bi bi-file-text-fill text-primary"></i>
-                                        <span>Full Description & Information</span>
+                                        <span>Full Description &amp; Information</span>
                                     </h6>
                                     <div class="text-secondary" style="line-height: 1.7; font-size: 0.95rem;">
                                         <?= !empty($ev['description']) ? nl2br(htmlspecialchars($ev['description'])) : '<em class="text-muted">No description provided.</em>'; ?>
@@ -982,7 +999,7 @@ if (session_status() === PHP_SESSION_NONE) {
                                         <input type="text" name="location" class="form-control" placeholder="e.g. SMCC Gymnasium or Quadrangle" value="<?= htmlspecialchars($ev['location']); ?>" required>
                                     </div>
                                     <div class="mb-0">
-                                        <label class="form-label small fw-bold">Full Event Description & Details</label>
+                                        <label class="form-label small fw-bold">Full Event Description &amp; Details</label>
                                         <textarea name="description" rows="5" class="form-control" placeholder="Enter complete guidelines, schedule, dress code, and details for students..."><?= htmlspecialchars($ev['description'] ?? ''); ?></textarea>
                                         <div class="form-text small text-muted">
                                             This complete text will be shown when students click on the event to view full details.
