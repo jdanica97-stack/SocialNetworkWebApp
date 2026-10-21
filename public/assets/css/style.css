@@ -1,5 +1,8 @@
 ﻿/* Custom Modern Dashboard Stylesheet for SMCC Connect */
-:root {
+:root,
+[data-bs-theme="light"],
+html.light-theme,
+.light-theme {
     --sidebar-bg: #192f5d;
     --sidebar-hover: rgba(255, 255, 255, 0.08);
     --sidebar-active-bg: rgba(255, 255, 255, 0.12);
@@ -576,17 +579,6 @@ body {
 .dark-theme .fb-icon-circle {
     background-color: rgba(255, 255, 255, 0.1);
     color: #e4e6eb;
-}
-
-.fb-icon-admin {
-    background-color: #fef3c7;
-    color: #d97706;
-}
-
-[data-bs-theme="dark"] .fb-icon-admin,
-.dark-theme .fb-icon-admin {
-    background-color: rgba(245, 158, 11, 0.18);
-    color: #fbbf24;
 }
 
 .fb-icon-signout {
@@ -1447,6 +1439,8 @@ a:hover .comment-avatar {
    Activates when data-bs-theme="dark" or .dark-theme is set
 ======================================================== */
 [data-bs-theme="dark"],
+:root[data-bs-theme="dark"],
+html.dark-theme,
 .dark-theme,
 body.dark-theme {
     /* Bootstrap 5.3 theme variables for deep SMCC Navy theme */
@@ -2468,12 +2462,38 @@ textarea::placeholder,
 }
 
 .search-reports-card {
-    background-color: #fafafb;
-    border: 1px solid #dedee2;
-    border-radius: 24px;
-    padding: 2rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    background-color: #ffffff;
+    border: 1px solid var(--card-border, #e2e8f0);
+    border-radius: 20px;
+    padding: 2.25rem 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+@media (max-width: 576px) {
+    .search-reports-card {
+        padding: 1.5rem 1.15rem;
+        border-radius: 16px;
+    }
+}
+
+.insights-header-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(52, 120, 246, 0.1);
+    color: #2563eb;
+    border: 1px solid rgba(52, 120, 246, 0.2);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+[data-bs-theme="dark"] .insights-header-icon-box {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+    color: #60a5fa !important;
+    border-color: rgba(59, 130, 246, 0.35) !important;
 }
 
 [data-bs-theme="dark"] .search-reports-card {
@@ -2910,539 +2930,3 @@ form[action*="delete_comment"] button.dropdown-item:hover {
     background-color: var(--subtle-bg, #122654);
     color: #ffffff;
 }
-
-
-
-/* ========================================================
-   ADMIN DASHBOARD - COMPREHENSIVE LIGHT & DARK MODE FIXES
-   Ensures all text, tables, tabs, badges, modals, forms,
-   and pagination remain readable in both themes.
-======================================================== */
-
-/* --- Admin Tab Buttons (Light Mode) --- */
-.admin-tab-btn {
-    transition: all 0.2s ease !important;
-}
-
-.admin-tab-btn.active {
-    color: #192f5d !important;
-    background-color: #ffffff !important;
-    font-weight: 700 !important;
-    border-color: var(--card-border, #e2e8f0) !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
-}
-
-.admin-tab-btn:not(.active) {
-    color: #475569 !important;
-    background-color: #f1f5f9 !important;
-    border-color: transparent !important;
-}
-
-.admin-tab-btn:not(.active):hover {
-    color: #1e293b !important;
-    background-color: #e2e8f0 !important;
-}
-
-/* --- Admin Tab Buttons (Dark Mode) --- */
-[data-bs-theme="dark"] .admin-tab-btn.active {
-    background-color: var(--card-bg, #0d1e44) !important;
-    color: #ffffff !important;
-    border-color: #3b82f6 !important;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
-}
-
-[data-bs-theme="dark"] .admin-tab-btn:not(.active) {
-    background-color: var(--input-bg, #0b1a3a) !important;
-    color: #93c5fd !important;
-    border-color: var(--card-border, #1b356d) !important;
-}
-
-[data-bs-theme="dark"] .admin-tab-btn:not(.active):hover {
-    background-color: #16326e !important;
-    color: #ffffff !important;
-}
-
-/* --- Table Styling (Dark Mode) --- */
-[data-bs-theme="dark"] .table {
-    --bs-table-bg: transparent;
-    --bs-table-color: var(--text-primary, #f0f6ff);
-    --bs-table-border-color: var(--card-border, #1b356d);
-    color: var(--text-primary, #f0f6ff);
-}
-
-[data-bs-theme="dark"] .table > :not(caption) > * > * {
-    color: var(--text-primary, #f0f6ff);
-    border-bottom-color: var(--card-border, #1b356d);
-}
-
-[data-bs-theme="dark"] thead.table-light,
-[data-bs-theme="dark"] thead.table-light > tr,
-[data-bs-theme="dark"] thead.table-light > tr > th {
-    --bs-table-bg: #0b1a3a !important;
-    --bs-table-color: #bfdbfe !important;
-    background-color: #0b1a3a !important;
-    color: #bfdbfe !important;
-    border-color: #1b356d !important;
-}
-
-[data-bs-theme="dark"] .table-hover > tbody > tr:hover > * {
-    background-color: rgba(59, 130, 246, 0.08) !important;
-    color: #f0f6ff !important;
-    --bs-table-bg-state: rgba(59, 130, 246, 0.08);
-}
-
-/* --- Badge Fixes: Keep text-dark readable on bright backgrounds --- */
-[data-bs-theme="dark"] .badge.bg-warning.text-dark,
-[data-bs-theme="dark"] .badge.bg-warning {
-    color: #192f5d !important;
-}
-
-/* --- List Group Items (Dark Mode) --- */
-[data-bs-theme="dark"] .list-group-item {
-    background-color: transparent !important;
-    border-color: var(--card-border, #1b356d) !important;
-    color: var(--text-primary, #f0f6ff) !important;
-}
-
-/* --- Search Input Groups (Dark Mode) --- */
-[data-bs-theme="dark"] .input-group-text.bg-white {
-    background-color: var(--input-bg, #0b1a3a) !important;
-    border-color: var(--input-border, #1e3a78) !important;
-    color: #93c5fd !important;
-}
-
-[data-bs-theme="dark"] .input-group .form-control.border-start-0 {
-    border-color: var(--input-border, #1e3a78) !important;
-}
-
-/* --- Form Controls (Dark Mode) --- */
-[data-bs-theme="dark"] .form-control,
-[data-bs-theme="dark"] .form-select {
-    background-color: var(--input-bg, #0b1a3a) !important;
-    border-color: var(--input-border, #1e3a78) !important;
-    color: var(--text-primary, #f0f6ff) !important;
-}
-
-[data-bs-theme="dark"] .form-control:focus,
-[data-bs-theme="dark"] .form-select:focus {
-    background-color: var(--input-focus-bg, #102450) !important;
-    border-color: var(--input-focus-border, #3b82f6) !important;
-    color: #ffffff !important;
-    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25) !important;
-}
-
-[data-bs-theme="dark"] .form-control::placeholder {
-    color: #64748b !important;
-}
-
-[data-bs-theme="dark"] .form-label {
-    color: var(--text-secondary, #bfdbfe) !important;
-}
-
-[data-bs-theme="dark"] .form-text {
-    color: var(--text-muted, #93c5fd) !important;
-}
-
-/* --- Pagination (Dark Mode) --- */
-[data-bs-theme="dark"] .page-link {
-    background-color: var(--card-bg, #0d1e44) !important;
-    border-color: var(--card-border, #1b356d) !important;
-    color: #93c5fd !important;
-}
-
-[data-bs-theme="dark"] .page-item.active .page-link {
-    background-color: #3b82f6 !important;
-    border-color: #3b82f6 !important;
-    color: #ffffff !important;
-}
-
-[data-bs-theme="dark"] .page-item.disabled .page-link {
-    background-color: #0b1a3a !important;
-    border-color: var(--card-border, #1b356d) !important;
-    color: #475569 !important;
-}
-
-[data-bs-theme="dark"] .page-link:hover {
-    background-color: #16326e !important;
-    border-color: #3b82f6 !important;
-    color: #ffffff !important;
-}
-
-/* --- Modal Content (Dark Mode) --- */
-[data-bs-theme="dark"] .modal-header.bg-light,
-[data-bs-theme="dark"] .modal-footer.bg-light,
-[data-bs-theme="dark"] .modal-header.border-bottom.bg-light,
-[data-bs-theme="dark"] .modal-footer.border-top.bg-light {
-    background-color: #0b1a3a !important;
-    border-color: var(--card-border, #1b356d) !important;
-    color: var(--text-primary, #f0f6ff) !important;
-}
-
-[data-bs-theme="dark"] .modal-header .bg-primary.bg-opacity-10 {
-    background-color: rgba(59, 130, 246, 0.15) !important;
-}
-
-[data-bs-theme="dark"] .modal-body .bg-light.border,
-[data-bs-theme="dark"] .modal-body .p-3.rounded-3.bg-light.border {
-    background-color: #0b1a3a !important;
-    border-color: var(--card-border, #1b356d) !important;
-}
-
-[data-bs-theme="dark"] .modal-body .bg-white.border,
-[data-bs-theme="dark"] .modal-body .p-4.rounded-3.bg-white.border {
-    background-color: var(--card-bg, #0d1e44) !important;
-    border-color: var(--card-border, #1b356d) !important;
-}
-
-/* --- Section Borders (Dark Mode) --- */
-[data-bs-theme="dark"] .border-bottom {
-    border-bottom-color: var(--card-border, #1b356d) !important;
-}
-
-[data-bs-theme="dark"] .border {
-    border-color: var(--card-border, #1b356d) !important;
-}
-
-/* --- Alert Overrides (Dark Mode) --- */
-[data-bs-theme="dark"] .alert-success {
-    background-color: rgba(16, 185, 129, 0.12) !important;
-    color: #6ee7b7 !important;
-    border-color: rgba(16, 185, 129, 0.25) !important;
-}
-
-[data-bs-theme="dark"] .alert-danger {
-    background-color: rgba(239, 68, 68, 0.12) !important;
-    color: #fca5a5 !important;
-    border-color: rgba(239, 68, 68, 0.25) !important;
-}
-
-/* --- KPI Summary Cards text fix (Light Mode explicit) --- */
-.card-modern h3.fw-bold.text-dark,
-.card-modern h5.fw-bold.text-dark,
-.card-modern .fw-bold.text-dark {
-    color: #1e293b;
-}
-
-[data-bs-theme="dark"] .card-modern h3.fw-bold,
-[data-bs-theme="dark"] .card-modern h5.fw-bold,
-[data-bs-theme="dark"] .card-modern .fw-bold {
-    color: #f0f6ff !important;
-}
-
-/* --- Admin hero header: keep gradient readable in both modes --- */
-[data-bs-theme="dark"] .card-modern[style*="linear-gradient"] {
-    border-color: #1b356d !important;
-}
-
-/* --- Community Reports gradient card (Dark Mode) --- */
-[data-bs-theme="dark"] .card-modern[style*="rgba(25, 47, 93"] {
-    background: linear-gradient(135deg, rgba(13, 30, 68, 0.7) 0%, rgba(241, 189, 39, 0.1) 100%) !important;
-    border-color: var(--card-border, #1b356d) !important;
-}
-
-/* --- btn-close visible in dark mode --- */
-[data-bs-theme="dark"] .btn-close {
-    filter: invert(1) brightness(1.5) !important;
-}
-
-
-/* --- Hero translucent pill badge (visible in both light & dark mode) --- */
-.hero-pill-badge {
-    background-color: rgba(255, 255, 255, 0.18) !important;
-    color: #ffffff !important;
-    border: 1px solid rgba(255, 255, 255, 0.25) !important;
-    font-weight: 500;
-}
-[data-bs-theme="dark"] .hero-pill-badge {
-    background-color: rgba(255, 255, 255, 0.12) !important;
-    color: #ffffff !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-}
-
-/* ======== ADMIN DASHBOARD REDESIGN (DEDICATED DARK NAVY THEME) ======== */
-/* Palette: Background #050e20, Container #07142e, Cards #0c1a3b, Borders rgba(59,130,246,0.2) */
-/*          Accents: Yellow #f1bd27, Blue #3b82f6, Green #10b981, Red #ef4444 */
-/*          Typography: Primary #ffffff, Subtext #8fa6d3, Links/Pills #93c5fd */
-
-/* Page background when admin dashboard is active */
-body.admin-page-active,
-body:has(.admin-dashboard-wrap),
-.app-main:has(.admin-dashboard-wrap),
-.app-layout:has(.admin-dashboard-wrap) {
-    background-color: #050e20 !important;
-}
-
-.admin-dashboard-wrap {
-    background-color: #07142e;
-    color: #e8f0fe;
-    border-radius: 16px;
-    padding: 1.5rem;
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-    margin-bottom: 2rem;
-}
-
-@media (max-width: 768px) {
-    .admin-dashboard-wrap {
-        padding: 0.85rem;
-        border-radius: 12px;
-    }
-}
-
-/* All cards inside admin dashboard */
-.admin-dashboard-wrap .card-modern {
-    background-color: #0c1a3b !important;
-    border: 1px solid rgba(59, 130, 246, 0.2) !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
-    color: #e8f0fe !important;
-}
-
-/* Headings and text colors */
-.admin-dashboard-wrap h1,
-.admin-dashboard-wrap h2,
-.admin-dashboard-wrap h3,
-.admin-dashboard-wrap h4,
-.admin-dashboard-wrap h5,
-.admin-dashboard-wrap h6,
-.admin-dashboard-wrap .text-dark {
-    color: #ffffff !important;
-}
-
-.admin-dashboard-wrap .text-muted,
-.admin-dashboard-wrap .text-secondary {
-    color: #8fa6d3 !important;
-}
-
-.admin-dashboard-wrap .small.text-muted,
-.admin-dashboard-wrap .micro-text {
-    color: #7b95c6 !important;
-}
-
-/* KPI statistics cards */
-.admin-dashboard-wrap .admin-kpi-card {
-    background-color: #0c1a3b !important;
-    border: 1px solid rgba(59, 130, 246, 0.18) !important;
-    padding: 1.15rem 1rem;
-    border-radius: 0.75rem;
-    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-}
-
-.admin-dashboard-wrap .admin-kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 24px rgba(59, 130, 246, 0.25) !important;
-}
-
-.admin-dashboard-wrap .admin-kpi-number {
-    font-size: 2.1rem;
-    font-weight: 700;
-    line-height: 1.1;
-    color: #ffffff !important;
-    letter-spacing: -0.02em;
-}
-
-.admin-dashboard-wrap .admin-kpi-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #8fa6d3 !important;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-top: 0.25rem;
-}
-
-.admin-dashboard-wrap .admin-kpi-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-/* Navigation tabs */
-.admin-dashboard-wrap .admin-tab-btn {
-    transition: all 0.2s ease !important;
-    padding: 0.65rem 1.15rem !important;
-    font-size: 0.88rem !important;
-    font-weight: 600;
-    border-radius: 0.5rem !important;
-}
-
-.admin-dashboard-wrap .admin-tab-btn:not(.active) {
-    background-color: #091530 !important;
-    color: #93c5fd !important;
-    border: 1px solid rgba(59, 130, 246, 0.2) !important;
-}
-
-.admin-dashboard-wrap .admin-tab-btn:not(.active):hover {
-    background-color: #142857 !important;
-    color: #ffffff !important;
-    border-color: rgba(59, 130, 246, 0.45) !important;
-}
-
-.admin-dashboard-wrap .admin-tab-btn.active {
-    background-color: #1e3a8a !important;
-    color: #ffffff !important;
-    border: 1px solid #3b82f6 !important;
-    box-shadow: 0 0 14px rgba(59, 130, 246, 0.45) !important;
-    font-weight: 700 !important;
-}
-
-/* Scroll container for tabs */
-.admin-dashboard-wrap .admin-tabs-scroll {
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(59, 130, 246, 0.5) transparent;
-    padding-bottom: 4px;
-}
-
-.admin-dashboard-wrap .admin-tabs-scroll::-webkit-scrollbar {
-    height: 4px;
-}
-
-.admin-dashboard-wrap .admin-tabs-scroll::-webkit-scrollbar-thumb {
-    background-color: rgba(59, 130, 246, 0.5);
-    border-radius: 4px;
-}
-
-/* Panels */
-.admin-dashboard-wrap .admin-content-panel {
-    background-color: #0c1a3b !important;
-    border: 1px solid rgba(59, 130, 246, 0.2) !important;
-    border-radius: 0.75rem;
-}
-
-.admin-dashboard-wrap .admin-panel-header h5 {
-    color: #ffffff !important;
-    font-size: 1.05rem;
-}
-
-.admin-dashboard-wrap .border-bottom {
-    border-bottom-color: rgba(59, 130, 246, 0.2) !important;
-}
-
-/* Contributor list */
-.admin-dashboard-wrap .admin-contributor-row {
-    transition: background-color 0.15s ease;
-    border-radius: 0.5rem;
-}
-
-.admin-dashboard-wrap .admin-contributor-row:hover {
-    background-color: rgba(59, 130, 246, 0.12) !important;
-}
-
-/* Tables */
-.admin-dashboard-wrap .table {
-    --bs-table-bg: transparent !important;
-    --bs-table-color: #e8f0fe !important;
-    --bs-table-border-color: rgba(59, 130, 246, 0.15) !important;
-    color: #e8f0fe !important;
-}
-
-.admin-dashboard-wrap .table thead,
-.admin-dashboard-wrap .table thead th,
-.admin-dashboard-wrap .table-light,
-.admin-dashboard-wrap .table-light th {
-    background-color: #081329 !important;
-    color: #93c5fd !important;
-    border-bottom: 2px solid rgba(59, 130, 246, 0.3) !important;
-    font-weight: 600;
-}
-
-.admin-dashboard-wrap .table tbody tr {
-    border-color: rgba(59, 130, 246, 0.12) !important;
-}
-
-.admin-dashboard-wrap .table-hover tbody tr:hover {
-    background-color: rgba(59, 130, 246, 0.08) !important;
-    color: #ffffff !important;
-}
-
-.admin-dashboard-wrap .table td,
-.admin-dashboard-wrap .table th {
-    color: #e8f0fe !important;
-}
-
-.admin-dashboard-wrap .table td a.text-dark {
-    color: #ffffff !important;
-}
-
-.admin-dashboard-wrap .table td a.text-dark:hover {
-    color: #60a5fa !important;
-}
-
-/* Forms & inputs inside admin */
-.admin-dashboard-wrap .form-control,
-.admin-dashboard-wrap .form-select {
-    background-color: #081329 !important;
-    border: 1px solid rgba(59, 130, 246, 0.25) !important;
-    color: #ffffff !important;
-}
-
-.admin-dashboard-wrap .form-control:focus,
-.admin-dashboard-wrap .form-select:focus {
-    background-color: #0b1a38 !important;
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
-    color: #ffffff !important;
-}
-
-.admin-dashboard-wrap .input-group-text {
-    background-color: #0a1733 !important;
-    border: 1px solid rgba(59, 130, 246, 0.25) !important;
-    color: #93c5fd !important;
-}
-
-.admin-dashboard-wrap .form-control::placeholder {
-    color: #5c749f !important;
-}
-
-/* Badges */
-.admin-dashboard-wrap .badge.bg-light {
-    background-color: rgba(59, 130, 246, 0.15) !important;
-    color: #93c5fd !important;
-    border: 1px solid rgba(59, 130, 246, 0.3) !important;
-}
-
-/* Pagination inside admin */
-.admin-dashboard-wrap .page-link {
-    background-color: #091530 !important;
-    border-color: rgba(59, 130, 246, 0.25) !important;
-    color: #93c5fd !important;
-}
-
-.admin-dashboard-wrap .page-item.active .page-link {
-    background-color: #1e3a8a !important;
-    border-color: #3b82f6 !important;
-    color: #ffffff !important;
-}
-
-.admin-dashboard-wrap .page-item.disabled .page-link {
-    background-color: #060e20 !important;
-    border-color: rgba(59, 130, 246, 0.1) !important;
-    color: #475569 !important;
-}
-
-/* Modals */
-.modal-content {
-    background-color: #0c1a3b !important;
-    color: #e8f0fe !important;
-    border: 1px solid rgba(59, 130, 246, 0.25) !important;
-}
-
-.modal-header,
-.modal-footer {
-    background-color: #081329 !important;
-    border-color: rgba(59, 130, 246, 0.2) !important;
-}
-
-.modal .form-control,
-.modal .form-select {
-    background-color: #081329 !important;
-    border: 1px solid rgba(59, 130, 246, 0.25) !important;
-    color: #ffffff !important;
-}
-
-/* ======== END ADMIN DASHBOARD REDESIGN ======== */

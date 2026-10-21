@@ -421,11 +421,6 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                                 <i class="bi bi-eye me-1"></i>View All
                             </button>
                         <?php endif; ?>
-                        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                            <a href="<?= BASE_URL ?>/index.php?action=admin&tab=events" class="widget-link small text-primary fw-semibold" title="Manage events in Admin Panel">
-                                <i class="bi bi-gear-fill me-1"></i>Manage
-                            </a>
-                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -552,11 +547,6 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                                                 <i class="bi bi-shield-check text-success me-1"></i>Official SMCC Connect Announcement
                                             </div>
                                             <div class="d-flex gap-2">
-                                                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                                                    <a href="<?= BASE_URL ?>/index.php?action=admin&tab=events" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                                                        <i class="bi bi-pencil-square me-1"></i>Edit in Admin Panel
-                                                    </a>
-                                                <?php endif; ?>
                                                 <button type="button" class="btn btn-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Close</button>
                                             </div>
                                         </div>
