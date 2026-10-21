@@ -28,7 +28,7 @@ $currentUserId = $_SESSION['user_id'] ?? null;
 
         <!-- BACK TO NEWSFEED BUTTON -->
         <div class="mb-3">
-            <a href="<?= BASE_URL ?>/" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1.5 fw-medium shadow-sm d-inline-flex align-items-center gap-1.5">
+            <a href="<?= BASE_URL ?>/" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-2 fw-medium shadow-sm d-inline-flex align-items-center gap-2">
                 <i class="bi bi-arrow-left"></i> Back to Newsfeed
             </a>
         </div>
@@ -146,25 +146,30 @@ $currentUserId = $_SESSION['user_id'] ?? null;
 
         <!-- COMMUNITY EXPLORATION & RESULTS CARD -->
         <div class="search-reports-card mb-4" id="communityExplorationSection">
-            <!-- Top Center Icon -->
-            <div class="mx-auto rounded-3 d-flex align-items-center justify-content-center mb-2" style="width: 44px; height: 44px; background-color: #e0f2fe; color: #3478f6;">
-                <i class="bi bi-search fs-5"></i>
-            </div>
+            <!-- Exploration / Results Header -->
+            <div class="text-center mb-4">
+                <!-- Top Center Icon -->
+                <div class="insights-header-icon-box mx-auto mb-3">
+                    <i class="bi <?= (!empty($reportGenerated) && empty($query)) ? 'bi-bar-chart-line-fill' : 'bi-search' ?> fs-5"></i>
+                </div>
 
-            <h5 class="fw-bold insights-title text-center mb-1">Explore Community<?= (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') ? ' & Generate Reports' : ''; ?></h5>
-            <p class="text-secondary small text-center mb-4 col-md-10 mx-auto">
-                Discover community members, search posts, and analyze user interactions<?= (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') ? ', and generate database reports' : ''; ?>.
-            </p>
+                <h4 class="fw-bold insights-title mb-2">Explore Community<?= (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') ? ' & Generate Reports' : ''; ?></h4>
+                <p class="text-secondary small mb-0 mx-auto" style="max-width: 560px; line-height: 1.6;">
+                    Discover community members, search posts, and analyze user interactions<?= (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') ? ', and inspect database reports' : ''; ?>.
+                </p>
+            </div>
 
             <!-- RESULTS DISPLAY -->
             <?php if (($type === 'all' && empty($users) && empty($posts)) || ($type === 'users' && empty($users)) || ($type === 'posts' && empty($posts))): ?>
+                <?php if (empty($reportGenerated) || !empty($query)): ?>
                 <!-- Clean Empty State -->
-                <div class="p-4 text-center rounded-3 mb-2 border bg-body">
+                <div class="p-4 text-center rounded-3 mb-4 border bg-body">
                     <div class="text-muted mb-2 fs-3"><i class="bi bi-search"></i></div>
                     <h6 class="fw-bold insights-title mb-1">No matching results found</h6>
                     <p class="text-muted small mb-3">No community members or posts matched your search parameters. Try adjusting keywords or clearing filters.</p>
                     <a href="<?= BASE_URL ?>/index.php?action=insights" class="btn btn-outline-secondary btn-sm rounded-pill px-4">Clear Search & Filters</a>
                 </div>
+                <?php endif; ?>
             <?php else: ?>
 
                 <!-- USER MATCHES -->
@@ -186,7 +191,7 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                                 ?>
                                 <div class="col-12 col-md-6">
                                     <div class="p-3 rounded-3 border bg-body h-100 d-flex align-items-center justify-content-between">
-                                        <div class="d-flex align-items-center gap-2.5 min-w-0">
+                                        <div class="d-flex align-items-center gap-2 min-w-0">
                                             <a href="<?= BASE_URL ?>/index.php?action=profile&id=<?= $u['id']; ?>" class="text-decoration-none flex-shrink-0">
                                                 <?php if (!empty($u['profile_image'])): ?>
                                                     <img 
@@ -210,7 +215,7 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                                             </div>
                                         </div>
 
-                                        <a href="<?= BASE_URL ?>/index.php?action=profile&id=<?= $u['id']; ?>" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5 micro-text flex-shrink-0">
+                                        <a href="<?= BASE_URL ?>/index.php?action=profile&id=<?= $u['id']; ?>" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 micro-text flex-shrink-0">
                                             Profile
                                         </a>
                                     </div>
@@ -239,10 +244,10 @@ $currentUserId = $_SESSION['user_id'] ?? null;
 
                                 $postTime = date('M j, Y \a\t g:i a', strtotime($post['created_at']));
                                 ?>
-                                <article class="p-3.5 rounded-3 border bg-body" id="post-<?= $post['id'] ?>">
+                                <article class="p-3 rounded-3 border bg-body" id="post-<?= $post['id'] ?>">
                                     <!-- Author Header -->
                                     <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <div class="d-flex align-items-center gap-2.5">
+                                        <div class="d-flex align-items-center gap-2">
                                             <a href="<?= BASE_URL ?>/index.php?action=profile&id=<?= $post['user_id']; ?>" class="text-decoration-none">
                                                 <?php if (!empty($post['profile_image'])): ?>
                                                     <img 
@@ -268,13 +273,13 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                                             </div>
                                         </div>
 
-                                        <a href="<?= BASE_URL ?>/index.php?action=insights&author_id=<?= $post['user_id']; ?>&type=posts" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0.5 micro-text" title="Filter by author">
+                                        <a href="<?= BASE_URL ?>/index.php?action=insights&author_id=<?= $post['user_id']; ?>&type=posts" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 micro-text" title="Filter by author">
                                             <i class="bi bi-funnel me-1"></i> Filter Author
                                         </a>
                                     </div>
 
                                     <!-- Content Body -->
-                                    <div class="insights-title mb-2.5 small" style="line-height: 1.5;">
+                                    <div class="insights-title mb-2 small" style="line-height: 1.5;">
                                         <?= nl2br(htmlspecialchars($post['content'])); ?>
                                     </div>
 
@@ -292,18 +297,18 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                                         $imgOrientationClass = ($imgSize && $imgSize[1] > $imgSize[0]) ? 'is-portrait' : 'is-landscape';
                                         ?>
                                         <?php if ($hasRealImage): ?>
-                                            <div class="post-image-container <?= $imgOrientationClass ?> mb-2.5">
+                                            <div class="post-image-container <?= $imgOrientationClass ?> mb-2">
                                                 <a href="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($singleImg)) ?>" class="post-lightbox-trigger" data-gallery="post-<?= (int)$post['id'] ?>" title="View full image">
                                                     <img src="<?= BASE_URL ?>/public/uploads/posts/<?= htmlspecialchars(basename($singleImg)) ?>" alt="Post attachment" loading="lazy" onload="this.naturalHeight > this.naturalWidth ? (this.closest('.post-image-container')?.classList.add('is-portrait'), this.closest('.post-image-container')?.classList.remove('is-landscape')) : (this.closest('.post-image-container')?.classList.add('is-landscape'), this.closest('.post-image-container')?.classList.remove('is-portrait'));">
                                                 </a>
                                             </div>
                                         <?php else: ?>
-                                            <div class="post-image-placeholder mb-2.5">
+                                            <div class="post-image-placeholder mb-2">
                                                 <i class="bi bi-image"></i>
                                             </div>
                                         <?php endif; ?>
                                     <?php elseif ($totalPostImages > 1): ?>
-                                        <div class="post-gallery post-gallery-<?= min($totalPostImages, 4) ?> mb-2.5" data-post-id="<?= (int)$post['id'] ?>">
+                                        <div class="post-gallery post-gallery-<?= min($totalPostImages, 4) ?> mb-2" data-post-id="<?= (int)$post['id'] ?>">
                                             <?php foreach (array_slice($postImages, 0, 4) as $idx => $imgFile): ?>
                                                 <?php
                                                 $isLastQuadrant = ($idx === 3 && $totalPostImages > 4);
@@ -333,12 +338,13 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                                         <div class="d-flex align-items-center gap-2">
                                             <form action="<?= BASE_URL ?>/index.php?action=like_post" method="POST" class="d-inline">
                                                 <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                                <button type="submit" class="btn btn-sm <?= !empty($post['is_liked']) ? 'btn-danger' : 'btn-outline-danger' ?> rounded-pill px-2.5 py-0.5 micro-text fw-medium" title="Like">
+                                                <?= csrf_field(); ?>
+                                                <button type="submit" class="btn btn-sm <?= !empty($post['is_liked']) ? 'btn-danger' : 'btn-outline-danger' ?> rounded-pill px-2 py-1 micro-text fw-medium" title="Like">
                                                     <i class="bi <?= !empty($post['is_liked']) ? 'bi-heart-fill' : 'bi-heart' ?> me-1"></i><span class="post-likes-count" data-post-id="<?= (int)$post['id']; ?>" title="View reactions"><?= (int)$post['likes_count']; ?></span>
                                                 </button>
                                             </form>
 
-                                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5 micro-text fw-medium" onclick="toggleComments(<?= $post['id'] ?>)">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 micro-text fw-medium" onclick="toggleComments(<?= $post['id'] ?>)">
                                                 <i class="bi bi-chat-dots me-1"></i> <?= (int)$post['comments_count']; ?> Comments
                                             </button>
                                         </div>
@@ -352,7 +358,7 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                                     <div class="comments-container d-none mt-2 pt-2 border-top insights-border" id="comments-box-<?= $post['id'] ?>">
                                         <?php if (!empty($post['comments'])): ?>
                                             <?php foreach ($post['comments'] as $comment): ?>
-                                                <div class="p-2 rounded-2 mb-1.5 small border bg-body">
+                                                <div class="p-2 rounded-2 mb-1 small border bg-body">
                                                     <div class="d-flex align-items-center justify-content-between mb-1">
                                                         <strong class="insights-title micro-text">@<?= htmlspecialchars($comment['username']); ?></strong>
                                                         <span class="text-muted micro-text"><?= date('M j, g:i a', strtotime($comment['created_at'])); ?></span>
@@ -372,39 +378,42 @@ $currentUserId = $_SESSION['user_id'] ?? null;
 
             <!-- COMMUNITY REPORTS DISPLAY (WHEN GENERATED FOR ADMIN) -->
             <?php if (!empty($reportGenerated) && isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                <div class="pt-3 border-top insights-border mt-3" id="communityReportsDetails">
+                <div class="pt-4 border-top insights-border mt-4" id="communityReportsDetails">
                     <div class="d-flex align-items-center justify-content-between mb-3">
-                        <h6 class="fw-bold insights-title mb-0">
-                            <i class="bi bi-bar-chart-line me-1 text-primary"></i> Generated Community Reports
-                        </h6>
+                        <h5 class="fw-bold insights-title mb-0">
+                            <i class="bi bi-bar-chart-line-fill me-2 text-primary"></i> Generated Community Reports
+                        </h5>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-semibold">
+                            Live SQL Analytics
+                        </span>
                     </div>
 
                     <!-- SUMMARY CARDS -->
-                    <div class="row g-2 mb-3">
+                    <div class="row g-3 mb-4">
                         <div class="col-6 col-md-3">
-                            <div class="p-2.5 rounded-3 border bg-body text-center">
-                                <span class="text-muted micro-text fw-bold text-uppercase d-block mb-0.5">Total Users</span>
+                            <div class="p-3 rounded-3 border bg-body text-center">
+                                <span class="text-muted micro-text fw-bold text-uppercase d-block mb-1">Total Users</span>
                                 <h4 class="fw-bold insights-title mb-0"><?= (int)($summaryMetrics['total_users'] ?? 0); ?></h4>
                             </div>
                         </div>
 
                         <div class="col-6 col-md-3">
-                            <div class="p-2.5 rounded-3 border bg-body text-center">
-                                <span class="text-muted micro-text fw-bold text-uppercase d-block mb-0.5">Total Posts</span>
+                            <div class="p-3 rounded-3 border bg-body text-center">
+                                <span class="text-muted micro-text fw-bold text-uppercase d-block mb-1">Total Posts</span>
                                 <h4 class="fw-bold insights-title mb-0"><?= (int)($summaryMetrics['total_posts'] ?? 0); ?></h4>
                             </div>
                         </div>
 
                         <div class="col-6 col-md-3">
-                            <div class="p-2.5 rounded-3 border bg-body text-center">
-                                <span class="text-muted micro-text fw-bold text-uppercase d-block mb-0.5">Total Comments</span>
+                            <div class="p-3 rounded-3 border bg-body text-center">
+                                <span class="text-muted micro-text fw-bold text-uppercase d-block mb-1">Total Comments</span>
                                 <h4 class="fw-bold insights-title mb-0"><?= (int)($summaryMetrics['total_comments'] ?? 0); ?></h4>
                             </div>
                         </div>
 
                         <div class="col-6 col-md-3">
-                            <div class="p-2.5 rounded-3 border bg-body text-center">
-                                <span class="text-muted micro-text fw-bold text-uppercase d-block mb-0.5">Total Likes</span>
+                            <div class="p-3 rounded-3 border bg-body text-center">
+                                <span class="text-muted micro-text fw-bold text-uppercase d-block mb-1">Total Likes</span>
                                 <h4 class="fw-bold insights-title mb-0"><?= (int)($summaryMetrics['total_likes'] ?? 0); ?></h4>
                             </div>
                         </div>
@@ -416,13 +425,13 @@ $currentUserId = $_SESSION['user_id'] ?? null;
                             <span class="fw-bold insights-title micro-text text-uppercase">
                                 Author Activity Report
                             </span>
-                            <div class="d-flex align-items-center gap-1.5">
+                            <div class="d-flex align-items-center gap-2">
                                 <span class="text-muted micro-text">Sort:</span>
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <a href="<?= BASE_URL ?>/index.php?action=insights&generate_report=1&report_sort=posts_desc#communityReportsDetails" class="btn <?= ($reportSort === 'posts_desc') ? 'btn-dark' : 'btn-outline-secondary' ?> py-0.5 px-2 micro-text">Posts ↓</a>
-                                    <a href="<?= BASE_URL ?>/index.php?action=insights&generate_report=1&report_sort=likes_desc#communityReportsDetails" class="btn <?= ($reportSort === 'likes_desc') ? 'btn-dark' : 'btn-outline-secondary' ?> py-0.5 px-2 micro-text">Likes ↓</a>
-                                    <a href="<?= BASE_URL ?>/index.php?action=insights&generate_report=1&report_sort=comments_desc#communityReportsDetails" class="btn <?= ($reportSort === 'comments_desc') ? 'btn-dark' : 'btn-outline-secondary' ?> py-0.5 px-2 micro-text">Comments ↓</a>
-                                    <a href="<?= BASE_URL ?>/index.php?action=insights&generate_report=1&report_sort=username_asc#communityReportsDetails" class="btn <?= ($reportSort === 'username_asc') ? 'btn-dark' : 'btn-outline-secondary' ?> py-0.5 px-2 micro-text">Name A-Z</a>
+                                    <a href="<?= BASE_URL ?>/index.php?action=insights&generate_report=1&report_sort=posts_desc#communityReportsDetails" class="btn <?= ($reportSort === 'posts_desc') ? 'btn-dark' : 'btn-outline-secondary' ?> py-1 px-2 micro-text">Posts ↓</a>
+                                    <a href="<?= BASE_URL ?>/index.php?action=insights&generate_report=1&report_sort=likes_desc#communityReportsDetails" class="btn <?= ($reportSort === 'likes_desc') ? 'btn-dark' : 'btn-outline-secondary' ?> py-1 px-2 micro-text">Likes ↓</a>
+                                    <a href="<?= BASE_URL ?>/index.php?action=insights&generate_report=1&report_sort=comments_desc#communityReportsDetails" class="btn <?= ($reportSort === 'comments_desc') ? 'btn-dark' : 'btn-outline-secondary' ?> py-1 px-2 micro-text">Comments ↓</a>
+                                    <a href="<?= BASE_URL ?>/index.php?action=insights&generate_report=1&report_sort=username_asc#communityReportsDetails" class="btn <?= ($reportSort === 'username_asc') ? 'btn-dark' : 'btn-outline-secondary' ?> py-1 px-2 micro-text">Name A-Z</a>
                                 </div>
                             </div>
                         </div>

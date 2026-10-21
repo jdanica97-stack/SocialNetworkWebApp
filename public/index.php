@@ -160,55 +160,6 @@ switch ($action) {
         $insightsController->index();
         break;
 
-    // Administrator Control Center & Moderation Actions
-    case 'admin':
-        require_once __DIR__ . '/../app/controllers/AdminController.php';
-        $adminController = new AdminController();
-        $adminController->index();
-        break;
-
-    case 'admin_change_role':
-        require_once __DIR__ . '/../app/controllers/AdminController.php';
-        $adminController = new AdminController();
-        $adminController->changeRole();
-        break;
-
-    case 'admin_delete_user':
-        require_once __DIR__ . '/../app/controllers/AdminController.php';
-        $adminController = new AdminController();
-        $adminController->deleteUser();
-        break;
-
-    case 'admin_delete_post':
-        require_once __DIR__ . '/../app/controllers/AdminController.php';
-        $adminController = new AdminController();
-        $adminController->deletePost();
-        break;
-
-    case 'admin_reorder_users':
-        require_once __DIR__ . '/../app/controllers/AdminController.php';
-        $adminController = new AdminController();
-        $adminController->reorderUsers();
-        break;
-
-    case 'admin_delete_comment':
-        require_once __DIR__ . '/../app/controllers/AdminController.php';
-        $adminController = new AdminController();
-        $adminController->deleteComment();
-        break;
-
-    case 'admin_save_event':
-        require_once __DIR__ . '/../app/controllers/AdminController.php';
-        $adminController = new AdminController();
-        $adminController->saveEvent();
-        break;
-
-    case 'admin_delete_event':
-        require_once __DIR__ . '/../app/controllers/AdminController.php';
-        $adminController = new AdminController();
-        $adminController->deleteEvent();
-        break;
-
     // Follow and Unfollow Actions
     case 'follow_user':
         require_once __DIR__ . '/../app/controllers/FollowController.php';

@@ -148,13 +148,7 @@ class AuthController {
                     $_SESSION['profile_image'] = $user['profile_image'] ?? null;
 
                     $_SESSION['success_message'] = 'Welcome back, ' . htmlspecialchars($user['full_name']) . '!';
-
-                    // Role-based redirection: Administrator -> Admin Dashboard, Normal User -> Feed
-                    if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
-                        header('Location: ' . BASE_URL . '/index.php?action=admin');
-                    } else {
-                        header('Location: ' . BASE_URL . '/index.php');
-                    }
+                    header('Location: ' . BASE_URL . '/index.php');
                     exit;
                 }
             }

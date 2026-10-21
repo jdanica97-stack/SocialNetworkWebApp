@@ -70,26 +70,9 @@ if ($isLoggedIn) {
     <!-- Bootstrap Icons CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <!-- Theme initialization (inline to prevent theme flash) -->
-    <script>
-        window.BASE_URL = "<?= BASE_URL ?>";
-        (function() {
-            var stored = localStorage.getItem('smcc_theme_preference');
-            var theme = 'light';
-            if (stored === 'dark' || stored === 'light') {
-                theme = stored;
-            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                theme = 'dark';
-            }
-            if (theme === 'dark') {
-                document.documentElement.setAttribute('data-bs-theme', 'dark');
-                document.documentElement.classList.add('dark-theme');
-            } else {
-                document.documentElement.setAttribute('data-bs-theme', 'light');
-                document.documentElement.classList.remove('dark-theme');
-            }
-        })();
-    </script>
+    <!-- Theme Controller (Loads early to prevent flicker & provide window.toggleTheme) -->
+    <script>window.BASE_URL = "<?= BASE_URL ?>";</script>
+    <script src="<?= BASE_URL ?>/public/assets/js/theme.js"></script>
 
     <!-- Cropper.js CSS (Image Crop/Adjust) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
@@ -188,19 +171,6 @@ if ($isLoggedIn) {
                                     <i class="bi bi-chevron-right fb-arrow-right"></i>
                                 </a>
 
-                                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                                    <!-- Admin Dashboard (Only for Admins) -->
-                                    <a class="dropdown-item fb-menu-item" href="<?= BASE_URL ?>/index.php?action=admin">
-                                        <div class="fb-menu-item-left">
-                                            <div class="fb-icon-circle fb-icon-admin">
-                                                <i class="bi bi-shield-lock-fill"></i>
-                                            </div>
-                                            <span class="fb-item-label fw-semibold text-warning">Admin Dashboard</span>
-                                        </div>
-                                        <i class="bi bi-chevron-right fb-arrow-right"></i>
-                                    </a>
-                                <?php endif; ?>
-
                                 <!-- Option 2: Account Settings -->
                                 <a class="dropdown-item fb-menu-item" href="<?= BASE_URL ?>/index.php?action=settings" title="Account Settings">
                                     <div class="fb-menu-item-left">
@@ -255,7 +225,7 @@ if ($isLoggedIn) {
         <main class="<?= $isLoggedIn ? 'p-3 p-md-4 flex-grow-1' : 'auth-main flex-grow-1 d-flex align-items-center justify-content-center p-3 p-md-4' ?>">
 
             <!-- Global Flash Messages -->
-            <?php if (!empty($_SESSION['error_message']) && $currentAction !== 'home' && $currentAction !== 'insights' && $currentAction !== 'admin'): ?>
+            <?php if (!empty($_SESSION['error_message']) && $currentAction !== 'home' && $currentAction !== 'insights'): ?>
                 <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4 mx-auto" style="max-width: 900px;" role="alert">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                     <?= htmlspecialchars($_SESSION['error_message']); ?>
@@ -264,7 +234,7 @@ if ($isLoggedIn) {
                 <?php unset($_SESSION['error_message']); ?>
             <?php endif; ?>
 
-            <?php if (!empty($_SESSION['success_message']) && $currentAction !== 'home' && $currentAction !== 'insights' && $currentAction !== 'admin' && $currentAction !== 'login'): ?>
+            <?php if (!empty($_SESSION['success_message']) && $currentAction !== 'home' && $currentAction !== 'insights' && $currentAction !== 'login'): ?>
                 <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4 mx-auto" style="max-width: 900px;" role="alert">
                     <i class="bi bi-check-circle-fill me-2"></i>
                     <?= htmlspecialchars($_SESSION['success_message']); ?>
